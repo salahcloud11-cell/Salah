@@ -1,0 +1,2781 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#080c15">
+<title>CinemaBox</title>
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#080c15;--panel:#111a29;--panel2:#1c2840;--text:#f2f5ff;
+  --muted:#a6b3cc;--accent:#9b87ff;--focus:#65f3cc;--danger:#ff8da1;
+  --line:#ffffff18;--sidebar:108px;--subtitle:26px
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 system-ui,Tahoma,sans-serif}
+body.ocean{--bg:#07151b;--panel:#102831;--panel2:#1a3843;--accent:#61d8ca}
+button,input,textarea{font:inherit}
+button{cursor:pointer;color:inherit;border:0}
+button:disabled{opacity:.4;cursor:not-allowed}
+button,input,textarea,a{touch-action:manipulation}
+button:focus,input:focus,textarea:focus,a:focus,[tabindex="0"]:focus{
+  outline:4px solid var(--focus);outline-offset:4px;
+  box-shadow:0 0 0 8px #65f3cc20
+}
+button:focus{position:relative;z-index:2}
+button:hover:not(:disabled){filter:brightness(1.13)}
+button:active:not(:disabled){transform:scale(.98)}
+button,input,textarea,a{scroll-margin:30px}
+input,textarea{
+  width:100%;padding:12px 15px;min-height:48px;border-radius:12px;
+  border:1px solid #ffffff30;background:#070e1b;color:var(--text)
+}
+input[type=range]{padding:0;min-height:42px;accent-color:var(--focus);direction:ltr}
+textarea{min-height:115px;resize:vertical}
+h1,h2,h3,p{margin-top:0}
+h1{font-size:clamp(2rem,4vw,4.3rem);line-height:1.2}
+h2{font-size:1.45rem}h3{font-size:1.1rem}
+a{color:var(--focus)}
+small,.muted{color:var(--muted)}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  min-height:48px;padding:11px 19px;border-radius:12px;background:var(--panel2);font-weight:650
+}
+.primary{background:var(--accent);color:#070c16}
+.danger{background:#ff71841c;border:1px solid #ff718444;color:var(--danger)}
+.ghost{background:#ffffff0c;border:1px solid var(--line)}
+.icon{min-width:48px;font-size:20px;padding:9px 13px}
+.actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.stack{display:grid;gap:18px}
+.between{display:flex;align-items:center;justify-content:space-between;gap:18px}
+label{display:grid;gap:7px;color:var(--muted);font-size:.9rem}
+.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.full{grid-column:1/-1}
+.panel{padding:25px;border:1px solid var(--line);background:var(--panel);border-radius:20px}
+.notice{padding:15px 18px;background:#f5c56a0b;border:1px solid #f5c56a35;color:#e9cfa7;border-radius:13px;font-size:13px}
+.sidebar{
+  position:fixed;right:0;top:0;bottom:0;width:var(--sidebar);z-index:20;
+  padding:25px 12px;background:#0b1120;border-left:1px solid var(--line);
+  display:flex;flex-direction:column;gap:25px
+}
+.logo{text-align:center;font-weight:950;font-size:31px;color:var(--focus)}
+.logo small{display:block;font-size:9px;letter-spacing:2px;color:var(--muted)}
+.nav{display:grid;gap:9px}
+.nav-button{
+  min-height:69px;border-radius:14px;background:transparent;color:var(--muted);
+  display:grid;place-content:center;gap:2px;font-size:11px
+}
+.nav-button b{font-size:23px;font-weight:400}
+.nav-button.active{background:#9b87ff20;color:white;box-shadow:inset -3px 0 var(--accent)}
+.app-body{margin-right:var(--sidebar)}
+header.topbar{height:88px;padding:18px 4vw;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.brand{font-size:26px;font-weight:900;letter-spacing:-1px}
+.brand span{color:var(--focus)}
+.brand small{font-size:10px;display:block;letter-spacing:1px;font-weight:500;color:var(--muted)}
+main{min-height:80vh;padding-bottom:50px}
+.content{padding:30px 4vw}
+.page{animation:fade .18s ease-out}
+.hero{
+  position:relative;isolation:isolate;overflow:hidden;min-height:530px;
+  padding:55px 5vw;display:flex;align-items:center;gap:45px;
+  background:linear-gradient(140deg,#333054,#123442)
+}
+.hero-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-3;opacity:.6}
+.hero:after{
+  content:"";position:absolute;inset:0;z-index:-2;
+  background:linear-gradient(270deg,#080c15ee,#080c1570),linear-gradient(0deg,var(--bg),transparent 60%)
+}
+.hero-copy{flex:1;max-width:750px}
+.eyebrow{font-size:12px;letter-spacing:2px;color:var(--focus);margin-bottom:18px}
+.hero h1{margin-bottom:17px}
+.hero p.description{color:#cad3e6;max-width:640px;margin:24px 0;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.meta{display:flex;gap:13px;flex-wrap:wrap;color:var(--muted)}
+.tag{font-size:12px;border:1px solid #ffffff30;border-radius:7px;padding:2px 9px}
+.rating{color:#ffd584}
+.hero-art{width:225px;flex-shrink:0;transform:rotate(-3deg)}
+.poster{
+  position:relative;aspect-ratio:2/3;overflow:hidden;border-radius:16px;
+  background:linear-gradient(150deg,#6859a9,#234a60 60%,#13333c);border:1px solid #ffffff22
+}
+.poster img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.poster-fallback{height:100%;padding:18px;display:flex;flex-direction:column;justify-content:flex-end;gap:10px}
+.poster-fallback:before{content:"▶";font-size:60px;color:#ffffff30;margin:auto}
+.poster-fallback strong{font-size:1.15rem;line-height:1.5}
+.poster-fallback small{font-size:9px;letter-spacing:2px}
+.section{margin:28px 0}
+.section-title{padding:0 4vw;display:flex;justify-content:space-between;align-items:center}
+.section-title h2{margin:0;font-size:1.35rem}
+.media-row{display:flex;gap:20px;overflow-x:auto;padding:24px 4vw;scrollbar-width:thin;scrollbar-color:#33405c transparent}
+.card{width:175px;flex:0 0 175px;min-width:0;padding:0;background:transparent;text-align:right;border-radius:16px}
+.card:focus .poster{border-color:var(--focus)}
+.card-title{display:block;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;font-weight:700;margin-top:11px}
+.card small{display:block;font-size:12px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+.badge{position:absolute;top:9px;right:9px;background:#080c15d9;padding:3px 8px;border-radius:7px;font-size:10px;z-index:1}
+.heart{position:absolute;top:9px;left:9px;color:#ffb7c6;background:#080c15d9;padding:3px 8px;border-radius:7px;z-index:1}
+.progress{position:absolute;bottom:0;left:0;right:0;height:4px;background:#ffffff25}
+.progress i{height:100%;display:block;background:var(--focus)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:26px 20px;padding:24px 0}
+.grid .card{width:100%}
+.toolbar{display:flex;gap:15px;flex-wrap:wrap;align-items:end;margin:22px 0}
+.toolbar>label{flex:2;min-width:220px}
+.empty{text-align:center;padding:45px 25px;border:1px dashed #ffffff30;border-radius:20px;background:#ffffff03}
+.empty p{color:var(--muted)}
+.empty .actions{justify-content:center}
+.episode{display:flex;align-items:center;gap:17px;border:1px solid var(--line);background:var(--panel);padding:17px;border-radius:15px}
+.episode .info{flex:1}
+.episode .info small{display:block}
+.episode-number{color:var(--focus);font-size:22px;min-width:40px;text-align:center}
+.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.toggle{display:flex;align-items:center;justify-content:space-between;text-align:right;width:100%}
+.toggle .pill{padding:3px 12px;border-radius:30px;background:#0004;color:var(--focus);font-size:12px}
+.remote-layout{display:grid;grid-template-columns:310px 1fr;gap:30px;align-items:start}
+.remote{
+  direction:ltr;background:linear-gradient(150deg,#26304a,#101724);
+  border:1px solid #ffffff28;box-shadow:0 20px 70px #0005;border-radius:48px;
+  padding:30px 24px;display:grid;grid-template-columns:repeat(3,1fr);gap:13px;max-width:300px;margin:auto
+}
+.remote .btn{padding:10px 7px;font-size:13px;min-width:0;background:#070e1d;min-height:54px;border:1px solid #ffffff16}
+.remote .ok{background:var(--accent);color:#090c17;border-radius:50%}
+.remote .wide{grid-column:1/-1}
+.remote .gap{pointer-events:none}
+.table-wrap{overflow:auto;padding:8px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:right;padding:13px 12px;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-size:12px}
+code,kbd{direction:ltr;unicode-bidi:isolate;background:#ffffff0a;padding:3px 7px;border:1px solid var(--line);border-radius:6px;font-size:12px;overflow-wrap:anywhere}
+.binding-info{padding:16px;border:1px solid #65f3cc33;background:#65f3cc08;border-radius:12px}
+.modal-layer{position:fixed;inset:0;z-index:100;background:#000c;display:flex;align-items:center;justify-content:center;padding:25px}
+.dialog{width:min(850px,100%);max-height:92dvh;overflow:auto;padding:27px;background:var(--panel);border:1px solid #ffffff30;border-radius:23px;box-shadow:0 30px 120px #000b}
+.dialog.wide{width:min(1150px,100%)}
+.dialog-head{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-bottom:23px}
+.dialog-head h2{margin:0}
+.choices{display:grid;gap:12px}
+.choice{text-align:right;justify-content:space-between}
+.test-status{position:sticky;top:0;z-index:4;background:#111e32;padding:15px;border:1px solid #65f3cc40;border-radius:12px;margin-bottom:24px;direction:ltr;text-align:left;font-family:monospace}
+.test-row{display:flex;gap:16px;overflow:auto;padding:13px 9px 25px}
+.test-card{flex:0 0 145px;min-height:150px;background:linear-gradient(145deg,#54478d,#153a4d);border-radius:15px;font-size:16px}
+.test-list{display:grid;gap:13px}
+.result-list{display:grid;gap:12px;max-height:330px;overflow:auto;padding:8px}
+.result{display:flex;align-items:center;gap:15px;text-align:right}
+.result img{width:45px;height:67px;object-fit:cover;border-radius:6px}
+#player{position:fixed;inset:0;background:black;z-index:60;direction:ltr}
+#video{width:100%;height:100%;object-fit:contain}
+#video::cue{font-size:var(--subtitle);background:#000b;color:white}
+.player-stage{position:absolute;inset:0;background:transparent;width:100%;height:100%;border-radius:0}
+.player-stage:focus{outline:0;box-shadow:inset 0 0 0 3px #65f3cc30}
+.player-top{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;gap:20px;padding:25px 4vw;background:linear-gradient(#000d,transparent);direction:rtl;z-index:3}
+.player-title{flex:1;overflow:hidden}
+.player-title strong{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.player-controls{position:absolute;bottom:0;left:0;right:0;padding:65px 4vw 30px;background:linear-gradient(transparent,#000e 45%);z-index:3}
+.seek-row{display:flex;align-items:center;gap:17px;font-size:13px;font-variant-numeric:tabular-nums}
+.seek-row input{flex:1}
+.player-buttons{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:17px}
+.player-buttons .btn{background:#ffffff1b}
+.player-buttons .primary{background:var(--focus);color:#081411}
+.player-buttons input{width:110px}
+.player-spacer{flex:1}
+.player-hint{text-align:center;direction:rtl;font-size:11px;color:var(--muted);margin-top:15px}
+#playerMessage{position:absolute;left:50%;top:43%;transform:translate(-50%,-50%);padding:16px 25px;background:#101927dc;border-radius:14px;z-index:5;direction:rtl;max-width:80%;pointer-events:none}
+#player.clean .player-controls,#player.clean .player-top{visibility:hidden;opacity:0;pointer-events:none}
+#toasts{position:fixed;bottom:25px;left:25px;display:grid;gap:10px;z-index:300;max-width:min(480px,90vw);pointer-events:none}
+.toast{padding:15px 21px;border:1px solid #ffffff30;background:#25334af5;border-radius:14px;box-shadow:0 10px 40px #0007}
+.toast.error{border-color:var(--danger)}
+.skeleton{height:270px;width:175px;flex-shrink:0;border-radius:15px;background:linear-gradient(90deg,#172133,#25324a,#172133);background-size:200% 100%;animation:loading 1.4s infinite}
+@keyframes loading{to{background-position:-200% 0}}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@media(min-width:1700px){
+  body{font-size:20px}:root{--sidebar:130px}
+  .nav-button{min-height:86px;font-size:14px}.card{width:220px;flex-basis:220px}
+  .hero{min-height:670px}.hero-art{width:285px}.btn{min-height:57px}
+}
+@media(max-width:1000px){
+  .settings-grid{grid-template-columns:1fr}.hero-art{width:170px}
+  .remote-layout{grid-template-columns:270px 1fr}.hero{min-height:470px}
+}
+@media(max-width:650px){
+  body{font-size:14px}:root{--sidebar:0px}
+  .sidebar{inset:auto 0 0;width:100%;height:calc(73px + env(safe-area-inset-bottom));padding:7px 4px env(safe-area-inset-bottom);border-top:1px solid var(--line)}
+  .logo{display:none}.nav{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+  .nav-button{flex:1 0 62px;min-height:56px;font-size:9px}.nav-button b{font-size:20px}
+  .app-body{margin:0}.topbar .muted{display:none}header.topbar{padding:16px 20px;height:80px}
+  .brand{font-size:23px}.topbar .btn{font-size:12px;padding:10px 13px}
+  main{padding-bottom:100px}.hero{padding:38px 23px;min-height:430px}.hero-art{display:none}
+  .hero h1{font-size:2.7rem}.hero .actions{gap:9px}.hero .btn{padding:11px 13px}
+  .content{padding:25px 20px}.section-title{padding:0 20px}.media-row{padding:23px 20px;gap:16px}
+  .card{width:140px;flex-basis:140px}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:25px 17px}
+  .field-grid,.remote-layout{grid-template-columns:1fr}.full{grid-column:auto}
+  .dialog{padding:20px;max-height:94dvh}.modal-layer{padding:10px}
+  .remote{width:275px}.panel{padding:20px}
+  .player-controls{padding:45px 15px 20px}.player-top{padding:17px}
+  .player-buttons{gap:9px}.player-buttons .btn{padding:9px 12px;min-height:44px}
+  .player-buttons input,.player-spacer,.player-hint{display:none}
+  .episode{gap:10px;padding:13px}.episode .btn{padding:10px 12px}
+  #toasts{bottom:93px;left:15px}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <aside class="sidebar">
+    <div class="logo">CB<small>LOCAL CINEMA</small></div>
+    <nav id="nav" class="nav" aria-label="التنقل الرئيسي" data-nav-group="sidebar"></nav>
+  </aside>
+  <div class="app-body">
+    <header class="topbar">
+      <div class="brand">Cinema<span>Box</span><small>مكتبتك. شاشتك. تحكمك.</small></div>
+      <div class="actions">
+        <small id="libraryCount" class="muted">مكتبة محلية</small>
+        <button id="addFiles" class="btn primary" data-focus="add-files">＋ إضافة فيديو</button>
+      </div>
+    </header>
+    <main id="main">
+      <div class="content"><h2>جارٍ فتح المكتبة…</h2></div>
+      <div class="media-row" aria-busy="true"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
+    </main>
+  </div>
+</div>
+
+<section id="player" hidden role="dialog" aria-modal="true" aria-label="مشغل الفيديو">
+  <video id="video" playsinline preload="metadata"></video>
+  <button id="playerStage" class="player-stage" data-focus="player-stage" aria-label="مساحة الفيديو: اختيار للتشغيل أو الإيقاف"></button>
+  <div class="player-top" data-nav-group="player-top">
+    <button id="playerBack" class="btn ghost" data-focus="player-back">← رجوع</button>
+    <div class="player-title"><strong id="playerTitle"></strong><small id="playerEpisode"></small></div>
+  </div>
+  <div id="playerMessage" role="status" hidden></div>
+  <div class="player-controls">
+    <div class="seek-row" data-nav-group="player-seek">
+      <span id="currentTime">00:00</span>
+      <input id="seek" type="range" min="0" max="1000" step="5" value="0" aria-label="موضع التشغيل" data-focus="player-seek" data-nav-range>
+      <span id="duration">00:00</span>
+    </div>
+    <div class="player-buttons" data-nav-group="player-buttons">
+      <button id="prevEpisode" class="btn" data-focus="player-prev" aria-label="الحلقة السابقة">⏮</button>
+      <button id="rewind" class="btn" data-focus="player-rewind" aria-label="رجوع عشر ثوانٍ">−10</button>
+      <button id="playPause" class="btn primary" data-focus="player-play" data-initial aria-label="تشغيل">▶</button>
+      <button id="forward" class="btn" data-focus="player-forward" aria-label="تقدم عشر ثوانٍ">+10</button>
+      <button id="nextEpisode" class="btn" data-focus="player-next" aria-label="الحلقة التالية">⏭</button>
+      <button id="mute" class="btn" data-focus="player-mute">صوت</button>
+      <input id="volume" type="range" min="0" max="1" step=".05" value="1" aria-label="مستوى الصوت" data-focus="player-volume" data-nav-range>
+      <span class="player-spacer"></span>
+      <button id="speed" class="btn" data-focus="player-speed">1×</button>
+      <button id="subtitles" class="btn" data-focus="player-subtitles">CC</button>
+      <button id="fullscreen" class="btn" data-focus="player-fullscreen">⛶</button>
+    </div>
+    <div class="player-hint">أعلى لإظهار التحكم · Enter اختيار · Back رجوع · تخصيص الأزرار من Remote & Controls</div>
+  </div>
+</section>
+
+<div id="modalHost"></div>
+<div id="toasts" role="status" aria-live="polite"></div>
+
+<script>
+"use strict";
+(() => {
+  const $=(selector,root=document)=>root.querySelector(selector);
+  const $$=(selector,root=document)=>[...root.querySelectorAll(selector)];
+  const uid=()=>globalThis.crypto?.randomUUID?.()||`cb-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
+  const number=(value,min,max,fallback=0)=>Number.isFinite(Number(value))?clamp(Number(value),min,max):fallback;
+  const copy=value=>JSON.parse(JSON.stringify(value));
+  const TYPES={movie:"فيلم",series:"مسلسل",anime:"أنمي",other:"فيديو"};
+  const STORE_PREFIX="CinemaBox.v2.";
+  let sequence=0;
+
+function node(tag,className="",text){
+    const n=document.createElement(tag);
+    if(className)n.className=className;
+    if(text!==undefined)n.textContent=text;
+    return n;
+  }
+  function errorMessage(error){
+    console.error("CinemaBox",error);
+    toast(error?.name==="QuotaExceededError"
+      ?"مساحة المتصفح غير كافية. حرّر مساحة ثم أعد المحاولة."
+      :error?.message||"تعذر تنفيذ العملية.",true);
+  }
+  function safe(fn){
+    return(...args)=>{
+      try{Promise.resolve(fn(...args)).catch(errorMessage);}
+      catch(error){errorMessage(error);}
+    };
+  }
+  function listen(target,event,fn){target.addEventListener(event,safe(fn));return target;}
+  function button(label,fn,key="",className="btn ghost"){
+    const b=node("button",className,label);b.type="button";
+    b.dataset.focus=key||`control-${++sequence}`;
+    listen(b,"click",fn);
+    return b;
+  }
+  function input(value="",type="text",key=""){
+    const n=node("input");n.type=type;n.value=value??"";
+    n.dataset.focus=key||`input-${++sequence}`;
+    return n;
+  }
+  function field(label,control){
+    const n=node("label");n.append(node("span","",label),control);return n;
+  }
+  function time(value){
+    const s=Math.max(0,Math.floor(Number(value)||0)),h=Math.floor(s/3600),m=Math.floor(s%3600/60);
+    return(h?`${h}:`:"")+String(m).padStart(2,"0")+":"+String(s%60).padStart(2,"0");
+  }
+  function toast(message,error=false){
+    const n=node("div","toast"+(error?" error":""),message);
+    $("#toasts").append(n);setTimeout(()=>n.remove(),error?7500:4300);
+  }
+  function imageURL(value){
+    try{
+      const url=new URL(value);
+      return url.protocol==="https:"&&url.hostname==="image.tmdb.org"?url.href:"";
+    }catch{return"";}
+  }
+  function filePicker(accept,multiple,callback){
+    const picker=document.createElement("input");
+    picker.type="file";picker.accept=accept;picker.multiple=multiple;picker.hidden=true;
+    document.body.append(picker);
+    const restore=NavigationManager.snapshot();
+    let done=false;
+    const finish=()=>{
+      if(done)return;done=true;picker.remove();
+      setTimeout(()=>NavigationManager.restore(restore),80);
+    };
+    picker.addEventListener("change",safe(async()=>{
+      const files=[...picker.files];finish();
+      if(files.length)await callback(files);
+    }),{once:true});
+    picker.addEventListener("cancel",finish,{once:true});
+    picker.click();setTimeout(finish,300000);
+  }
+
+/* Event bus and extension registry: future adapters must declare real capabilities. */
+  const EventBus=new EventTarget();
+  function emit(name,detail){EventBus.dispatchEvent(new CustomEvent(name,{detail}));}
+  const ExtensionRegistry={
+    adapters:new Map(),
+    register(name,adapter){
+      if(typeof name!=="string"||!adapter||typeof adapter.isAvailable!=="function")
+        throw new Error("واجهة الإضافة غير صالحة.");
+      this.adapters.set(name,adapter);emit("extension:registered",{name});
+    },
+    async available(name){
+      const adapter=this.adapters.get(name);
+      return !!adapter&&!!(await adapter.isAvailable());
+    }
+  };
+
+const StorageManager={
+    db:null,temporary:false,queue:Promise.resolve(),
+    memory:{media:new Map(),assets:new Map(),prefs:new Map()},
+    async open(){
+      try{
+        if(!window.indexedDB)throw new Error("IndexedDB unavailable");
+        this.db=await new Promise((resolve,reject)=>{
+          const request=indexedDB.open("CinemaBox",1);
+          request.onupgradeneeded=()=>{
+            for(const name of["media","assets","prefs"])
+              if(!request.result.objectStoreNames.contains(name))
+                request.result.createObjectStore(name,{keyPath:"id"});
+          };
+          request.onsuccess=()=>resolve(request.result);
+          request.onerror=()=>reject(request.error);
+          request.onblocked=()=>toast("أغلق النوافذ الأخرى للتطبيق لإتاحة التخزين.",true);
+        });
+        this.db.onversionchange=()=>{this.db.close();toast("تغير التخزين في نافذة أخرى. أعد تحميل الصفحة.",true);};
+      }catch{this.temporary=true;}
+    },
+    async get(store,id){
+      if(this.temporary)return this.memory[store].get(id);
+      return new Promise((resolve,reject)=>{
+        const r=this.db.transaction(store).objectStore(store).get(id);
+        r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);
+      });
+    },
+    async all(store){
+      if(this.temporary)return[...this.memory[store].values()];
+      return new Promise((resolve,reject)=>{
+        const r=this.db.transaction(store).objectStore(store).getAll();
+        r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);
+      });
+    },
+    transaction(operations){
+      const task=this.queue.then(()=>new Promise((resolve,reject)=>{
+        if(this.temporary){
+          for(const op of operations){
+            const store=this.memory[op.store];
+            if(op.action==="clear")store.clear();
+            else if(op.action==="delete")store.delete(op.id);
+            else store.set(op.value.id,op.value);
+          }
+          resolve();return;
+        }
+        const tx=this.db.transaction([...new Set(operations.map(x=>x.store))],"readwrite");
+        tx.oncomplete=()=>resolve();
+        tx.onabort=()=>reject(tx.error||new Error("لم تكتمل معاملة التخزين."));
+        tx.onerror=()=>{};
+        try{
+          for(const op of operations){
+            const store=tx.objectStore(op.store);
+            if(op.action==="clear")store.clear();
+            else if(op.action==="delete")store.delete(op.id);
+            else store.put(op.value);
+          }
+        }catch(error){tx.abort();reject(error);}
+      }));
+      this.queue=task.catch(()=>{});
+      return task;
+    }
+  };
+
+const AssetManager={
+    urls:new Map(),
+    async url(id){
+      if(!id)return"";
+      if(this.urls.has(id))return this.urls.get(id);
+      const record=await StorageManager.get("assets",id);
+      if(!(record?.blob instanceof Blob))return"";
+      if(this.urls.has(id))return this.urls.get(id);
+      const url=URL.createObjectURL(record.blob);this.urls.set(id,url);return url;
+    },
+    revoke(id){const url=this.urls.get(id);if(url)URL.revokeObjectURL(url);this.urls.delete(id);},
+    clear(){for(const id of this.urls.keys())this.revoke(id);}
+  };
+
+const SettingsManager={
+    defaults:{sound:false,autoplay:true,theme:"midnight",speed:1,subtitleSize:26,subtitles:true,apiKey:""},
+    value:{},
+    async load(){
+      let local={};
+      try{local=JSON.parse(localStorage.getItem(STORE_PREFIX+"settings")||"{}");}catch{}
+      const stored=await StorageManager.get("prefs","settings");
+      this.value={...this.defaults,...(stored?.value||local)};
+      this.value.apiKey=String(this.value.apiKey||"").slice(0,4000);
+      this.value.speed=number(this.value.speed,.5,2,1);
+      this.apply();
+    },
+    apply(){
+      document.body.classList.toggle("ocean",this.value.theme==="ocean");
+      document.documentElement.style.setProperty("--subtitle",`${number(this.value.subtitleSize,16,48,26)}px`);
+    },
+    async save(patch){
+      const value={...this.value,...patch};
+      await StorageManager.transaction([{store:"prefs",value:{id:"settings",value}}]);
+      this.value=value;
+      try{localStorage.setItem(STORE_PREFIX+"settings",JSON.stringify(value));}catch{}
+      this.apply();emit("settings:changed",value);
+    }
+  };
+
+const SoundManager={
+    context:null,
+    play(kind="move"){
+      if(!SettingsManager.value.sound)return;
+      try{
+        const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+        this.context||=new AC();
+        this.context.resume().catch(()=>{});
+        const oscillator=this.context.createOscillator(),gain=this.context.createGain(),now=this.context.currentTime;
+        oscillator.frequency.value={move:440,select:660,page:520,play:780}[kind]||440;
+        gain.gain.setValueAtTime(.025,now);gain.gain.exponentialRampToValueAtTime(.001,now+.07);
+        oscillator.connect(gain);gain.connect(this.context.destination);
+        oscillator.start();oscillator.stop(now+.08);
+      }catch{}
+    }
+  };
+
+const LibraryManager={
+    items:[],queue:Promise.resolve(),busy:false,
+    async load(){this.items=await StorageManager.all("media");},
+    get(id){return this.items.find(x=>x.id===id);},
+    series(item){return item&&(item.type==="series"||item.type==="anime");},
+    groupKey(item){return`${item.type}:${(item.seriesTitle||item.title).trim().toLocaleLowerCase()}`;},
+    episodes(item){
+      if(!this.series(item))return item?[item]:[];
+      return this.items.filter(x=>this.series(x)&&this.groupKey(x)===this.groupKey(item))
+        .sort((a,b)=>a.season-b.season||a.episode-b.episode||a.added-b.added);
+    },
+    continuing(item){return item.position>5&&!item.completed;},
+    target(item){
+      const list=this.episodes(item);
+      return list.filter(x=>this.continuing(x)).sort((a,b)=>b.lastPlayed-a.lastPlayed)[0]
+        ||list.find(x=>!x.completed)||list[0];
+    },
+    grouped(items){
+      const seen=new Set();
+      return items.filter(item=>{
+        if(!this.series(item))return true;
+        const key=this.groupKey(item);
+        if(seen.has(key))return false;seen.add(key);return true;
+      });
+    },
+    create(){
+      return{
+        id:uid(),title:"فيديو جديد",type:"movie",seriesTitle:"",season:1,episode:1,year:"",
+        description:"",genre:"",rating:0,favorite:false,added:Date.now(),lastPlayed:0,
+        duration:0,position:0,completed:false,demo:false,fileName:"",fileSize:0,
+        videoAsset:"",posterAsset:"",backdropAsset:"",subtitleAsset:"",posterUrl:"",backdropUrl:""
+      };
+    },
+    mutate(id,patch,assets=[],remove=[]){
+      const task=this.queue.then(async()=>{
+        const current=this.get(id);
+        const updated={...(current||this.create()),...patch,id};
+        const ops=assets.map(value=>({store:"assets",value}));
+        remove.filter(Boolean).forEach(asset=>ops.push({store:"assets",action:"delete",id:asset}));
+        ops.push({store:"media",value:updated});
+        await StorageManager.transaction(ops);
+        remove.forEach(asset=>AssetManager.revoke(asset));
+        const index=this.items.findIndex(x=>x.id===id);
+        if(index<0)this.items.push(updated);else this.items[index]=updated;
+        emit("library:changed",{id});return updated;
+      });
+      this.queue=task.catch(()=>{});return task;
+    },
+    pick(){
+      filePicker("video/*,.mkv,.mp4,.webm,.mov,.avi,.m4v,.ts",true,files=>this.importVideos(files));
+    },
+    async importVideos(files){
+      if(this.busy){toast("انتظر اكتمال الإضافة الحالية.");return;}
+      this.busy=true;$("#addFiles").disabled=true;
+      const body=node("div","stack"),status=node("p","","جارٍ حفظ الملفات محليًا…");
+      body.append(status,node("p","muted","لا تُرفع الملفات. الملفات الكبيرة تُنسخ إلى مساحة المتصفح."));
+      const dialog=UIManager.modal("إضافة الفيديوهات",body);
+      let count=0,last=null;
+      try{
+        for(let i=0;i<files.length;i++){
+          const file=files[i];status.textContent=`${i+1} / ${files.length} — ${file.name}`;
+          if(!file.size)continue;
+          if(this.items.some(x=>x.fileName===file.name&&x.fileSize===file.size&&x.fileModified===file.lastModified&&x.videoAsset))continue;
+          const title=file.name.replace(/\.[^.]+$/,"").replace(/[._]+/g," ").trim();
+          const match=title.match(/(?:s(\d{1,3})\s*e(\d{1,4})|(\d{1,3})x(\d{1,4}))/i);
+          const item=this.create(),asset=uid();
+          Object.assign(item,{
+            title,type:match?"series":"movie",
+            seriesTitle:match?title.slice(0,match.index).replace(/[- ]+$/,"").trim()||"مسلسل جديد":"",
+            season:match?Number(match[1]||match[3]):1,episode:match?Number(match[2]||match[4]):1,
+            videoAsset:asset,fileName:file.name,fileSize:file.size,fileModified:file.lastModified
+          });
+          await this.mutate(item.id,item,[{id:asset,blob:file,kind:"video"}]);count++;last=item;
+        }
+        navigator.storage?.persist?.().catch(()=>{});
+        toast(`أضيف ${count} ملف. تُتخطى الملفات الفارغة أو المتطابقة.`);
+      }finally{
+        this.busy=false;$("#addFiles").disabled=false;
+        if(UIManager.top()===dialog)UIManager.close(dialog);
+        UIManager.refresh();
+        if(count===1&&files.length===1&&last)UIManager.edit(last.id);
+      }
+    },
+    attach(id){
+      filePicker("video/*,.mkv,.mp4,.webm,.mov,.avi,.ts",false,async([file])=>{
+        const item=this.get(id);if(!item)return;
+        if(!file.size)throw new Error("ملف الفيديو فارغ.");
+        if(item.videoAsset&&!await UIManager.confirm("استبدال الفيديو","استبدال النسخة المحفوظة لهذا العنصر؟ الملف الأصلي لن يتغير."))return;
+        const asset=uid();
+        await this.mutate(id,{videoAsset:asset,fileName:file.name,fileSize:file.size,fileModified:file.lastModified,demo:false},
+          [{id:asset,blob:file,kind:"video"}],[item.videoAsset]);
+        UIManager.refresh();toast("تم ربط الفيديو.");
+      });
+    },
+    async favorite(id){
+      const item=this.get(id);if(!item)return;
+      await this.mutate(id,{favorite:!item.favorite});UIManager.refresh();
+    },
+    async remove(id){
+      const item=this.get(id);if(!item||this.busy)return;
+      if(!await UIManager.confirm("حذف العنصر",`حذف «${item.title}» ونسخته داخل المتصفح؟`,true))return;
+      await this.queue;
+      const assets=["videoAsset","posterAsset","backdropAsset","subtitleAsset"].map(k=>item[k]).filter(Boolean);
+      await StorageManager.transaction([{store:"media",action:"delete",id},...assets.map(id=>({store:"assets",action:"delete",id}))]);
+      assets.forEach(id=>AssetManager.revoke(id));this.items=this.items.filter(x=>x.id!==id);
+      if(UIManager.route.id===id)UIManager.navigate("home",null,false);else UIManager.refresh();
+      toast("تم الحذف من المكتبة فقط.");
+    },
+    async demo(){
+      if(this.items.some(x=>x.demo)){toast("العرض التجريبي موجود.");return;}
+      const data=[
+        {title:"ما وراء المدار",type:"movie",year:"2025",genre:"خيال علمي",rating:8.6},
+        {title:"المدينة الزرقاء",type:"movie",year:"2024",genre:"غموض",favorite:true,rating:8.1},
+        {title:"البداية",seriesTitle:"أرشيف الليل",type:"series",season:1,episode:1,position:425,duration:2600,lastPlayed:Date.now()},
+        {title:"الإشارة",seriesTitle:"أرشيف الليل",type:"series",season:1,episode:2},
+        {title:"العودة",seriesTitle:"أرشيف الليل",type:"series",season:2,episode:1},
+        {title:"أول ضوء",seriesTitle:"حارس النجوم",type:"anime",season:1,episode:1,favorite:true},
+        {title:"الطريق السماوي",seriesTitle:"حارس النجوم",type:"anime",season:1,episode:2}
+      ];
+      for(const sample of data){
+        const item={...this.create(),...sample,demo:true,description:"بيانات خيالية لعرض التصميم. اربط ملف فيديو من جهازك للتشغيل."};
+        await this.mutate(item.id,item);
+      }
+      UIManager.refresh();toast("أضيف عرض تجريبي بلا فيديوهات.");
+    },
+    export(){
+      const items=this.items.map(item=>{
+        const result={...item};
+        for(const k of["videoAsset","posterAsset","backdropAsset","subtitleAsset"])delete result[k];
+        return result;
+      });
+      const blob=new Blob([JSON.stringify({application:"CinemaBox",version:1,exportedAt:new Date().toISOString(),items},null,2)],{type:"application/json"});
+      const url=URL.createObjectURL(blob),a=node("a");
+      a.href=url;a.download=`CinemaBox-${new Date().toISOString().slice(0,10)}.json`;document.body.append(a);a.click();a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),30000);
+      toast("النسخة تشمل البيانات فقط، دون ملفات الوسائط أو مفاتيح API.");
+    },
+    importBackup(){
+      filePicker(".json,application/json",false,async([file])=>{
+        if(file.size>20*1024*1024)throw new Error("الحد الأقصى لملف JSON هو 20 MB.");
+        let data;try{data=JSON.parse(await file.text());}catch{throw new Error("JSON غير صالح.");}
+        if(data.application!=="CinemaBox"||data.version!==1||!Array.isArray(data.items)||data.items.length>10000)
+          throw new Error("نسخة غير مدعومة.");
+        if(!await UIManager.confirm("استعادة المكتبة",`دمج ${data.items.length} عنصر؟ ستحتاج إلى ربط الوسائط غير الموجودة على هذا المتصفح.`))return;
+        for(const raw of data.items){
+          if(!raw||typeof raw!=="object")continue;
+          const item=this.create(),str=(v,max)=>typeof v==="string"?v.slice(0,max):"";
+          const id=str(raw.id,120)||item.id;
+          Object.assign(item,{
+            id,title:str(raw.title,240)||"بدون عنوان",type:Object.hasOwn(TYPES,raw.type)?raw.type:"other",
+            seriesTitle:str(raw.seriesTitle,240),season:Math.floor(number(raw.season,0,999,1)),
+            episode:Math.floor(number(raw.episode,1,9999,1)),year:str(String(raw.year||""),4),
+            genre:str(raw.genre,500),description:str(raw.description,12000),rating:number(raw.rating,0,10),
+            favorite:raw.favorite===true,position:number(raw.position,0,1e8),duration:number(raw.duration,0,1e8),
+            completed:raw.completed===true,added:number(raw.added,0,9e15,Date.now()),
+            lastPlayed:number(raw.lastPlayed,0,9e15),demo:raw.demo===true,
+            posterUrl:imageURL(raw.posterUrl),backdropUrl:imageURL(raw.backdropUrl),
+            fileName:str(raw.fileName,500),fileSize:number(raw.fileSize,0,1e14)
+          });
+          const current=this.get(id);
+          if(current)for(const key of["videoAsset","posterAsset","backdropAsset","subtitleAsset","fileName","fileSize"])item[key]=current[key];
+          await this.mutate(id,item);
+        }
+        UIManager.refresh();toast("اكتملت الاستعادة.");
+      });
+    }
+  };
+
+/*
+   * NavigationManager owns scopes, spatial movement, focus memory and recovery.
+   * DOM order is only a final fallback, not the D-Pad navigation model.
+   */
+  const NavigationManager={
+    memories:new Map(),groupMemory:new Map(),scheduled:false,ready:false,
+    scope(){
+      const modal=UIManager.top();
+      if(modal)return{key:modal.id,root:modal.layer};
+      if(PlayerManager.opened)return{key:"player",root:$("#player")};
+      return{key:`page:${UIManager.route.name}:${UIManager.route.id||""}`,root:$("#app")};
+    },
+    visible(el){
+      if(!el||!el.isConnected||el.disabled||el.closest("[hidden],[inert]"))return false;
+      const style=getComputedStyle(el),rect=el.getBoundingClientRect();
+      return style.display!=="none"&&style.visibility!=="hidden"&&rect.width>0&&rect.height>0;
+    },
+    elements(root=this.scope().root){
+      return $$('button,input:not([type=hidden]),textarea,a[href],[tabindex="0"]',root).filter(el=>this.visible(el));
+    },
+    key(el){return el?.dataset.focus||el?.id||"";},
+    snapshot(){
+      const scope=this.scope();
+      return{
+        scope:scope.key,key:this.key(document.activeElement),element:document.activeElement,
+        x:window.scrollX,y:window.scrollY,
+        scroll:$$("[data-scroll-key]",scope.root).map(el=>({key:el.dataset.scrollKey,left:el.scrollLeft,top:el.scrollTop}))
+      };
+    },
+    remember(el){
+      if(!this.visible(el)||!this.scope().root.contains(el))return;
+      const key=this.key(el),scope=this.scope().key;
+      if(key)this.memories.set(scope,key);
+      const group=el.closest("[data-nav-group]");
+      if(group)this.groupMemory.set(`${scope}:${group.dataset.navGroup}`,key);
+      emit("focus:changed",{key,label:el.getAttribute("aria-label")||el.textContent.trim().slice(0,80)||key});
+    },
+    focus(el,scroll=true){
+      if(!this.visible(el)||!this.scope().root.contains(el))return false;
+      el.focus({preventScroll:true});
+      if(document.activeElement!==el)return false;
+      if(scroll)el.scrollIntoView({block:"nearest",inline:"nearest",behavior:"auto"});
+      this.remember(el);return true;
+    },
+    restore(snapshot){
+      if(!this.ready)return;
+      const scope=this.scope();
+      if(snapshot&&snapshot.scope===scope.key){
+        for(const pos of snapshot.scroll||[]){
+          const el=$$("[data-scroll-key]",scope.root).find(x=>x.dataset.scrollKey===pos.key);
+          if(el){el.scrollLeft=pos.left;el.scrollTop=pos.top;}
+        }
+        if(scope.key.startsWith("page:"))window.scrollTo(snapshot.x||0,snapshot.y||0);
+        const matching=this.elements().find(el=>this.key(el)===snapshot.key);
+        if(this.focus(matching||snapshot.element,false))return;
+      }
+      this.repair();
+    },
+    enter(){
+      const scope=this.scope(),elements=this.elements();
+      const preferred=elements.find(x=>x.hasAttribute("data-initial"));
+      this.focus(preferred||elements[0]);
+    },
+    repair(){
+      if(!this.ready)return;
+      const scope=this.scope(),active=document.activeElement;
+      if(scope.root.contains(active)&&this.visible(active)&&this.elements().includes(active))return;
+      const nodes=this.elements(),remembered=this.memories.get(scope.key);
+      this.focus(nodes.find(x=>this.key(x)===remembered)||nodes.find(x=>x.hasAttribute("data-initial"))||nodes[0]);
+    },
+    scheduleRepair(){
+      if(this.scheduled)return;this.scheduled=true;
+      requestAnimationFrame(()=>{this.scheduled=false;this.repair();});
+    },
+    horizontalVisible(el){
+      const row=el.closest(".media-row,.test-row");
+      if(!row)return true;
+      const a=el.getBoundingClientRect(),b=row.getBoundingClientRect();
+      return a.right>b.left+10&&a.left<b.right-10;
+    },
+    move(direction){
+      const active=document.activeElement;
+      if(!this.elements().includes(active)){this.repair();return;}
+      if(active.matches("input[type=range]")&&(direction==="left"||direction==="right")){
+        const min=Number(active.min||0),max=Number(active.max||100),step=Number(active.step)||1;
+        active.value=String(clamp(Number(active.value)+(direction==="right"?step:-step),min,max));
+        active.dispatchEvent(new Event("input",{bubbles:true}));
+        active.dispatchEvent(new Event("change",{bubbles:true}));
+        return;
+      }
+      const override=active.dataset[`nav${direction[0].toUpperCase()+direction.slice(1)}`];
+      if(override){
+        const explicit=this.elements().find(el=>this.key(el)===override);
+        if(this.focus(explicit))return;
+      }
+      const r=active.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
+      const horizontal=direction==="left"||direction==="right";
+      const row=active.closest(".media-row,.test-row");
+      let candidates=this.elements().filter(el=>el!==active);
+      // A horizontal row is a navigation lane; its edges never jump into another row.
+      if(horizontal&&row)candidates=candidates.filter(el=>row.contains(el));
+      if(!horizontal)candidates=candidates.filter(el=>this.horizontalVisible(el));
+      let best=null,score=Infinity;
+      for(const el of candidates){
+        const t=el.getBoundingClientRect(),dx=t.left+t.width/2-cx,dy=t.top+t.height/2-cy;
+        const primary=direction==="left"?-dx:direction==="right"?dx:direction==="up"?-dy:dy;
+        if(primary<4)continue;
+        const overlap=horizontal?t.bottom>r.top+4&&t.top<r.bottom-4:t.right>r.left+4&&t.left<r.right-4;
+        const cross=horizontal?Math.abs(dy):Math.abs(dx);
+        const gap=horizontal?Math.max(0,Math.abs(dx)-(r.width+t.width)/2):Math.max(0,Math.abs(dy)-(r.height+t.height)/2);
+        const value=gap+primary*.15+cross*2+(overlap?0:1100);
+        if(value<score){score=value;best=el;}
+      }
+      if(best&&this.focus(best))SoundManager.play("move");
+    },
+    select(){
+      const active=document.activeElement;
+      if(!this.visible(active)||!this.scope().root.contains(active)){this.repair();return;}
+      if(active.matches("input,textarea")){
+        if(active.type==="range"){this.move("down");return;}
+        active.focus();return;
+      }
+      active.click();SoundManager.play("select");
+    },
+    tab(backward){
+      const nodes=this.elements();if(!nodes.length)return;
+      const index=nodes.indexOf(document.activeElement);
+      this.focus(nodes[(index+(backward?-1:1)+nodes.length)%nodes.length]);
+    },
+    init(){
+      document.addEventListener("focusin",event=>{
+        if(this.scope().root.contains(event.target))this.remember(event.target);
+        else this.scheduleRepair();
+      });
+      new MutationObserver(()=>this.scheduleRepair()).observe(document.body,{
+        subtree:true,childList:true,attributes:true,attributeFilter:["hidden","inert","disabled"]
+      });
+      window.addEventListener("focus",()=>this.scheduleRepair());
+    }
+  };
+
+const ActionRegistry={
+    actions:new Map(),
+    register(id,label,execute,{repeat=false,example=""}={}){
+      this.actions.set(id,{id,label,execute,repeat,example});
+    },
+    get(id){return this.actions.get(id);},
+    list(){return[...this.actions.values()];},
+    async run(id,context={}){
+      const action=this.get(id);if(!action)return;
+      emit("input:action",{...context,action:id,label:action.label});
+      const test=UIManager.top()?.test;
+      if(test&&!["nav.up","nav.down","nav.left","nav.right","select","back"].includes(id)){
+        test.effect.textContent=`معاينة آمنة: ${action.example||action.label}`;
+        return;
+      }
+      await action.execute(context);
+    }
+  };
+
+const DEFAULT_BINDINGS={
+    keyboard:{
+      ArrowUp:"nav.up",ArrowDown:"nav.down",ArrowLeft:"nav.left",ArrowRight:"nav.right",
+      Enter:"select",NumpadEnter:"select",Escape:"back",Backspace:"back",Space:"play.toggle",
+      KeyJ:"seek.back",KeyL:"seek.forward",KeyF:"fullscreen",KeyU:"mute",
+      Equal:"volume.up",Minus:"volume.down",Home:"home",KeyM:"menu"
+    },
+    remote:{
+      ArrowUp:"nav.up",ArrowDown:"nav.down",ArrowLeft:"nav.left",ArrowRight:"nav.right",
+      Enter:"select",NumpadEnter:"select",BrowserBack:"back",Escape:"back",Backspace:"back",
+      MediaPlayPause:"play.toggle",MediaPlay:"play",MediaPause:"pause",
+      MediaRewind:"seek.back",MediaFastForward:"seek.forward",
+      MediaTrackNext:"episode.next",MediaTrackPrevious:"episode.previous",
+      AudioVolumeUp:"volume.up",AudioVolumeDown:"volume.down",
+      AudioVolumeMute:"mute",Home:"home",ContextMenu:"menu"
+    },
+    gamepad:{
+      "Button:12":"nav.up","Button:13":"nav.down","Button:14":"nav.left","Button:15":"nav.right",
+      "Button:0":"select","Button:1":"back","Button:9":"menu","Button:8":"play.toggle",
+      "Button:4":"seek.back","Button:5":"seek.forward","Button:6":"volume.down","Button:7":"volume.up",
+      "Button:3":"home","Axis:0:-":"nav.left","Axis:0:+":"nav.right","Axis:1:-":"nav.up","Axis:1:+":"nav.down"
+    }
+  };
+
+const InputManager={
+    config:{mode:"auto",gamepad:true,bindings:copy(DEFAULT_BINDINGS)},
+    capture:null,lastRepeat:new Map(),pads:new Map(),frame:0,lastPoll:0,emergency:false,
+    async load(){
+      let saved;
+      try{saved=JSON.parse(localStorage.getItem(STORE_PREFIX+"controls")||"null");}catch{}
+      const stored=await StorageManager.get("prefs","controls");
+      saved=stored?.value||saved;
+      if(saved&&saved.version===2){
+        const bindings={keyboard:{},remote:{},gamepad:{}};
+        for(const source of Object.keys(bindings)){
+          const sourceMap=saved.bindings?.[source];
+          if(sourceMap&&typeof sourceMap==="object"){
+            for(const [code,action]of Object.entries(sourceMap)){
+              if(code.length<100&&ActionRegistry.get(action)&&code!=="F8")bindings[source][code]=action;
+            }
+          }else bindings[source]=copy(DEFAULT_BINDINGS[source]);
+        }
+        this.config={mode:["auto","keyboard","remote"].includes(saved.mode)?saved.mode:"auto",gamepad:saved.gamepad!==false,bindings};
+      }
+    },
+    async persist(config){
+      const value={version:2,...copy(config)};
+      await StorageManager.transaction([{store:"prefs",value:{id:"controls",value}}]);
+      this.config=copy(config);
+      try{localStorage.setItem(STORE_PREFIX+"controls",JSON.stringify(value));}catch{}
+      emit("controls:changed",this.config);
+    },
+    async bind(source,oldCode,newCode,action){
+      const config=copy(this.config);
+      if(newCode==="F8")throw new Error("F8 محجوز لشاشة استعادة التحكم.");
+      if(oldCode&&oldCode!==newCode)delete config.bindings[source][oldCode];
+      config.bindings[source][newCode]=action;
+      await this.persist(config);
+    },
+    async reset(){
+      await this.persist({mode:"auto",gamepad:true,bindings:copy(DEFAULT_BINDINGS)});
+      toast("استُعيدت خريطة التحكم الافتراضية.");UIManager.refresh();
+    },
+    canonical(event){
+      const legacy={
+        19:"MediaPause",23:"Enter",85:"MediaPlayPause",86:"MediaStop",
+        87:"MediaTrackNext",88:"MediaTrackPrevious",89:"MediaRewind",90:"MediaFastForward",
+        126:"MediaPlay",127:"MediaPause",179:"MediaPlayPause",461:"BrowserBack",10009:"BrowserBack"
+      };
+      if(event.code&&event.code!=="Unidentified")return event.code;
+      if(legacy[event.keyCode])return legacy[event.keyCode];
+      const aliases={" ":"Space",Spacebar:"Space",Esc:"Escape",GoBack:"BrowserBack",Back:"BrowserBack",
+        VolumeUp:"AudioVolumeUp",VolumeDown:"AudioVolumeDown",VolumeMute:"AudioVolumeMute"};
+      if(aliases[event.key])return aliases[event.key];
+      if(event.key&&event.key!=="Unidentified")return event.key;
+      return`KeyCode:${event.keyCode}`;
+    },
+    keyboardSource(code){
+      if(this.config.mode!=="auto")return this.config.mode;
+      return /^(Media|AudioVolume|BrowserBack|ContextMenu|KeyCode:)/.test(code)?"remote":"keyboard";
+    },
+    isRescue(){return UIManager.dialogs.some(x=>x.rescue);},
+    mapping(source,code){
+      if(this.isRescue())return DEFAULT_BINDINGS[source]?.[code];
+      return this.config.bindings[source]?.[code];
+    },
+    async dispatch(source,code,{repeat=false,device=""}={}){
+      if(this.capture){
+        if(performance.now()<this.capture.after)return;
+        if(this.capture.source!==source&&!(this.capture.source==="remote"&&source==="keyboard"))return;
+        this.capture.finish(code);return;
+      }
+      const action=this.mapping(source,code);
+      emit("input:detected",{source,code,device,action:action||"unassigned"});
+      const definition=ActionRegistry.get(action);
+      if(!definition)return;
+      if(repeat&&!definition.repeat)return;
+      const stamp=`${source}:${code}`,now=performance.now();
+      if(repeat&&now-(this.lastRepeat.get(stamp)||0)<115)return;
+      this.lastRepeat.set(stamp,now);
+      await ActionRegistry.run(action,{source,code,device});
+    },
+    async keyboard(event){
+      const code=this.canonical(event);
+      if(code==="F8"){
+        event.preventDefault();event.stopPropagation();
+        if(!event.repeat){
+          if(this.capture)this.capture.cancel();
+          UIManager.rescue();
+        }
+        return;
+      }
+      if(this.capture){
+        event.preventDefault();event.stopPropagation();
+        if(event.repeat)return;
+        if(code==="Escape"){this.capture.cancel();return;}
+        const source=this.capture.source==="gamepad"?"keyboard":this.capture.source;
+        await this.dispatch(source,code);return;
+      }
+      const source=this.keyboardSource(code),action=this.mapping(source,code);
+      const active=document.activeElement,editing=active?.matches("input:not([type=range]),textarea");
+      // Text entry stays native. Direction actions only leave single-line fields vertically.
+      if(editing){
+        if(code==="Tab"){event.preventDefault();NavigationManager.tab(event.shiftKey);return;}
+        if(code==="Escape"){event.preventDefault();await UIManager.back();return;}
+        if((action==="nav.up"||action==="nav.down")&&(active.tagName!=="TEXTAREA"||event.altKey)){
+          event.preventDefault();await this.dispatch(source,code,{repeat:event.repeat});return;
+        }
+        if(action==="select"&&active.tagName!=="TEXTAREA"){
+          event.preventDefault();NavigationManager.move("down");return;
+        }
+        return;
+      }
+      if(code==="Tab"){event.preventDefault();NavigationManager.tab(event.shiftKey);return;}
+      if(!action)return;
+      event.preventDefault();event.stopPropagation();
+      await this.dispatch(source,code,{repeat:event.repeat});
+    },
+    captureInput(source){
+      return new Promise(resolve=>{
+        const body=node("div","stack");
+        body.append(node("p","","اضغط الزر المطلوب الآن."),
+          node("p","muted",source==="gamepad"
+            ?"اضغط زرًا أو حرّك محورًا ثم اتركه. قد تحتاج إلى تنشيط Gamepad بزر أولًا."
+            :"يمكن تسجيل الأسهم وEnter ومفاتيح الوسائط. Escape للإلغاء وF8 للاستعادة؛ بعض أزرار النظام لا تصل إلى المتصفح."));
+        const cancel=button("إلغاء التسجيل",()=>finish(null),"capture-cancel");
+        body.append(cancel);
+        let dialog,finished=false;
+        const finish=code=>{
+          if(finished)return;finished=true;
+          this.capture=null;
+          if(UIManager.top()===dialog)UIManager.close(dialog);
+          resolve(code);
+        };
+        dialog=UIManager.modal("تسجيل زر تحكم",body,{onClose:()=>finish(null)});
+        this.capture={source,after:performance.now()+300,finish,cancel:()=>finish(null)};
+      });
+    },
+    poll(timestamp){
+      this.frame=requestAnimationFrame(t=>this.poll(t));
+      if(document.hidden||timestamp-this.lastPoll<25)return;
+      this.lastPoll=timestamp;
+      if(!this.config.gamepad&&this.capture?.source!=="gamepad")return;
+      if(!navigator.getGamepads)return;
+      let pads;try{pads=navigator.getGamepads();}catch{return;}
+      const connected=new Set();
+      for(const pad of pads){
+        if(!pad)continue;connected.add(pad.index);
+        const previous=this.pads.get(pad.index)||new Map(),current=new Set();
+        pad.buttons.forEach((b,index)=>{if(b.pressed||b.value>.65)current.add(`Button:${index}`);});
+        pad.axes.forEach((value,index)=>{
+          const positive=`Axis:${index}:+`,negative=`Axis:${index}:-`;
+          if(value>(previous.has(positive)?.35:.6))current.add(positive);
+          if(value<-(previous.has(negative)?.35:.6))current.add(negative);
+        });
+        const next=new Map();
+        for(const code of current){
+          const held=previous.get(code);
+          if(!held){
+            next.set(code,{since:timestamp,last:timestamp});
+            safe(()=>this.dispatch("gamepad",code,{device:pad.id}))();
+          }else{
+            next.set(code,held);
+            if(!this.capture&&timestamp-held.since>420&&timestamp-held.last>125){
+              held.last=timestamp;
+              safe(()=>this.dispatch("gamepad",code,{repeat:true,device:pad.id}))();
+            }
+          }
+        }
+        this.pads.set(pad.index,next);
+      }
+      for(const id of this.pads.keys())if(!connected.has(id))this.pads.delete(id);
+    },
+    init(){
+      document.addEventListener("keydown",safe(event=>this.keyboard(event)),true);
+      document.addEventListener("keyup",event=>{
+        const code=this.canonical(event);this.lastRepeat.delete(`${this.keyboardSource(code)}:${code}`);
+      },true);
+      window.addEventListener("blur",()=>{this.lastRepeat.clear();this.pads.clear();});
+      window.addEventListener("gamepadconnected",event=>toast(`Gamepad متصل: ${event.gamepad.id}`));
+      window.addEventListener("gamepaddisconnected",()=>toast("انقطع اتصال Gamepad؛ يمكنك استخدام الريموت أو لوحة المفاتيح."));
+      this.frame=requestAnimationFrame(t=>this.poll(t));
+    }
+  };
+
+const PlayerManager={
+    id:null,opened:false,loaded:false,token:0,returnFocus:null,hideTimer:0,
+    lastSave:0,subtitleURL:"",track:null,opening:false,
+    get video(){return $("#video");},
+    async open(id,restart=false){
+      if(this.opening)return;
+      const item=LibraryManager.get(id);if(!item)return;
+      if(!item.videoAsset){toast("اربط ملف فيديو من جهازك أولًا.");LibraryManager.attach(id);return;}
+      this.opening=true;
+      try{
+        const source=await AssetManager.url(item.videoAsset);
+        if(!source){toast("الملف المحلي غير متاح. أعد ربطه.",true);LibraryManager.attach(id);return;}
+        if(this.opened)await this.save(true);else this.returnFocus=NavigationManager.snapshot();
+        const token=++this.token;
+        this.loaded=false;this.video.pause();this.video.removeAttribute("src");this.video.load();this.clearTrack();
+        this.id=id;this.opened=true;this.lastSave=0;
+        this.startAt=restart||item.completed?0:item.position||0;
+        $("#player").hidden=false;$("#player").classList.remove("clean");
+        UIManager.syncScopes();document.body.style.overflow="hidden";
+        $("#playerTitle").textContent=LibraryManager.series(item)?item.seriesTitle||item.title:item.title;
+        $("#playerEpisode").textContent=LibraryManager.series(item)?`الموسم ${item.season} · الحلقة ${item.episode} · ${item.title}`:item.title;
+        $("#seek").value="0";$("#currentTime").textContent="00:00";$("#duration").textContent="00:00";
+        this.video.playbackRate=SettingsManager.value.speed;$("#speed").textContent=`${SettingsManager.value.speed}×`;
+        this.updateEpisodes();this.message("جارٍ فتح الفيديو…");
+        this.video.src=source;this.video.load();
+        NavigationManager.focus($("#playPause"));
+        if(item.subtitleAsset)safe(()=>this.loadSubtitle(item.subtitleAsset,token))();
+        try{await this.video.play();}catch(error){
+          if(error.name!=="AbortError")this.message("اضغط تشغيل. قد يمنع المتصفح التشغيل التلقائي.");
+        }
+        SoundManager.play("play");this.show(false);
+      }finally{this.opening=false;}
+    },
+    async close(){
+      if(!this.opened)return;
+      ++this.token;
+      try{await this.save(true);}catch(error){errorMessage(error);}
+      this.loaded=false;this.video.pause();clearTimeout(this.hideTimer);
+      if(document.fullscreenElement)try{await document.exitFullscreen();}catch{}
+      this.video.removeAttribute("src");this.video.load();this.clearTrack();
+      this.opened=false;this.id=null;$("#player").hidden=true;
+      document.body.style.overflow="";UIManager.syncScopes();UIManager.render();
+      NavigationManager.restore(this.returnFocus);
+    },
+    message(text){
+      const n=$("#playerMessage");n.textContent=text;n.hidden=false;
+      clearTimeout(this.messageTimer);this.messageTimer=setTimeout(()=>n.hidden=true,4500);
+    },
+    show(focus=false){
+      $("#player").classList.remove("clean");clearTimeout(this.hideTimer);
+      if(focus)NavigationManager.focus($("#playPause"),false);
+      if(!this.video.paused)this.hideTimer=setTimeout(()=>{
+        if(!this.opened||UIManager.top()||this.video.paused)return;
+        const active=document.activeElement;
+        // Never hide a seek/volume field while it is being adjusted.
+        if(active?.matches("input")||active===$("#playerBack")){this.show(false);return;}
+        $("#player").classList.add("clean");NavigationManager.focus($("#playerStage"),false);
+      },6000);
+    },
+    navigate(direction){
+      if($("#player").classList.contains("clean")||document.activeElement===$("#playerStage")){
+        if(direction==="left"||direction==="right"){this.seek(direction==="left"?-10:10);return;}
+        this.show(true);return;
+      }
+      this.show(false);NavigationManager.move(direction);
+    },
+    async toggle(){
+      if(!this.opened){toast("شغّل فيديو أولًا.");return;}
+      if(this.video.paused){
+        try{await this.video.play();}catch{this.message("تعذر التشغيل؛ تحقق من دعم ترميز الفيديو والصوت.");}
+      }else this.video.pause();
+      this.show(false);
+    },
+    seek(delta){
+      if(!this.opened||!Number.isFinite(this.video.duration))return;
+      this.video.currentTime=clamp(this.video.currentTime+delta,0,this.video.duration);
+      this.message(`${delta>0?"+":""}${delta} ثوانٍ`);
+    },
+    volume(delta){
+      if(!this.opened){toast("التحكم بمستوى صوت الفيديو متاح أثناء التشغيل، وليس بصوت نظام الجهاز.");return;}
+      try{
+        this.video.volume=clamp(this.video.volume+delta,0,1);this.video.muted=false;
+        this.message(`صوت الفيديو: ${Math.round(this.video.volume*100)}%`);
+      }catch{this.message("هذا المتصفح يدير مستوى الصوت عبر أزرار الجهاز.");}
+    },
+    async fullscreen(){
+      if(!this.opened){toast("افتح فيديو أولًا.");return;}
+      try{
+        if(document.fullscreenElement)await document.exitFullscreen();
+        else if($("#player").requestFullscreen)await $("#player").requestFullscreen();
+        else if(this.video.webkitEnterFullscreen)this.video.webkitEnterFullscreen();
+        else this.message("ملء الشاشة غير مدعوم هنا.");
+      }catch{this.message("رفض المتصفح ملء الشاشة؛ جرّب الزر مباشرة.");}
+    },
+    updateEpisodes(){
+      const item=LibraryManager.get(this.id),list=LibraryManager.episodes(item),index=list.findIndex(x=>x.id===this.id);
+      $("#prevEpisode").disabled=!LibraryManager.series(item)||index<=0;
+      $("#nextEpisode").disabled=!LibraryManager.series(item)||index<0||index>=list.length-1;
+    },
+    async adjacent(step){
+      if(!this.opened)return;
+      const item=LibraryManager.get(this.id),list=LibraryManager.episodes(item),index=list.findIndex(x=>x.id===this.id);
+      if(!LibraryManager.series(item)||!list[index+step]){this.message("لا توجد حلقة أخرى.");return;}
+      const next=list[index+step];
+      if(!next.videoAsset){this.message("الحلقة التالية غير مرتبطة بملف فيديو.");this.show(true);return;}
+      await this.open(next.id);
+    },
+    async save(force=false){
+      if(!this.opened||!this.loaded||!this.id)return;
+      const v=this.video,now=Date.now();
+      if(!force&&now-this.lastSave<5000)return;
+      if(!Number.isFinite(v.duration)||v.duration<=0)return;
+      this.lastSave=now;
+      const id=this.id,position=clamp(v.currentTime,0,v.duration),duration=v.duration;
+      await LibraryManager.mutate(id,{position,duration,lastPlayed:now,
+        completed:v.ended||(duration>90&&position/duration>=.97)});
+    },
+    clearTrack(){
+      this.track?.remove();this.track=null;
+      if(this.subtitleURL)URL.revokeObjectURL(this.subtitleURL);
+      this.subtitleURL="";
+    },
+    async loadSubtitle(id,token=this.token){
+      const asset=await StorageManager.get("assets",id);
+      if(token!==this.token||!(asset?.blob instanceof Blob))return;
+      this.clearTrack();const track=document.createElement("track");
+      track.kind="subtitles";track.label="ترجمة محلية";track.srclang="ar";
+      this.subtitleURL=URL.createObjectURL(asset.blob);track.src=this.subtitleURL;
+      track.default=SettingsManager.value.subtitles;this.track=track;this.video.append(track);
+      track.track.mode=SettingsManager.value.subtitles?"showing":"disabled";
+      track.onload=()=>{track.track.mode=SettingsManager.value.subtitles?"showing":"disabled";};
+      track.onerror=()=>this.message("تعذر قراءة الترجمة. جرّب WebVTT بترميز UTF-8.");
+    },
+    subtitles(){
+      if(!this.opened)return;
+      const body=node("div","stack"),id=this.id;
+      body.append(node("p","muted","يدعم ملفات VTT وSRT الخارجية. المسارات المدمجة تعتمد على دعم المتصفح."));
+      [...this.video.textTracks].forEach((track,i)=>{
+        body.append(button(`${track.mode==="showing"?"✓ ":""}${track.label||"المسار "+(i+1)}`,()=>{
+          track.mode=track.mode==="showing"?"disabled":"showing";toast(track.mode==="showing"?"الترجمة مفعّلة":"الترجمة متوقفة");
+        },`subtitle-track-${i}`));
+      });
+      let dialog;
+      body.append(button("اختيار ملف ترجمة",()=>{
+        filePicker(".vtt,.srt,text/vtt",false,async([file])=>{
+          if(file.size>5*1024*1024)throw new Error("ملف الترجمة أكبر من 5 MB.");
+          let text=(await file.text()).replace(/^\uFEFF/,"").replace(/\r\n?/g,"\n");
+          if(!text.trimStart().startsWith("WEBVTT"))text="WEBVTT\n\n"+text.replace(/(\d{2}:\d{2}:\d{2}),(\d{3})/g,"$1.$2");
+          if(!text.includes("-->"))throw new Error("توقيتات الترجمة غير صالحة.");
+          const current=LibraryManager.get(id);if(!current)return;
+          const asset=uid();
+          await LibraryManager.mutate(id,{subtitleAsset:asset,subtitleName:file.name},
+            [{id:asset,blob:new Blob([text],{type:"text/vtt;charset=utf-8"}),kind:"subtitle"}],[current.subtitleAsset]);
+          if(this.id===id){await this.loadSubtitle(asset);if(this.track)this.track.track.mode="showing";}
+          UIManager.close(dialog);toast("أضيفت الترجمة.");
+        });
+      },"subtitle-import","btn primary"));
+      dialog=UIManager.modal("الترجمة",body);
+    },
+    init(){
+      const v=this.video;
+      listen($("#playerBack"),"click",()=>UIManager.back());
+      listen($("#playPause"),"click",()=>this.toggle());
+      listen($("#playerStage"),"click",()=>this.toggle());
+      listen($("#rewind"),"click",()=>this.seek(-10));
+      listen($("#forward"),"click",()=>this.seek(10));
+      listen($("#prevEpisode"),"click",()=>this.adjacent(-1));
+      listen($("#nextEpisode"),"click",()=>this.adjacent(1));
+      listen($("#mute"),"click",()=>{v.muted=!v.muted;});
+      listen($("#fullscreen"),"click",()=>this.fullscreen());
+      listen($("#subtitles"),"click",()=>this.subtitles());
+      listen($("#speed"),"click",()=>UIManager.choose("سرعة التشغيل",[.5,.75,1,1.25,1.5,2].map(n=>[String(n),`${n}×`]),String(v.playbackRate),value=>{
+        v.playbackRate=Number(value);$("#speed").textContent=`${value}×`;
+      }));
+      listen($("#volume"),"input",event=>{v.volume=Number(event.target.value);v.muted=false;this.show(false);});
+      listen($("#seek"),"input",event=>{
+        if(this.loaded&&Number.isFinite(v.duration))v.currentTime=Number(event.target.value)/1000*v.duration;
+        this.show(false);
+      });
+      listen($("#seek"),"change",()=>this.save(true));
+      listen(v,"loadedmetadata",()=>{
+        if(!this.opened)return;
+        this.loaded=true;
+        if(Number.isFinite(v.duration))v.currentTime=clamp(this.startAt||0,0,Math.max(0,v.duration-.2));
+        this.startAt=0;v.playbackRate=SettingsManager.value.speed;
+        this.save(true).catch(errorMessage);
+      });
+      listen(v,"timeupdate",()=>{
+        $("#currentTime").textContent=time(v.currentTime);
+        $("#duration").textContent=Number.isFinite(v.duration)?time(v.duration):"—";
+        if(document.activeElement!==$("#seek")&&v.duration>0)$("#seek").value=String(v.currentTime/v.duration*1000);
+        this.save().catch(errorMessage);
+      });
+      listen(v,"play",()=>{$("#playPause").textContent="❚❚";$("#playPause").setAttribute("aria-label","إيقاف مؤقت");this.show(false);});
+      listen(v,"pause",()=>{$("#playPause").textContent="▶";$("#playPause").setAttribute("aria-label","تشغيل");this.show(false);this.save(true).catch(errorMessage);});
+      listen(v,"playing",()=>$("#playerMessage").hidden=true);
+      listen(v,"waiting",()=>{if(this.opened)this.message("جارٍ تحميل الفيديو…");});
+      listen(v,"volumechange",()=>{$("#volume").value=String(v.volume);$("#mute").textContent=v.muted?"مكتوم":"صوت";});
+      listen(v,"ended",async()=>{
+        await this.save(true);
+        if(SettingsManager.value.autoplay&&!$("#nextEpisode").disabled)await this.adjacent(1);
+        else{this.show(true);this.message("انتهت المشاهدة.");}
+      });
+      listen(v,"error",()=>{
+        if(this.opened&&v.getAttribute("src")){
+          this.show(true);this.message("تعذر تشغيل الملف. دعم الحاوية والترميز والصوت يعتمد على المتصفح؛ تغيير الامتداد ليس تحويلًا.");
+        }
+      });
+      let lastMove=0;
+      listen($("#player"),"pointermove",()=>{
+        if(performance.now()-lastMove>400){lastMove=performance.now();this.show(false);}
+      });
+      listen($("#player"),"focusin",event=>{if(event.target!==$("#playerStage"))this.show(false);});
+      document.addEventListener("visibilitychange",()=>{if(document.hidden)this.save(true).catch(()=>{});});
+      window.addEventListener("pagehide",()=>{this.save(true).catch(()=>{});});
+    }
+  };
+
+const MetadataManager={
+    async request(path,params={}){
+      const key=SettingsManager.value.apiKey.trim();
+      if(!key)throw new Error("أضف مفتاح TMDB في الإعدادات أولًا.");
+      const url=new URL("https://api.themoviedb.org/3"+path),headers={Accept:"application/json"};
+      url.searchParams.set("language","ar-SA");
+      for(const[k,v]of Object.entries(params))url.searchParams.set(k,v);
+      if(key.includes("."))headers.Authorization=`Bearer ${key}`;else url.searchParams.set("api_key",key);
+      const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),18000);
+      try{
+        const response=await fetch(url,{headers,signal:controller.signal});
+        if(!response.ok)throw new Error(`تعذر جلب TMDB (${response.status}). تحقق من المفتاح وحدود الاستخدام.`);
+        return await response.json();
+      }catch(error){
+        if(error.name==="AbortError")throw new Error("انتهت مهلة TMDB.");
+        if(error instanceof TypeError)throw new Error("تعذر الاتصال. تحقق من الإنترنت؛ قد يقيّد المتصفح الاتصال من file://.");
+        throw error;
+      }finally{clearTimeout(timer);}
+    }
+  };
+
+const SearchManager={
+    query:"",filter:"all",sort:"recent",
+    results(route){
+      const q=this.query.trim().toLocaleLowerCase();
+      let list=LibraryManager.items.filter(item=>{
+        if(route==="movies"&&item.type!=="movie")return false;
+        if(route==="series"&&item.type!=="series")return false;
+        if(route==="anime"&&item.type!=="anime")return false;
+        if(route==="favorites"&&!item.favorite)return false;
+        if(this.filter!=="all"&&this.filter!==item.type)return false;
+        return !q||[item.title,item.seriesTitle,item.genre,item.description,item.year].join(" ").toLocaleLowerCase().includes(q);
+      });
+      list.sort((a,b)=>this.sort==="name"?a.title.localeCompare(b.title,"ar"):
+        this.sort==="year"?Number(b.year||0)-Number(a.year||0):
+        this.sort==="played"?b.lastPlayed-a.lastPlayed:b.added-a.added);
+      return route==="search"?list:LibraryManager.grouped(list);
+    }
+  };
+
+const UIManager={
+    ready:false,route:{name:"home",id:null},history:[],dialogs:[],seasons:new Map(),
+    top(){return this.dialogs.at(-1);},
+    syncScopes(){
+      $("#app").inert=PlayerManager.opened||this.dialogs.length>0;
+      $("#player").inert=this.dialogs.length>0;
+      this.dialogs.forEach((dialog,index)=>{
+        dialog.layer.hidden=index!==this.dialogs.length-1;
+        dialog.layer.inert=index!==this.dialogs.length-1;
+      });
+    },
+    modal(title,body,options={}){
+      const restore=NavigationManager.snapshot(),layer=node("div","modal-layer"),box=node("section","dialog"+(options.wide?" wide":""));
+      const id=`dialog-${uid()}`,heading=node("h2","",title),header=node("div","dialog-head");
+      heading.id=id+"-title";box.setAttribute("role","dialog");box.setAttribute("aria-modal","true");box.setAttribute("aria-labelledby",heading.id);
+      const dialog={id,layer,box,restore,...options};
+      header.append(heading,button("✕",()=>this.close(dialog),`${id}-close`,"btn icon ghost"));
+      box.append(header,body);layer.append(box);
+      this.dialogs.push(dialog);$("#modalHost").append(layer);this.syncScopes();
+      NavigationManager.enter();SoundManager.play("page");return dialog;
+    },
+    close(dialog=this.top()){
+      if(!dialog||dialog!==this.top())return;
+      this.dialogs.pop();dialog.layer.remove();this.syncScopes();
+      NavigationManager.restore(dialog.restore);dialog.onClose?.();
+      if(PlayerManager.opened)PlayerManager.show(false);
+    },
+    confirm(title,message,danger=false){
+      return new Promise(resolve=>{
+        const body=node("div","stack"),actions=node("div","actions");let accepted=false,dialog;
+        body.append(node("p","muted",message));
+        const cancel=button("إلغاء",()=>this.close(dialog),"confirm-cancel");cancel.dataset.initial="";
+        actions.append(cancel,button("تأكيد",()=>{accepted=true;this.close(dialog);},"confirm-yes",danger?"btn danger":"btn primary"));
+        body.append(actions);dialog=this.modal(title,body,{onClose:()=>resolve(accepted)});
+      });
+    },
+    choose(title,options,current,onChoose){
+      const body=node("div","choices");let dialog;
+      options.forEach(([value,label])=>{
+        const b=button(`${String(value)===String(current)?"✓  ":""}${label}`,async()=>{
+          this.close(dialog);await onChoose(value);
+        },`choice-${value}`,"btn ghost choice");
+        if(String(value)===String(current))b.dataset.initial="";
+        body.append(b);
+      });
+      dialog=this.modal(title,body);return dialog;
+    },
+    async back(){
+      if(this.top()){this.close();return;}
+      if(PlayerManager.opened){await PlayerManager.close();return;}
+      const previous=this.history.pop();
+      if(previous){
+        this.route=previous.route;this.render();NavigationManager.restore(previous.focus);
+      }else if(this.route.name!=="home")this.navigate("home",null,false);
+      else{NavigationManager.focus($('[data-focus="nav-home"]'));toast("أنت في الصفحة الرئيسية.");}
+    },
+    navigate(name,id=null,remember=true){
+      if(!this.ready)return;
+      if(remember)this.history.push({route:{...this.route},focus:NavigationManager.snapshot()});
+      if(this.history.length>50)this.history.shift();
+      this.route={name,id};this.render();window.scrollTo(0,0);NavigationManager.enter();SoundManager.play("page");
+    },
+    refresh(){
+      if(!this.ready)return;
+      const snapshot=NavigationManager.snapshot();this.render();NavigationManager.restore(snapshot);
+    },
+    menu(){
+      if(this.top()?.test){return;}
+      const body=node("div","choices");let dialog;
+      const run=fn=>async()=>{this.close(dialog);await fn();};
+      body.append(
+        button("Remote & Controls",run(async()=>{if(PlayerManager.opened)await PlayerManager.close();this.navigate("controls");}),"menu-controls"),
+        button("Test Controls",run(()=>ControlsUI.test()),"menu-test"),
+        button("الإعدادات",run(async()=>{if(PlayerManager.opened)await PlayerManager.close();this.navigate("settings");}),"menu-settings")
+      );
+      dialog=this.modal("القائمة السريعة",body);
+    },
+    rescue(){
+      if(this.dialogs.some(x=>x.rescue))return;
+      const body=node("div","stack");
+      body.append(node("p","","وضع الاستعادة يستخدم الخريطة الافتراضية مؤقتًا، حتى لو تغيّرت أزرارك."),
+        node("p","muted","الأسهم / Enter / Escape، أو D-Pad / A / B. يبقى F8 محجوزًا لهذه الشاشة."));
+      let dialog;
+      const reset=button("استعادة جميع الأزرار الافتراضية",async()=>{
+        await InputManager.reset();this.close(dialog);
+      },"rescue-reset","btn primary");reset.dataset.initial="";
+      body.append(reset,button("إغلاق دون تغيير",()=>this.close(dialog),"rescue-close"));
+      dialog=this.modal("استعادة التحكم",body,{rescue:true});
+    },
+    image(container,item,kind,className=""){
+      const asset=item[`${kind}Asset`],remote=imageURL(item[`${kind}Url`]);if(!asset&&!remote)return;
+      const img=node("img",className);img.alt=kind==="poster"?item.title:"";img.loading=kind==="poster"?"lazy":"eager";img.decoding="async";img.hidden=true;
+      img.referrerPolicy="no-referrer";container.append(img);
+      img.onload=()=>img.hidden=false;img.onerror=()=>img.remove();
+      safe(async()=>{
+        const source=(asset?await AssetManager.url(asset):"")||remote;
+        if(img.isConnected&&source)img.src=source;
+      })();
+    },
+    poster(item){
+      const container=node("div","poster"),fallback=node("div","poster-fallback");
+      fallback.append(node("strong","",LibraryManager.series(item)?item.seriesTitle||item.title:item.title),node("small","","CINEMABOX · PERSONAL MEDIA"));
+      container.append(fallback);
+      const art=(item.posterAsset||item.posterUrl)?item:LibraryManager.episodes(item).find(x=>x.posterAsset||x.posterUrl)||item;
+      this.image(container,art,"poster");return container;
+    },
+    card(item,prefix,grouped=false){
+      const b=button("",()=>this.navigate("details",item.id),`${prefix}-${item.id}`,"card"),poster=this.poster(item);
+      const title=grouped&&LibraryManager.series(item)?item.seriesTitle||item.title:item.title;
+      b.setAttribute("aria-label",title);
+      poster.append(node("span","badge",item.demo?"تجريبي":TYPES[item.type]));
+      if(item.favorite)poster.append(node("span","heart","♥"));
+      if(item.duration&&item.position){
+        const progress=node("div","progress"),bar=node("i");bar.style.width=`${clamp(item.position/item.duration*100,0,100)}%`;progress.append(bar);poster.append(progress);
+      }
+      b.append(poster,node("span","card-title",title),
+        node("small","",LibraryManager.series(item)?grouped?`${LibraryManager.episodes(item).length} حلقات`:`S${item.season} · E${item.episode}`:`${item.year||"—"} · ${item.genre||TYPES[item.type]}`));
+      return b;
+    },
+    section(title,items,id,grouped=false){
+      const section=node("section","section"),header=node("div","section-title"),row=node("div","media-row");
+      row.dataset.navGroup=id;row.dataset.scrollKey=id;
+      header.append(node("h2","",title),node("small","",`${items.length} عنصر`));section.append(header,row);
+      if(!items.length)row.append(node("p","muted","لا توجد عناصر بعد."));
+      else items.forEach(item=>row.append(this.card(item,id,grouped)));
+      return section;
+    },
+    hero(item,details=false){
+      const hero=node("section","hero"),body=node("div","hero-copy");
+      if(!item){
+        body.append(node("div","eyebrow","YOUR FILES. YOUR CINEMA."),node("h1","","سينما خاصة، تحت تحكمك."),
+          node("p","description","مكتبة محلية، مشغل كبير، وتنقل مصمم للريموت ولوحة المفاتيح وGamepad."));
+        const actions=node("div","actions"),add=button("＋ إضافة فيديو",()=>LibraryManager.pick(),"home-add","btn primary");
+        add.dataset.initial="";actions.append(add,button("عرض تجريبي",()=>LibraryManager.demo(),"home-demo"));
+        body.append(actions);hero.append(body);return hero;
+      }
+      this.image(hero,item,"backdrop","hero-bg");
+      const target=LibraryManager.target(item),title=LibraryManager.series(item)?item.seriesTitle||item.title:item.title;
+      body.append(node("div","eyebrow",`PERSONAL COLLECTION / ${TYPES[item.type]}`),node("h1","",title));
+      const meta=node("div","meta");
+      meta.append(node("span","tag",TYPES[item.type]));
+      if(item.year)meta.append(node("span","",item.year));
+      if(item.genre)meta.append(node("span","",item.genre));
+      if(item.rating)meta.append(node("span","rating",`★ ${Number(item.rating).toFixed(1)}`));
+      if(item.duration&&!LibraryManager.series(item))meta.append(node("span","",`${Math.round(item.duration/60)} دقيقة`));
+      body.append(meta,node("p","description",item.description||"محتوى من مكتبتك الشخصية. أضف الوصف والصور من شاشة التعديل."));
+      const actions=node("div","actions");
+      const watch=button(LibraryManager.continuing(target)?`▶ متابعة ${time(target.position)}`:"▶ شاهد الآن",()=>PlayerManager.open(target.id),"hero-watch","btn primary");
+      watch.dataset.initial="";
+      actions.append(watch,button(item.favorite?"♥ المفضلة":"♡ المفضلة",()=>LibraryManager.favorite(item.id),"hero-favorite"));
+      if(details){
+        actions.append(button("✎ تعديل",()=>this.edit(item.id),"hero-edit"),button("ربط فيديو",()=>LibraryManager.attach(item.id),"hero-attach"));
+        if(LibraryManager.continuing(target))actions.append(button("من البداية",()=>PlayerManager.open(target.id,true),"hero-restart"));
+      }else actions.append(button("التفاصيل",()=>this.navigate("details",item.id),"hero-details"));
+      body.append(actions);
+      if(!item.videoAsset)body.append(node("p","muted",item.demo?"عنصر تجريبي بلا فيديو.":"أعد ربط ملف الفيديو لتشغيله."));
+      const art=node("div","hero-art");art.append(this.poster(item));hero.append(body,art);return hero;
+    },
+    render(){
+      if(!this.ready)return;
+      const page=node("div","page"),name=this.route.name;
+      $$(".nav-button").forEach(b=>{
+        const active=b.dataset.route===name;b.classList.toggle("active",active);
+        if(active)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current");
+      });
+      if(StorageManager.temporary){
+        const warning=node("div","notice","التخزين الدائم غير متاح. المكتبة مؤقتة لهذه الجلسة؛ صدّر بياناتك قبل الإغلاق.");
+        warning.style.margin="15px 4vw";page.append(warning);
+      }
+      if(name==="home")this.home(page);
+      else if(name==="details")this.details(page);
+      else if(name==="settings")this.settings(page);
+      else if(name==="controls")ControlsUI.render(page);
+      else this.catalog(page);
+      $("#main").replaceChildren(page);
+      $("#libraryCount").textContent=`${LibraryManager.items.length} ملف · محلي`;
+      this.syncScopes();
+    },
+    home(page){
+      const recent=[...LibraryManager.items].sort((a,b)=>b.added-a.added);
+      page.append(this.hero(recent[0]));
+      page.append(this.section("متابعة المشاهدة",recent.filter(x=>LibraryManager.continuing(x)).sort((a,b)=>b.lastPlayed-a.lastPlayed),"continue"));
+      page.append(this.section("أُضيف حديثًا",recent.slice(0,30),"recent"));
+      page.append(this.section("الأفلام",recent.filter(x=>x.type==="movie"),"movies"));
+      page.append(this.section("المسلسلات",LibraryManager.grouped(recent.filter(x=>x.type==="series")),"series",true));
+      page.append(this.section("الأنمي",LibraryManager.grouped(recent.filter(x=>x.type==="anime")),"anime",true));
+      page.append(this.section("المفضلة",LibraryManager.grouped(recent.filter(x=>x.favorite)),"favorites",true));
+    },
+    catalog(page){
+      const name=this.route.name,titles={movies:"الأفلام",series:"المسلسلات",anime:"الأنمي",favorites:"المفضلة",search:"ابحث في مكتبتك"};
+      const content=node("div","content"),toolbar=node("div","toolbar"),grid=node("div","grid");
+      const search=input(SearchManager.query,"search","search-input");search.placeholder="عنوان، مسلسل، وصف…";search.dataset.initial="";
+      content.append(node("h1","",titles[name]||"المكتبة"));
+      toolbar.append(field("البحث",search));
+      let filterButton,sortButton;
+      filterButton=button(`النوع: ${TYPES[SearchManager.filter]||"الكل"}`,()=>this.choose("نوع المحتوى",[["all","الكل"],...Object.entries(TYPES)],SearchManager.filter,value=>{
+        SearchManager.filter=value;filterButton.textContent=`النوع: ${TYPES[value]||"الكل"}`;update();
+      }),"catalog-filter");
+      const sortLabels={recent:"الأحدث",name:"الاسم",year:"السنة",played:"آخر مشاهدة"};
+      sortButton=button(`الترتيب: ${sortLabels[SearchManager.sort]}`,()=>this.choose("الترتيب",Object.entries(sortLabels),SearchManager.sort,value=>{
+        SearchManager.sort=value;sortButton.textContent=`الترتيب: ${sortLabels[value]}`;update();
+      }),"catalog-sort");
+      toolbar.append(filterButton,sortButton);content.append(toolbar,grid);page.append(content);
+      grid.dataset.navGroup="catalog-grid";
+      const update=()=>{
+        const list=SearchManager.results(name);grid.replaceChildren();
+        if(!list.length)grid.append(node("p","muted full","لا توجد نتائج. أضف ملفات أو غيّر البحث."));
+        else list.forEach(item=>grid.append(this.card(item,"result",name!=="search")));
+      };
+      let timer;
+      listen(search,"input",()=>{SearchManager.query=search.value;clearTimeout(timer);timer=setTimeout(update,100);});
+      update();
+    },
+    details(page){
+      const item=LibraryManager.get(this.route.id);
+      if(!item){page.append(node("div","content","العنصر غير موجود."));return;}
+      page.append(this.hero(item,true));
+      const content=node("div","content stack");
+      if(LibraryManager.series(item)){
+        const list=LibraryManager.episodes(item),seasons=[...new Set(list.map(x=>x.season))].sort((a,b)=>a-b);
+        let selected=this.seasons.get(LibraryManager.groupKey(item));
+        if(!seasons.includes(selected))selected=item.season;
+        const header=node("div","between"),rows=node("div","stack");
+        rows.dataset.navGroup="episodes";
+        const chooseSeason=button(`الموسم ${selected}`,()=>this.choose("اختر الموسم",seasons.map(s=>[String(s),`الموسم ${s}`]),String(selected),value=>{
+          selected=Number(value);this.seasons.set(LibraryManager.groupKey(item),selected);
+          chooseSeason.textContent=`الموسم ${selected}`;renderEpisodes();
+        }),"season-select");
+        header.append(node("h2","","المواسم والحلقات"),chooseSeason);content.append(header,rows);
+        const renderEpisodes=()=>{
+          rows.replaceChildren();
+          list.filter(x=>x.season===selected).forEach(ep=>{
+            const row=node("div","episode"),info=node("div","info"),actions=node("div","actions");
+            info.append(node("strong","",ep.title),node("small","",`${ep.completed?"تمت المشاهدة · ":""}${ep.duration?time(ep.duration):"مدة غير معروفة"}${ep.position?" · متابعة "+time(ep.position):""}`));
+            actions.append(button(LibraryManager.continuing(ep)?"متابعة":"▶",()=>PlayerManager.open(ep.id),`episode-${ep.id}`,"btn primary"),
+              button("✎",()=>this.edit(ep.id),`episode-edit-${ep.id}`));
+            row.append(node("span","episode-number",String(ep.episode)),info,actions);rows.append(row);
+          });
+        };
+        renderEpisodes();
+      }else content.append(node("p","muted",`الملف: ${item.fileName||"غير مرتبط"} · ${item.fileSize?(item.fileSize/1024/1024).toFixed(1)+" MB":"—"}`));
+      const actions=node("div","actions");
+      actions.append(button("رجوع",()=>this.back(),"details-back"),button("حذف هذا العنصر",()=>LibraryManager.remove(item.id),"details-delete","btn danger"));
+      content.append(actions);page.append(content);
+    },
+    edit(id){
+      const item=LibraryManager.get(id);if(!item)return;
+      const form=node("form","stack"),grid=node("div","field-grid");
+      const values={type:item.type,posterUrl:item.posterUrl||"",backdropUrl:item.backdropUrl||""};
+      const fields={
+        title:input(item.title,"text","edit-title"),seriesTitle:input(item.seriesTitle),
+        season:input(item.season,"number"),episode:input(item.episode,"number"),
+        year:input(item.year,"number"),genre:input(item.genre),rating:input(item.rating||"","number"),
+        description:node("textarea")
+      };
+      fields.title.required=true;fields.title.maxLength=240;fields.title.dataset.initial="";
+      fields.description.value=item.description||"";fields.description.maxLength=12000;fields.description.dataset.focus="edit-description";
+      fields.season.min="0";fields.season.max="999";fields.episode.min="1";fields.episode.max="9999";
+      fields.year.min="1800";fields.year.max="2200";fields.rating.min="0";fields.rating.max="10";fields.rating.step=".1";
+      let typeButton;
+      typeButton=button(`النوع: ${TYPES[values.type]}`,()=>this.choose("النوع",Object.entries(TYPES),values.type,value=>{
+        values.type=value;typeButton.textContent=`النوع: ${TYPES[value]}`;series.hidden=!["series","anime"].includes(value);
+      }),"edit-type");
+      grid.append(field("العنوان",fields.title),typeButton);
+      const series=node("div","field-grid full");series.hidden=!LibraryManager.series(item);
+      series.append(field("اسم المسلسل / الأنمي الموحد",fields.seriesTitle),field("الموسم",fields.season),field("الحلقة",fields.episode));
+      grid.append(series,field("السنة",fields.year),field("Genre",fields.genre),field("التقييم / 10",fields.rating));
+      const desc=field("الوصف",fields.description);desc.className="full";grid.append(desc);form.append(grid);
+      const pending={},removed={},imageStatus={};
+      const images=node("div","field-grid");
+      for(const kind of["poster","backdrop"]){
+        const group=node("div","stack"),status=node("small","",item[kind+"Asset"]?"صورة محلية":values[kind+"Url"]?"صورة TMDB":"بلا صورة");
+        imageStatus[kind]=status;
+        group.append(button(`اختيار ${kind}`,()=>filePicker("image/jpeg,image/png,image/webp,image/avif,image/gif",false,([file])=>{
+          if(file.size>25*1024*1024||!file.type.startsWith("image/"))throw new Error("اختر صورة مدعومة أصغر من 25 MB.");
+          pending[kind]=file;removed[kind]=false;values[kind+"Url"]="";status.textContent=file.name;
+        }),`edit-${kind}`),button("إزالة الصورة",()=>{
+          pending[kind]=null;removed[kind]=true;values[kind+"Url"]="";status.textContent="ستُزال عند الحفظ.";
+        },`remove-${kind}`),status);images.append(group);
+      }
+      form.append(images);
+      const metadata=node("div","panel stack"),query=input(item.seriesTitle||item.title),results=node("div","result-list");
+      metadata.append(node("h3","","TMDB اختياري"),node("small","","يُرسل عنوان البحث إلى TMDB، لا ملف الفيديو. الصور الخارجية تحتاج إلى اتصال بالإنترنت."),field("العنوان",query));
+      const search=button("بحث TMDB",async()=>{
+        search.disabled=true;results.replaceChildren(node("p","muted","جارٍ البحث…"));
+        try{
+          const type=["series","anime"].includes(values.type)?"tv":"movie";
+          const data=await MetadataManager.request(`/search/${type}`,{query:query.value.trim(),include_adult:"false"});
+          results.replaceChildren();
+          if(!data.results?.length)results.append(node("p","muted","لا توجد نتائج."));
+          for(const result of(data.results||[]).slice(0,12)){
+            const b=button(result.title||result.name||"بدون عنوان",async()=>{
+              b.disabled=true;
+              try{
+                const data=await MetadataManager.request(`/${type}/${Number(result.id)}`);
+                if(type==="tv")fields.seriesTitle.value=data.name||"";else fields.title.value=data.title||"";
+                fields.description.value=data.overview||"";fields.year.value=(data.release_date||data.first_air_date||"").slice(0,4);
+                fields.genre.value=(data.genres||[]).map(x=>x.name).join(" / ");fields.rating.value=Number(data.vote_average||0).toFixed(1);
+                for(const kind of["poster","backdrop"]){
+                  const path=data[kind+"_path"];
+                  if(typeof path==="string"&&/^\/[A-Za-z0-9._-]+$/.test(path)){
+                    values[kind+"Url"]=`https://image.tmdb.org/t/p/${kind==="poster"?"w500":"w1280"}${path}`;
+                    pending[kind]=null;removed[kind]=true;imageStatus[kind].textContent="صورة TMDB";
+                  }
+                }
+                toast("تم ملء البيانات. احفظ لاعتمادها.");
+              }finally{b.disabled=false;}
+            },`tmdb-${result.id}`,"btn ghost result");
+            results.append(b);
+          }
+        }finally{search.disabled=false;}
+      },"metadata-search","btn primary");
+      metadata.append(search,results);form.append(metadata);
+      const save=node("button","btn primary","حفظ");save.type="submit";save.dataset.focus="edit-save";form.append(save);
+      let dialog;
+      listen(form,"submit",async event=>{
+        event.preventDefault();if(!form.reportValidity())return;
+        if(!fields.title.value.trim())return;
+        if(["series","anime"].includes(values.type)&&!fields.seriesTitle.value.trim()){
+          toast("أدخل اسم المسلسل الموحد.");NavigationManager.focus(fields.seriesTitle);return;
+        }
+        save.disabled=true;
+        try{
+          const current=LibraryManager.get(id);if(!current)throw new Error("العنصر غير موجود.");
+          const patch={
+            title:fields.title.value.trim(),type:values.type,seriesTitle:fields.seriesTitle.value.trim().slice(0,240),
+            season:Number(fields.season.value)||0,episode:Number(fields.episode.value)||1,year:fields.year.value,
+            genre:fields.genre.value.slice(0,500),rating:Number(fields.rating.value)||0,description:fields.description.value,
+            posterUrl:imageURL(values.posterUrl),backdropUrl:imageURL(values.backdropUrl)
+          };
+          const assets=[],remove=[];
+          for(const kind of["poster","backdrop"]){
+            if(pending[kind]){
+              const asset=uid();patch[kind+"Asset"]=asset;assets.push({id:asset,blob:pending[kind],kind});remove.push(current[kind+"Asset"]);
+            }else if(removed[kind]){patch[kind+"Asset"]="";remove.push(current[kind+"Asset"]);}
+          }
+          await LibraryManager.mutate(id,patch,assets,remove);
+          this.close(dialog);this.refresh();toast("تم الحفظ.");
+        }finally{save.disabled=false;}
+      });
+      dialog=this.modal("تعديل المحتوى",form,{wide:true});
+    },
+    settings(page){
+      const content=node("div","content stack"),grid=node("div","settings-grid");
+      content.append(node("h1","","الإعدادات"));
+      const controls=button("🎮 Remote & Controls — تخصيص واختبار التحكم",()=>this.navigate("controls"),"settings-controls","btn primary");
+      controls.dataset.initial="";content.append(controls);
+      const preferences=node("div","panel stack"),storage=node("div","panel stack");
+      preferences.append(node("h2","","التشغيل والمظهر"));
+      const toggle=(key,label)=>{
+        const b=button("",async()=>{await SettingsManager.save({[key]:!SettingsManager.value[key]});update();},`setting-${key}`,"btn ghost toggle");
+        const update=()=>{b.replaceChildren(node("span","",label),node("span","pill",SettingsManager.value[key]?"ON":"OFF"));b.setAttribute("aria-pressed",String(!!SettingsManager.value[key]));};
+        update();return b;
+      };
+      preferences.append(toggle("sound","أصوات الواجهة"),toggle("autoplay","تشغيل الحلقة التالية"),toggle("subtitles","إظهار الترجمة"));
+      preferences.append(button("الثيم",()=>this.choose("الثيم",[["midnight","Midnight"],["ocean","Ocean"]],SettingsManager.value.theme,value=>SettingsManager.save({theme:value})),"setting-theme"),
+        button("سرعة التشغيل الافتراضية",()=>this.choose("السرعة",[.5,.75,1,1.25,1.5,2].map(x=>[String(x),`${x}×`]),String(SettingsManager.value.speed),value=>SettingsManager.save({speed:Number(value)})),"setting-speed"),
+        button("حجم الترجمة",()=>this.choose("حجم الترجمة",[18,22,26,32,40].map(x=>[String(x),`${x}px`]),String(SettingsManager.value.subtitleSize),value=>SettingsManager.save({subtitleSize:Number(value)})),"setting-subs"));
+      const key=input(SettingsManager.value.apiKey,"password","api-key");key.autocomplete="off";
+      preferences.append(field("TMDB API Key / Read Access Token",key),node("small","","يُحفظ محليًا دون تشفير. استخدم مفتاحًا مناسبًا لتطبيق عميل."),
+        button("حفظ المفتاح",async()=>{await SettingsManager.save({apiKey:key.value.trim()});toast("تم حفظ المفتاح.");},"save-api"));
+      storage.append(node("h2","","المكتبة والنسخ الاحتياطي"),
+        node("small","","JSON لا يتضمن الفيديوهات أو الصور المحلية أو API Key. النسخ الأصلية مسؤوليتك؛ قد يمسح المتصفح التخزين."),
+        button("تصدير Library JSON",()=>LibraryManager.export(),"export"),
+        button("استيراد Library JSON",()=>LibraryManager.importBackup(),"import"),
+        button("طلب الاحتفاظ بالتخزين",async()=>{
+          if(!navigator.storage?.persist){toast("طلب التخزين الدائم غير متاح.");return;}
+          toast(await navigator.storage.persist()?"تمت الموافقة.":"لم يوافق المتصفح؛ احتفظ بنسخة احتياطية.");
+        },"persist"),
+        button("إضافة عرض تجريبي",()=>LibraryManager.demo(),"demo"),
+        button("حذف العناصر التجريبية",async()=>{
+          const items=LibraryManager.items.filter(x=>x.demo);if(!items.length){toast("لا توجد عناصر تجريبية.");return;}
+          if(!await this.confirm("حذف العرض التجريبي",`حذف ${items.length} عنصر؟`,true))return;
+          await LibraryManager.queue;
+          const assets=items.flatMap(x=>["videoAsset","posterAsset","backdropAsset","subtitleAsset"].map(k=>x[k]).filter(Boolean));
+          await StorageManager.transaction([...items.map(x=>({store:"media",action:"delete",id:x.id})),...assets.map(id=>({store:"assets",action:"delete",id}))]);
+          assets.forEach(id=>AssetManager.revoke(id));LibraryManager.items=LibraryManager.items.filter(x=>!x.demo);this.refresh();
+        },"remove-demo"),
+        button("تفريغ المكتبة",()=>this.clear(false),"clear","btn danger"),
+        button("إعادة ضبط التطبيق",()=>this.clear(true),"reset","btn danger")
+      );
+      grid.append(preferences,storage);content.append(grid);
+      const about=node("div","panel stack");
+      about.append(node("h2","","عن CinemaBox"),
+        node("p","muted","الملفات محلية. دعم الترميزات والريموت وGamepad وFullscreen يعتمد على المتصفح. فتح الملف عبر file:// قد يقيّد بعض APIs. لا يتطلب التطبيق خدمة بث أو خادمًا."),
+        node("p","muted","البنية تفصل التحكم والتنقل والمشغل والتخزين والمكتبة والبحث والبيانات الخارجية. توجد واجهة تسجيل Adapters مستقبلية؛ Chromecast وDLNA وSMB والمزامنة والمشاهدة الجماعية غير منفذة هنا. PWA يحتاج سياقًا آمنًا وService Worker مناسبًا، وليس مجرد فتح هذا الملف."),
+        node("p","muted","This product uses the TMDB API but is not endorsed or certified by TMDB."));
+      const link=node("a","","إعدادات TMDB API");link.href="https://www.themoviedb.org/settings/api";link.target="_blank";link.rel="noopener noreferrer";link.dataset.focus="tmdb-link";
+      about.append(link);content.append(about);page.append(content);
+    },
+    async clear(reset){
+      if(LibraryManager.busy){toast("انتظر اكتمال إضافة الملفات.");return;}
+      if(!await this.confirm(reset?"إعادة ضبط التطبيق":"تفريغ المكتبة","ستُحذف نسخ الوسائط داخل المتصفح فقط. لن تتغير الملفات الأصلية.",true))return;
+      await LibraryManager.queue;
+      const operations=[{store:"media",action:"clear"},{store:"assets",action:"clear"}];
+      if(reset)operations.push({store:"prefs",action:"clear"});
+      await StorageManager.transaction(operations);AssetManager.clear();LibraryManager.items=[];
+      if(reset){
+        SettingsManager.value={...SettingsManager.defaults};SettingsManager.apply();
+        InputManager.config={mode:"auto",gamepad:true,bindings:copy(DEFAULT_BINDINGS)};
+        try{localStorage.removeItem(STORE_PREFIX+"settings");localStorage.removeItem(STORE_PREFIX+"controls");}catch{}
+      }
+      this.history=[];this.navigate("home",null,false);toast("تمت العملية.");
+    },
+    init(){
+      const routes=[["home","⌂","الرئيسية"],["movies","▣","أفلام"],["series","▤","مسلسلات"],["anime","✧","أنمي"],["favorites","♡","المفضلة"],["search","⌕","بحث"],["settings","⚙","إعدادات"]];
+      for(const[id,icon,label]of routes){
+        const b=button("",()=>this.navigate(id),`nav-${id}`,"nav-button");b.dataset.route=id;b.setAttribute("aria-label",label);
+        b.append(node("b","",icon),node("span","",label));$("#nav").append(b);
+      }
+      listen($("#addFiles"),"click",()=>LibraryManager.pick());
+    }
+  };
+
+const ControlsUI={
+    source:"keyboard",
+    sourceLabels:{keyboard:"Keyboard",remote:"Remote",gamepad:"Gamepad"},
+    remoteSlots:[
+      ["Home","Home",1,1],["ContextMenu","Menu",1,3],
+      ["ArrowUp","▲ Up",2,2],["ArrowLeft","◀ Left",3,1],
+      ["Enter","OK",3,2],["ArrowRight","Right ▶",3,3],
+      ["ArrowDown","▼ Down",4,2],["BrowserBack","Back",5,1],
+      ["MediaPlayPause","Play / Pause",5,2],["MediaRewind","Rewind",6,1],
+      ["MediaFastForward","Forward",6,3],["AudioVolumeDown","Vol −",7,1],
+      ["AudioVolumeUp","Vol +",7,3]
+    ],
+    render(page){
+      const content=node("div","content stack");
+      content.append(node("h1","","Remote & Controls"),
+        node("p","muted","معاينة الريموت، خريطة الأزرار، التخصيص والاختبار في مكان واحد."));
+      const actions=node("div","actions"),test=button("Test Controls",()=>this.test(),"controls-test","btn primary");test.dataset.initial="";
+      actions.append(test,button("Reset to Default",async()=>{
+        if(await UIManager.confirm("إعادة التحكم الافتراضي","استعادة جميع خرائط Keyboard / Remote / Gamepad؟"))await InputManager.reset();
+      },"controls-reset","btn danger"),button("استعادة آمنة F8",()=>UIManager.rescue(),"controls-rescue"));
+      content.append(actions);
+      const help=node("div","notice","إذا تشابهت إشارات الريموت ولوحة المفاتيح فلا يستطيع المتصفح تمييز الجهاز فعليًا. اختر Remote لتطبيق خريطته على المفاتيح القادمة منه. الوضع Auto يعامل الأسهم العادية كـ Keyboard ومفاتيح الوسائط/الرجوع الخاصة كـ Remote. بعض أزرار Home والصوت يحتجزها نظام التشغيل. F8 محجوز للاستعادة ولا يمكن إعادة تعيينه.");
+      content.append(help);
+      const modeLabels={auto:"Auto — حسب الإشارة",keyboard:"Keyboard",remote:"Remote"};
+      const setup=node("div","actions");
+      setup.append(button(`مصدر المفاتيح: ${modeLabels[InputManager.config.mode]}`,()=>UIManager.choose("مصدر أحداث المفاتيح",Object.entries(modeLabels),InputManager.config.mode,async value=>{
+        const config=copy(InputManager.config);config.mode=value;await InputManager.persist(config);UIManager.refresh();
+      }),"controls-mode"),button(`Gamepad: ${InputManager.config.gamepad?"ON":"OFF"}`,async()=>{
+        const config=copy(InputManager.config);config.gamepad=!config.gamepad;await InputManager.persist(config);UIManager.refresh();
+      },"controls-gamepad"));
+      content.append(setup);
+      const layout=node("div","remote-layout"),preview=node("div","panel stack"),remote=node("div","remote");
+      remote.dataset.navGroup="virtual-remote";
+      preview.append(node("h2","","1. معاينة الريموت"));
+      for(const[code,label,row,column]of this.remoteSlots){
+        const b=button(label,()=>this.edit("remote",code),`remote-preview-${code}`,"btn"+(code==="Enter"?" ok":""));
+        b.style.gridRow=String(row);b.style.gridColumn=String(column);
+        b.setAttribute("aria-label",`${label}: ${ActionRegistry.get(InputManager.config.bindings.remote[code])?.label||"غير معيّن"}`);
+        remote.append(b);
+      }
+      preview.append(remote,node("small","","اختيار زر في المعاينة يفتح وظيفته واختصاره وخيارات تغييره؛ لا ينفذ أمرًا خارج هذه الصفحة."));
+      const mappings=node("div","panel stack");
+      mappings.append(node("h2","","2. الأزرار والوظائف الحالية"));
+      const sources=node("div","actions");
+      for(const[source,label]of Object.entries(this.sourceLabels)){
+        sources.append(button(label,()=>{this.source=source;UIManager.refresh();},`source-${source}`,source===this.source?"btn primary":"btn ghost"));
+      }
+      mappings.append(sources,button("＋ تسجيل زر جديد",async()=>{
+        const code=await InputManager.captureInput(this.source);if(code)this.edit(this.source,code);
+      },"binding-add"));
+      const wrap=node("div","table-wrap"),table=node("table"),head=node("thead"),tr=node("tr");
+      for(const title of["الزر / الاختصار","الوظيفة","تخصيص"])tr.append(node("th","",title));
+      head.append(tr);table.append(head);
+      const body=node("tbody"),map=InputManager.config.bindings[this.source];
+      for(const[code,action]of Object.entries(map)){
+        const row=node("tr"),codeCell=node("td"),actionCell=node("td","",ActionRegistry.get(action)?.label||"غير معروف"),editCell=node("td");
+        codeCell.append(node("code","",code));editCell.append(button("تعديل",()=>this.edit(this.source,code),`binding-${this.source}-${code}`));
+        row.append(codeCell,actionCell,editCell);body.append(row);
+      }
+      if(!Object.keys(map).length){
+        const row=node("tr"),cell=node("td","","لا توجد أزرار معيّنة. سجّل زرًا جديدًا أو استعد الافتراضي.");cell.colSpan=3;row.append(cell);body.append(row);
+      }
+      table.append(body);wrap.append(table);mappings.append(wrap);
+      layout.append(preview,mappings);content.append(layout);
+      content.append(node("p","muted","Gamepad يستخدم أرقام الأزرار والمحاور التي يعرضها المتصفح. العصي لها Dead Zone وتكرار مضبوط. جرّب الجهاز في Test Controls؛ الخريطة القياسية قد تختلف على الأجهزة غير القياسية."));
+      page.append(content);
+    },
+    edit(source,originalCode){
+      let code=originalCode,action=InputManager.config.bindings[source][code]||"select",dialog;
+      const body=node("div","stack"),info=node("div","binding-info"),example=node("p","muted");
+      const update=()=>{
+        info.replaceChildren(node("strong","",this.sourceLabels[source]),node("p","",`${code} → ${ActionRegistry.get(action)?.label||"غير معيّن"}`));
+        example.textContent=`مثال مباشر: ${ActionRegistry.get(action)?.example||""}`;
+        actionButton.textContent=`الوظيفة: ${ActionRegistry.get(action)?.label||"اختر"}`;
+      };
+      const actionButton=button("",()=>UIManager.choose("Actions المتاحة",ActionRegistry.list().map(x=>[x.id,x.label]),action,value=>{
+        action=value;update();
+      }),"binding-action","btn primary");actionButton.dataset.initial="";
+      body.append(info,actionButton,button("تغيير الزر / تسجيل اختصار",async()=>{
+        const result=await InputManager.captureInput(source);
+        if(result){code=result;update();}
+      },"binding-capture"),example);
+      const demonstration=node("div","binding-info","اختر «معاينة الوظيفة» لمشاهدة النتيجة الآمنة.");
+      body.append(button("معاينة الوظيفة",()=>{
+        demonstration.textContent=`${code} → ${ActionRegistry.get(action)?.example||ActionRegistry.get(action)?.label}`;
+      },"binding-preview"),demonstration);
+      const actions=node("div","actions");
+      actions.append(button("حفظ التعيين",async()=>{
+        const conflict=InputManager.config.bindings[source][code];
+        if(code!==originalCode&&conflict&&conflict!==action){
+          if(!await UIManager.confirm("تعارض زر",`${code} مرتبط بـ ${ActionRegistry.get(conflict)?.label}. استبدال هذا التعيين؟`))return;
+        }
+        await InputManager.bind(source,originalCode,code,action);
+        UIManager.close(dialog);UIManager.refresh();toast(`حُفظ: ${code} → ${ActionRegistry.get(action)?.label}`);
+      },"binding-save","btn primary"),button("حذف التعيين",async()=>{
+        if(!await UIManager.confirm("حذف التعيين",`إلغاء وظيفة ${originalCode}؟ يبقى F8 للاستعادة.`,true))return;
+        const config=copy(InputManager.config);delete config.bindings[source][originalCode];
+        await InputManager.persist(config);UIManager.close(dialog);UIManager.refresh();
+      },"binding-delete","btn danger"));
+      body.append(actions);dialog=UIManager.modal("تخصيص زر التحكم",body);update();
+    },
+    test(){
+      const body=node("div","stack"),status=node("div","test-status");
+      const inputLine=node("div","","Last Input: —"),actionLine=node("div","","Action: —"),focusLine=node("div","","Focused Element: —");
+      status.append(inputLine,actionLine,focusLine);body.append(status);
+      const effect=node("div","binding-info","اختر بطاقة أو جرّب الأزرار. أوامر المشغل في هذه الشاشة محاكاة آمنة.");
+      const cards=node("div","test-row");cards.dataset.navGroup="test-cards";cards.dataset.scrollKey="test-cards";
+      for(let i=1;i<=8;i++){
+        const b=button(`Movie Card ${i}`,()=>effect.textContent=`تم اختيار Movie Card ${i} — هذا مثال آمن لفتح التفاصيل.`,`test-card-${i}`,"test-card");
+        b.setAttribute("aria-label",`Movie Card ${i}`);if(i===1)b.dataset.initial="";cards.append(b);
+      }
+      body.append(cards,effect);
+      const buttons=node("div","actions");buttons.dataset.navGroup="test-buttons";
+      for(const label of["تشغيل تجريبي","مفضلة","قائمة خيارات"]){
+        buttons.append(button(label,()=>effect.textContent=`نُفذ اختيار: ${label}`,`test-button-${label}`));
+      }
+      buttons.append(button("فتح Dialog متداخل",()=>{
+        const nested=node("div","stack");let child;
+        nested.append(node("p","","أغلق هذه النافذة للتحقق من استعادة التركيز على الزر الذي فتحها."),
+          button("إغلاق والعودة للزر السابق",()=>UIManager.close(child),"nested-close","btn primary"));
+        child=UIManager.modal("اختبار Dialog",nested);
+      },"test-nested"));
+      body.append(buttons);
+      const list=node("div","test-list");list.dataset.navGroup="test-list";
+      for(let i=1;i<=3;i++)list.append(button(`List Item ${i}`,()=>effect.textContent=`اختير List Item ${i}`,`test-list-${i}`));
+      body.append(node("h3","","قائمة قابلة للتنقل"),list);
+      const range=input(40,"range","test-slider");range.min="0";range.max="100";range.step="5";range.dataset.navRange="";
+      range.setAttribute("aria-label","Test Slider");
+      const rangeValue=node("small","","القيمة: 40");
+      listen(range,"input",()=>{rangeValue.textContent=`القيمة: ${range.value}`;effect.textContent=`Slider: ${range.value}`;});
+      body.append(field("Slider — يمين / يسار للتعديل، أعلى / أسفل للخروج",range),rangeValue);
+      const actions=node("div","actions");let dialog;
+      actions.append(button("إنهاء الاختبار",()=>UIManager.close(dialog),"test-exit","btn primary"),button("استعادة التحكم",()=>UIManager.rescue(),"test-rescue"));
+      body.append(actions);
+      const detected=event=>{
+        const d=event.detail;
+        inputLine.textContent=`Last Input: ${d.source} / ${d.code}${d.device?" / "+d.device:""}`;
+        actionLine.textContent=`Action: ${ActionRegistry.get(d.action)?.label||"Unassigned"}`;
+      };
+      const focused=event=>{focusLine.textContent=`Focused Element: ${event.detail.label}`;};
+      EventBus.addEventListener("input:detected",detected);EventBus.addEventListener("focus:changed",focused);
+      dialog=UIManager.modal("Test Controls",body,{wide:true,test:{effect},onClose:()=>{
+        EventBus.removeEventListener("input:detected",detected);EventBus.removeEventListener("focus:changed",focused);
+      }});
+    }
+  };
+
+function registerActions(){
+    const navigation={
+      up:["Navigate Up","انتقال التركيز إلى العنصر الأقرب أعلى الشاشة."],
+      down:["Navigate Down","انتقال التركيز إلى الصف أو العنصر التالي أسفل الشاشة."],
+      left:["Navigate Left","انتقال التركيز يسارًا؛ وفي Slider تنخفض القيمة."],
+      right:["Navigate Right","انتقال التركيز يمينًا؛ وفي Slider ترتفع القيمة."]
+    };
+    for(const[direction,[label,example]]of Object.entries(navigation)){
+      ActionRegistry.register(`nav.${direction}`,label,()=>{
+        if(PlayerManager.opened&&!UIManager.top())PlayerManager.navigate(direction);
+        else NavigationManager.move(direction);
+      },{repeat:true,example});
+    }
+    ActionRegistry.register("select","Select / OK",()=>{
+      if(PlayerManager.opened&&!UIManager.top()&&document.activeElement===$("#playerStage"))return PlayerManager.toggle();
+      NavigationManager.select();
+    },{example:"يفتح البطاقة المحددة، أو ينفذ الزر الموجود عليه التركيز."});
+    ActionRegistry.register("back","Back",()=>UIManager.back(),{example:"يغلق Dialog أولًا، ثم Player، ثم يرجع للصفحة السابقة مع استعادة التركيز."});
+    ActionRegistry.register("play.toggle","Play / Pause",()=>PlayerManager.toggle(),{example:"تبديل الفيديو بين التشغيل والإيقاف المؤقت."});
+    ActionRegistry.register("play","Play",async()=>{
+      if(PlayerManager.opened&&PlayerManager.video.paused)await PlayerManager.toggle();
+    },{example:"تشغيل الفيديو إن كان متوقفًا."});
+    ActionRegistry.register("pause","Pause",()=>{
+      if(PlayerManager.opened)PlayerManager.video.pause();
+    },{example:"إيقاف الفيديو مؤقتًا."});
+    ActionRegistry.register("seek.back","Rewind 10s",()=>PlayerManager.seek(-10),{repeat:true,example:"الرجوع عشر ثوانٍ داخل الفيديو."});
+    ActionRegistry.register("seek.forward","Fast Forward 10s",()=>PlayerManager.seek(10),{repeat:true,example:"التقدم عشر ثوانٍ داخل الفيديو."});
+    ActionRegistry.register("volume.up","Volume Up",()=>PlayerManager.volume(.05),{repeat:true,example:"زيادة صوت الفيديو 5%، وليس صوت نظام الجهاز."});
+    ActionRegistry.register("volume.down","Volume Down",()=>PlayerManager.volume(-.05),{repeat:true,example:"خفض صوت الفيديو 5%."});
+    ActionRegistry.register("mute","Mute",()=>{
+      if(PlayerManager.opened)PlayerManager.video.muted=!PlayerManager.video.muted;else toast("افتح فيديو أولًا.");
+    },{example:"تبديل كتم صوت الفيديو."});
+    ActionRegistry.register("fullscreen","Fullscreen",()=>PlayerManager.fullscreen(),{example:"طلب ملء الشاشة إن سمح المتصفح."});
+    ActionRegistry.register("episode.next","Next Episode",()=>PlayerManager.adjacent(1),{example:"تشغيل الحلقة التالية المرتبطة بملف."});
+    ActionRegistry.register("episode.previous","Previous Episode",()=>PlayerManager.adjacent(-1),{example:"تشغيل الحلقة السابقة."});
+    ActionRegistry.register("home","Home",async()=>{
+      while(UIManager.top())UIManager.close();
+      if(PlayerManager.opened)await PlayerManager.close();
+      UIManager.navigate("home");
+    },{example:"فتح الصفحة الرئيسية."});
+    ActionRegistry.register("menu","Menu",()=>UIManager.menu(),{example:"فتح القائمة السريعة التي تحتوي على التحكم والإعدادات."});
+    ActionRegistry.register("controls","Remote & Controls",async()=>{
+      while(UIManager.top())UIManager.close();
+      if(PlayerManager.opened)await PlayerManager.close();
+      UIManager.navigate("controls");
+    },{example:"فتح صفحة تخصيص التحكم."});
+    ActionRegistry.register("none","No Action",()=>{}, {example:"تجاهل هذا الزر دون تنفيذ وظيفة."});
+  }
+
+/*
+   * Public extension points contain no fake backend implementation.
+   * Future modules may subscribe to events, register actions, or supply adapters:
+   * cast, dlna, nas, smb, sync, profiles, parental-controls, history,
+   * watch-party, subtitle-provider, audio-tracks, trailers, collections,
+   * smart-playlists, recommendations, statistics, backup-importer, themes,
+   * layouts, plugins, pwa, native-wrapper.
+   */
+  window.CinemaBox=Object.freeze({
+    version:"2.0",
+    managers:Object.freeze({
+      NavigationManager,InputManager,PlayerManager,LibraryManager,MetadataManager,
+      StorageManager,SettingsManager,UIManager,SearchManager
+    }),
+    actions:ActionRegistry,events:EventBus,extensions:ExtensionRegistry,
+    capabilities:()=>({
+      indexedDB:!StorageManager.temporary,
+      gamepad:typeof navigator.getGamepads==="function",
+      fullscreen:!!document.fullscreenEnabled,
+      persistentStorage:!!navigator.storage?.persist,
+      secureContext:window.isSecureContext,
+      backend:false
+    })
+  });
+
+async function boot(){
+    $("#addFiles").disabled=true;
+    registerActions();UIManager.init();NavigationManager.init();
+    await StorageManager.open();
+    await SettingsManager.load();
+    await LibraryManager.load();
+    await InputManager.load();
+    PlayerManager.init();InputManager.init();
+    UIManager.ready=true;NavigationManager.ready=true;
+    $("#addFiles").disabled=false;UIManager.render();NavigationManager.enter();
+    if(!LibraryManager.items.length)toast("أضف ملفاتك أو جرّب العرض التجريبي. إعدادات التحكم متاحة من Settings → Remote & Controls.");
+  }
+
+boot().catch(error=>{
+    errorMessage(error);
+    const box=node("div","content stack");
+    box.append(node("h2","","تعذر فتح التطبيق"),
+      node("p","muted","قد يكون التخزين محظورًا. جرّب نافذة عادية أو متصفحًا آخر."),
+      button("إعادة المحاولة",()=>location.reload(),"reload","btn primary"));
+    $("#main").replaceChildren(box);
+    const retry=$("button",box);retry.focus();
+  });
+})();
+</script>
+
+<style>
+/* CinemaBox control and editor correction */
+.cb-editor {
+  display: grid;
+  gap: 22px;
+}
+.cb-editor-help {
+  padding: 14px 17px;
+  border: 1px solid #65f3cc45;
+  border-radius: 12px;
+  background: #65f3cc09;
+  color: #c5e8df;
+}
+.cb-editor-images {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+.cb-image-box {
+  display: grid;
+  gap: 13px;
+  padding: 18px;
+  background: #ffffff05;
+  border: 1px solid #ffffff20;
+  border-radius: 16px;
+}
+.cb-image-preview {
+  width: 100%;
+  height: 220px;
+  object-fit: contain;
+  background: #050914;
+  border: 1px solid #ffffff20;
+  border-radius: 12px;
+}
+.cb-file-input {
+  display: block;
+  width: 100%;
+  min-height: 55px;
+  padding: 10px;
+  cursor: pointer;
+}
+.cb-file-input::file-selector-button {
+  background: var(--accent);
+  color: #07101c;
+  border: 0;
+  padding: 10px 13px;
+  border-radius: 9px;
+  margin-inline-end: 12px;
+  font: inherit;
+  cursor: pointer;
+}
+.cb-editor-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 15px 0 3px;
+  border-top: 1px solid #ffffff20;
+}
+.cb-editing {
+  outline-color: #ffd580 !important;
+  box-shadow: 0 0 0 8px #ffd58022 !important;
+}
+.cb-control-preview {
+  direction: ltr;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 13px;
+  width: min(370px, 100%);
+  margin: auto;
+  padding: 24px;
+  border-radius: 30px;
+  background: linear-gradient(145deg, #28364f, #0c1423);
+}
+.cb-control-preview button {
+  min-height: 56px;
+  padding: 10px;
+}
+.cb-control-preview .cb-ok {
+  background: var(--accent);
+  color: #07101c;
+}
+.cb-input-monitor {
+  direction: ltr;
+  text-align: left;
+  font-family: ui-monospace, monospace;
+  overflow-wrap: anywhere;
+  padding: 16px;
+  background: #081322;
+  border: 1px solid #65f3cc45;
+  border-radius: 12px;
+  white-space: pre-line;
+}
+.cb-inline-message {
+  min-height: 26px;
+  color: var(--focus);
+  overflow-wrap: anywhere;
+}
+.cb-editor textarea {
+  min-height: 150px;
+}
+.dialog {
+  overscroll-behavior: contain;
+  scroll-padding-block: 22px;
+}
+@media (max-width: 650px) {
+  .cb-editor-images {
+    grid-template-columns: 1fr;
+  }
+  .cb-image-preview {
+    height: 190px;
+  }
+}
+</style>
+
+<script>
+(() => {
+  "use strict";
+
+/*
+   * Append after the original CinemaBox script.
+   * This patch targets CinemaBox version 2 from the previous answer.
+   */
+  const CB = window.CinemaBox;
+  if (!CB || window.__CinemaBoxControlFixInstalled) return;
+  window.__CinemaBoxControlFixInstalled = true;
+
+const {
+    NavigationManager: Nav,
+    InputManager: Input,
+    UIManager: UI,
+    PlayerManager: Player,
+    LibraryManager: Library,
+    MetadataManager: Metadata,
+    StorageManager: Storage
+  } = CB.managers;
+
+const Actions = CB.actions;
+  const Events = CB.events;
+  const $ = (selector, root = document) => root.querySelector(selector);
+  const $$ = (selector, root = document) =>
+    [...root.querySelectorAll(selector)];
+
+const types = {
+    movie: "فيلم",
+    series: "مسلسل",
+    anime: "أنمي",
+    other: "فيديو"
+  };
+
+const makeId = () =>
+    globalThis.crypto?.randomUUID?.() ||
+    `fix-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+function element(tag, className = "", text) {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text !== undefined) node.textContent = text;
+    return node;
+  }
+
+function notify(message, error = false) {
+    const node = element("div", "toast" + (error ? " error" : ""), message);
+    $("#toasts").append(node);
+    setTimeout(() => node.remove(), error ? 7500 : 4500);
+  }
+
+function fail(error) {
+    console.error("CinemaBox correction:", error);
+    notify(
+      error?.name === "QuotaExceededError"
+        ? "مساحة التخزين غير كافية. لم يتم حفظ الصورة أو التغييرات."
+        : error?.message || "تعذر إكمال العملية.",
+      true
+    );
+  }
+
+function listen(node, event, callback) {
+    node.addEventListener(event, (...args) => {
+      try {
+        Promise.resolve(callback(...args)).catch(fail);
+      } catch (error) {
+        fail(error);
+      }
+    });
+  }
+
+function button(label, callback, key, className = "btn ghost") {
+    const node = element("button", className, label);
+    node.type = "button";
+    node.dataset.focus = key || makeId();
+    listen(node, "click", callback);
+    return node;
+  }
+
+function field(label, control) {
+    const wrapper = element("label");
+    wrapper.append(element("span", "", label), control);
+    return wrapper;
+  }
+
+function input(value, type, key) {
+    const node = element("input");
+    node.type = type || "text";
+    node.value = value ?? "";
+    node.dataset.focus = key || makeId();
+    return node;
+  }
+
+function allowedRemoteImage(value) {
+    try {
+      const url = new URL(value);
+      return url.protocol === "https:" &&
+        url.hostname === "image.tmdb.org"
+        ? url.href
+        : "";
+    } catch {
+      return "";
+    }
+  }
+
+/*
+   * 1. Native file dialogs must not cause aggressive focus recovery.
+   */
+  let pickerDeadline = 0;
+  let editingElement = null;
+
+const originalRepair = Nav.repair.bind(Nav);
+
+Nav.repair = function () {
+    if (performance.now() < pickerDeadline) return;
+
+if (
+      editingElement &&
+      (!editingElement.isConnected ||
+        !this.scope().root.contains(editingElement))
+    ) {
+      leaveEditing();
+    }
+
+originalRepair();
+  };
+
+function leaveEditing() {
+    if (editingElement) {
+      editingElement.classList.remove("cb-editing");
+    }
+    editingElement = null;
+  }
+
+function enterEditing(node) {
+    leaveEditing();
+    editingElement = node;
+    node.classList.add("cb-editing");
+    node.focus({ preventScroll: true });
+
+notify(
+      "وضع الكتابة: الأسهم لتحريك المؤشر. Back أو Escape لإنهاء الكتابة والعودة للتنقل."
+    );
+  }
+
+document.addEventListener("focusin", event => {
+    if (editingElement && event.target !== editingElement) {
+      leaveEditing();
+    }
+  });
+
+document.addEventListener("click", event => {
+    const target = event.target;
+
+if (
+      target instanceof HTMLInputElement &&
+      target.type === "file"
+    ) {
+      pickerDeadline = performance.now() + 120000;
+    }
+  }, true);
+
+document.addEventListener("change", event => {
+    if (event.target?.matches?.('input[type="file"]')) {
+      pickerDeadline = 0;
+    }
+  }, true);
+
+document.addEventListener("cancel", event => {
+    if (event.target?.matches?.('input[type="file"]')) {
+      pickerDeadline = 0;
+      Nav.scheduleRepair();
+    }
+  }, true);
+
+window.addEventListener("focus", () => {
+    setTimeout(() => {
+      pickerDeadline = 0;
+      Nav.scheduleRepair();
+    }, 300);
+  });
+
+/*
+   * 2. Normalize remote keys before selecting the input map.
+   * Some TV browsers report keyCode but an unusable code/key.
+   */
+  const originalCanonical = Input.canonical.bind(Input);
+
+Input.canonical = function (event) {
+    const code = event.code || "";
+    const key = event.key || "";
+    const legacy = Number(event.keyCode || event.which || 0);
+
+const keyAliases = {
+      DPAD_UP: "ArrowUp",
+      DPAD_DOWN: "ArrowDown",
+      DPAD_LEFT: "ArrowLeft",
+      DPAD_RIGHT: "ArrowRight",
+      DPAD_CENTER: "Enter",
+      DPadUp: "ArrowUp",
+      DPadDown: "ArrowDown",
+      DPadLeft: "ArrowLeft",
+      DPadRight: "ArrowRight",
+      Select: "Enter",
+      Accept: "Enter",
+      OK: "Enter",
+      Back: "BrowserBack",
+      GoBack: "BrowserBack",
+      Return: "Enter",
+      Esc: "Escape",
+      " ": "Space"
+    };
+
+if (keyAliases[key]) return keyAliases[key];
+
+const remoteCodes = {
+      23: "Enter",
+      461: "BrowserBack",
+      10009: "BrowserBack",
+      415: "MediaPlay",
+      19: "MediaPause",
+      413: "MediaStop",
+      412: "MediaRewind",
+      417: "MediaFastForward",
+      10252: "MediaPlayPause"
+    };
+
+const genuineKeyCode =
+      /^(Key[A-Z]|Digit[0-9]|Numpad[0-9])$/.test(code);
+
+if (remoteCodes[legacy] && !genuineKeyCode) {
+      return remoteCodes[legacy];
+    }
+
+if (!code || code === "Unidentified") {
+      const arrows = {
+        37: "ArrowLeft",
+        38: "ArrowUp",
+        39: "ArrowRight",
+        40: "ArrowDown",
+        13: "Enter",
+        27: "Escape"
+      };
+
+if (arrows[legacy]) return arrows[legacy];
+    }
+
+return originalCanonical(event);
+  };
+
+/*
+   * 3. Native inputs:
+   * - File input: OK opens the actual browser picker synchronously.
+   * - Text fields: navigation mode by default.
+   * - OK enters text-edit mode.
+   * - Back first leaves edit mode instead of closing the editor.
+   */
+  const originalKeyboard = Input.keyboard.bind(Input);
+
+Input.keyboard = async function (event) {
+    const code = this.canonical(event);
+
+if (code === "F8" || this.capture) {
+      return originalKeyboard(event);
+    }
+
+const active = document.activeElement;
+    const source = this.keyboardSource(code);
+    const action = this.mapping(source, code);
+
+const isFile = active?.matches?.('input[type="file"]');
+
+const isText = active?.matches?.(
+      'textarea,input:not([type="range"]):not([type="file"]):not([type="checkbox"]):not([type="radio"])'
+    );
+
+const cancel =
+      action === "back" ||
+      code === "Escape" ||
+      code === "BrowserBack";
+
+if (isFile) {
+      if (action === "select" || code === "Space") {
+        event.preventDefault();
+        event.stopPropagation();
+
+if (!event.repeat) {
+          pickerDeadline = performance.now() + 120000;
+          active.click();
+        }
+
+return;
+      }
+
+if (action?.startsWith("nav.")) {
+        event.preventDefault();
+        event.stopPropagation();
+
+await this.dispatch(source, code, {
+          repeat: event.repeat
+        });
+
+return;
+      }
+    }
+
+if (isText) {
+      if (code === "Tab") {
+        event.preventDefault();
+        leaveEditing();
+        Nav.tab(event.shiftKey);
+        return;
+      }
+
+if (editingElement === active) {
+        if (cancel && code !== "Backspace") {
+          event.preventDefault();
+          event.stopPropagation();
+          leaveEditing();
+          Nav.focus(active, false);
+          notify("تم الرجوع إلى وضع التنقل.");
+        }
+
+return;
+      }
+
+if (cancel && code !== "Backspace") {
+        event.preventDefault();
+        event.stopPropagation();
+        await UI.back();
+        return;
+      }
+
+if (action?.startsWith("nav.")) {
+        event.preventDefault();
+        event.stopPropagation();
+
+await this.dispatch(source, code, {
+          repeat: event.repeat
+        });
+
+return;
+      }
+
+if (action === "select") {
+        event.preventDefault();
+        event.stopPropagation();
+
+if (!event.repeat) enterEditing(active);
+        return;
+      }
+
+/*
+       * Typing directly is allowed without an extra OK press.
+       * A character bound to an app command stays text inside a field.
+       */
+      if (
+        event.key?.length === 1 &&
+        !event.ctrlKey &&
+        !event.metaKey &&
+        !event.altKey
+      ) {
+        leaveEditing();
+        editingElement = active;
+        active.classList.add("cb-editing");
+      }
+
+return;
+    }
+
+return originalKeyboard(event);
+  };
+
+const originalSelect = Nav.select.bind(Nav);
+
+Nav.select = function () {
+    const active = document.activeElement;
+
+if (active?.matches?.('input[type="file"]')) {
+      pickerDeadline = performance.now() + 120000;
+      active.click();
+      return;
+    }
+
+if (
+      active?.matches?.(
+        'textarea,input:not([type="range"]):not([type="file"])'
+      )
+    ) {
+      enterEditing(active);
+      return;
+    }
+
+originalSelect();
+  };
+
+/*
+   * 4. Scroll the actual dialog/row when moving focus.
+   * Directional navigation can now reach controls below long textareas.
+   */
+  const originalFocus = Nav.focus.bind(Nav);
+
+Nav.focus = function (target, scroll = true) {
+    const success = originalFocus(target, false);
+
+if (!success || !scroll) return success;
+
+const dialog = target.closest(".dialog");
+
+if (dialog) {
+      const bounds = dialog.getBoundingClientRect();
+      const rect = target.getBoundingClientRect();
+      const margin = 25;
+
+if (rect.bottom > bounds.bottom - margin) {
+        dialog.scrollTop += rect.bottom - bounds.bottom + margin;
+      }
+
+if (rect.top < bounds.top + margin) {
+        dialog.scrollTop -= bounds.top + margin - rect.top;
+      }
+
+const horizontal = target.closest(
+        ".test-row,.media-row,.table-wrap"
+      );
+
+if (horizontal && dialog.contains(horizontal)) {
+        target.scrollIntoView({
+          block: "nearest",
+          inline: "nearest",
+          behavior: "auto"
+        });
+      }
+    } else {
+      target.scrollIntoView({
+        block: "nearest",
+        inline: "nearest",
+        behavior: "auto"
+      });
+    }
+
+return true;
+  };
+
+const originalMove = Nav.move.bind(Nav);
+
+Nav.move = function (direction) {
+    const before = document.activeElement;
+
+leaveEditing();
+    originalMove(direction);
+
+/*
+     * Fallback for irregular grids and wide full-row controls:
+     * move through the dialog's focus order only when spatial search
+     * could not find a vertical candidate.
+     */
+    if (
+      document.activeElement === before &&
+      before?.closest?.(".dialog") &&
+      (direction === "up" || direction === "down")
+    ) {
+      const list = this.elements();
+      const index = list.indexOf(before);
+      const next = list[index + (direction === "down" ? 1 : -1)];
+      if (next) this.focus(next);
+    }
+  };
+
+/*
+   * Gamepad-based OK may not grant native file-picker activation.
+   * The actual file input remains visible and usable by touch/keyboard.
+   */
+  function nativePickerHint() {
+    notify(
+      "اختر صورة من نافذة الملفات. إذا لم تفتح باستخدام Gamepad، استخدم OK من الريموت أو اضغط حقل اختيار الملف؛ المتصفح قد يشترط تفاعلًا مباشرًا."
+    );
+  }
+
+/*
+   * 5. Replace the editor with a fully navigable version:
+   * visible native file inputs, local previews and atomic save.
+   */
+  UI.edit = function (id) {
+    const original = Library.get(id);
+    if (!original) return;
+
+const form = element("form", "cb-editor");
+    const intro = element(
+      "div",
+      "cb-editor-help",
+      "الأسهم للتنقل بين جميع الحقول والأزرار، حتى أسفل الصفحة. OK للكتابة داخل الحقل، وBack لإنهاء الكتابة. اختر الصورة ثم اضغط «حفظ التغييرات»."
+    );
+
+form.append(intro);
+
+const grid = element("div", "field-grid");
+
+const fields = {
+      title: input(original.title, "text", "fixed-title"),
+      seriesTitle: input(original.seriesTitle, "text", "fixed-series"),
+      season: input(original.season ?? 1, "number", "fixed-season"),
+      episode: input(original.episode ?? 1, "number", "fixed-episode"),
+      year: input(original.year, "number", "fixed-year"),
+      genre: input(original.genre, "text", "fixed-genre"),
+      rating: input(original.rating || "", "number", "fixed-rating"),
+      description: element("textarea")
+    };
+
+fields.title.required = true;
+    fields.title.maxLength = 240;
+    fields.title.dataset.initial = "";
+
+fields.seriesTitle.maxLength = 240;
+    fields.season.min = "0";
+    fields.season.max = "999";
+    fields.episode.min = "1";
+    fields.episode.max = "9999";
+    fields.year.min = "1800";
+    fields.year.max = "2200";
+    fields.rating.min = "0";
+    fields.rating.max = "10";
+    fields.rating.step = ".1";
+
+fields.description.value = original.description || "";
+    fields.description.maxLength = 12000;
+    fields.description.dataset.focus = "fixed-description";
+
+let contentType = original.type;
+    let dialog;
+    let disposed = false;
+    let saving = false;
+
+const pending = {
+      poster: null,
+      backdrop: null
+    };
+
+const removed = {
+      poster: false,
+      backdrop: false
+    };
+
+const remote = {
+      poster: allowedRemoteImage(original.posterUrl),
+      backdrop: allowedRemoteImage(original.backdropUrl)
+    };
+
+const urls = new Set();
+    const versions = { poster: 0, backdrop: 0 };
+    const imageViews = {};
+
+const series = element("div", "field-grid full");
+
+const typeButton = button(
+      `النوع: ${types[contentType]}`,
+      () => UI.choose(
+        "نوع المحتوى",
+        Object.entries(types),
+        contentType,
+        value => {
+          contentType = value;
+          updateType();
+        }
+      ),
+      "fixed-type"
+    );
+
+function updateType() {
+      typeButton.textContent = `النوع: ${types[contentType]}`;
+
+series.hidden = !["series", "anime"].includes(contentType);
+
+for (const control of [
+        fields.seriesTitle,
+        fields.season,
+        fields.episode
+      ]) {
+        control.disabled = series.hidden;
+      }
+
+fields.seriesTitle.required = !series.hidden;
+    }
+
+grid.append(
+      field("العنوان", fields.title),
+      typeButton
+    );
+
+series.append(
+      field("اسم المسلسل / الأنمي الموحد", fields.seriesTitle),
+      field("رقم الموسم", fields.season),
+      field("رقم الحلقة", fields.episode)
+    );
+
+grid.append(
+      series,
+      field("سنة الإصدار", fields.year),
+      field("Genre", fields.genre),
+      field("التقييم من 10", fields.rating)
+    );
+
+const description = field("الوصف", fields.description);
+    description.className = "full";
+
+grid.append(description);
+    form.append(grid);
+    updateType();
+
+const imageGrid = element("div", "cb-editor-images");
+
+function objectURL(blob) {
+      const url = URL.createObjectURL(blob);
+      urls.add(url);
+      return url;
+    }
+
+async function displayStored(kind) {
+      const version = versions[kind];
+      const view = imageViews[kind];
+
+let source = remote[kind];
+      const asset = original[kind + "Asset"];
+
+if (asset) {
+        try {
+          const stored = await Storage.get("assets", asset);
+
+if (
+            disposed ||
+            version !== versions[kind] ||
+            pending[kind] ||
+            removed[kind]
+          ) return;
+
+if (stored?.blob instanceof Blob) {
+            source = objectURL(stored.blob);
+          }
+        } catch {
+          view.status.textContent =
+            "تعذر قراءة الصورة القديمة. يمكنك اختيار صورة جديدة.";
+        }
+      }
+
+if (disposed || version !== versions[kind]) return;
+
+if (source) {
+        view.preview.src = source;
+        view.preview.hidden = false;
+      }
+    }
+
+async function verifyImage(file) {
+      if (!file.size) throw new Error("ملف الصورة فارغ.");
+
+if (file.size > 25 * 1024 * 1024) {
+        throw new Error("اختر صورة أصغر من 25 MB.");
+      }
+
+/*
+       * Android providers sometimes leave MIME type empty.
+       * Validate using both the name and actual browser decoding.
+       */
+      const extensionOK =
+        /\.(jpe?g|png|webp|gif|avif|bmp)$/i.test(file.name);
+
+const mimeOK =
+        /^image\/(jpeg|png|webp|gif|avif|bmp|x-ms-bmp)$/i.test(file.type);
+
+if (!extensionOK && !mimeOK) {
+        throw new Error(
+          "اختر JPG أو PNG أو WebP أو GIF أو AVIF. صور HEIC قد تحتاج إلى تحويل قبل استخدامها."
+        );
+      }
+
+const url = objectURL(file);
+
+await new Promise((resolve, reject) => {
+        const image = new Image();
+        const timer = setTimeout(() => {
+          image.onload = null;
+          image.onerror = null;
+          reject(new Error("استغرق فتح الصورة وقتًا طويلًا. جرّب صورة أصغر."));
+        }, 15000);
+
+image.onload = () => {
+          clearTimeout(timer);
+
+if (!image.naturalWidth || !image.naturalHeight) {
+            reject(new Error("لا يمكن قراءة أبعاد الصورة."));
+            return;
+          }
+
+resolve();
+        };
+
+image.onerror = () => {
+          clearTimeout(timer);
+          reject(new Error("المتصفح لا يستطيع قراءة هذه الصورة. جرّب JPG أو PNG."));
+        };
+
+image.src = url;
+      });
+
+return url;
+    }
+
+for (const kind of ["poster", "backdrop"]) {
+      const box = element("section", "cb-image-box");
+      const title = kind === "poster"
+        ? "صورة البوستر"
+        : "صورة الخلفية";
+
+const preview = element("img", "cb-image-preview");
+      preview.alt = `معاينة ${title}`;
+      preview.hidden = true;
+      preview.referrerPolicy = "no-referrer";
+
+const picker = input("", "file", `fixed-file-${kind}`);
+      picker.accept =
+        "image/jpeg,image/png,image/webp,image/gif,image/avif,image/bmp,.jpg,.jpeg,.png,.webp,.gif,.avif,.bmp";
+      picker.className = "cb-file-input";
+      picker.
+
+</body>
+</html>
