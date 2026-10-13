@@ -1,58 +1,8 @@
 Godot Engine v4.8.dev3.official.51105ccbe - https://godotengine.org
 
-SCRIPT ERROR: Compile Error: Identifier not found: Settings
-          at: GDScript::reload (res://player/player.gd:50)
-SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
-          at: GDScript::reload (res://android/smoke_test.gd:0)
-ERROR: Failed to load script "res://android/smoke_test.gd" with error "Compilation failed".
-   at: load (modules/gdscript/gdscript_resource_format.cpp:50)
-SMOKE-OK: root children (autoloads): [&"Settings", &"MusicPlayer", &"TouchControls"]
-WARNING: [CharacterPose] No Skeleton3D found under Man
-     at: push_warning (core/variant/variant_utility.cpp:1034)
-     GDScript backtrace (most recent call first):
-         [0] _ready (res://apartment/assets/characters/character_pose.gd:15)
-WARNING: [CharacterPose] No Skeleton3D found under Woman
-     at: push_warning (core/variant/variant_utility.cpp:1034)
-     GDScript backtrace (most recent call first):
-         [0] _ready (res://apartment/assets/characters/character_pose.gd:15)
-WARNING: [CharacterPose] No Skeleton3D found under Man
-     at: push_warning (core/variant/variant_utility.cpp:1034)
-     GDScript backtrace (most recent call first):
-         [0] _ready (res://apartment/assets/characters/character_pose.gd:15)
-SCRIPT ERROR: Trying to assign value of type 'CharacterBody3D' to a variable of type 'player.gd'.
-          at: ApartmentGameManager.@implicit_ready (res://apartment/game_manager.gd:26)
-          GDScript backtrace (most recent call first):
-              [0] @implicit_ready (res://apartment/game_manager.gd:26)
-SCRIPT ERROR: Invalid access to property or key 'activated' on a base object of type 'Nil'.
-          at: ApartmentGameManager._ready (res://apartment/game_manager.gd:88)
-          GDScript backtrace (most recent call first):
-              [0] _ready (res://apartment/game_manager.gd:88)
-SMOKE-OK: menu scene: MainMenu
-WARNING: [CharacterPose] No Skeleton3D found under Man
-     at: push_warning (core/variant/variant_utility.cpp:1034)
-     GDScript backtrace (most recent call first):
-         [0] _ready (res://apartment/assets/characters/character_pose.gd:15)
-WARNING: [CharacterPose] No Skeleton3D found under Woman
-     at: push_warning (core/variant/variant_utility.cpp:1034)
-     GDScript backtrace (most recent call first):
-         [0] _ready (res://apartment/assets/characters/character_pose.gd:15)
-WARNING: [CharacterPose] No Skeleton3D found under Man
-     at: push_warning (core/variant/variant_utility.cpp:1034)
-     GDScript backtrace (most recent call first):
-         [0] _ready (res://apartment/assets/characters/character_pose.gd:15)
-SCRIPT ERROR: Trying to assign value of type 'CharacterBody3D' to a variable of type 'player.gd'.
-          at: ApartmentGameManager.@implicit_ready (res://apartment/game_manager.gd:26)
-          GDScript backtrace (most recent call first):
-              [0] @implicit_ready (res://apartment/game_manager.gd:26)
-SCRIPT ERROR: Invalid access to property or key 'activated' on a base object of type 'Nil'.
-          at: ApartmentGameManager._ready (res://apartment/game_manager.gd:88)
-          GDScript backtrace (most recent call first):
-              [0] _ready (res://apartment/game_manager.gd:88)
-SMOKE-OK: game scene: ApartmentBlockout
-SMOKE-FAIL: player not found in game scene
-SMOKE FAILED (1): ["player not found in game scene"]
-SMOKE FAIL
-WARNING: 4 ObjectDB instances were leaked at exit (run with `--verbose` for details).
-   at: cleanup (core/object/object.cpp:2527)
-ERROR: 2 resources still in use at exit (run with --verbose for details).
-   at: clear (core/io/resource.cpp:822)
+ERROR: Attempt to open script 'res://android/smoke_test.gd' resulted in error 'File not found'.
+   at: load_source_code (modules/gdscript/gdscript.cpp:1159)
+ERROR: Failed loading resource: res://android/smoke_test.gd.
+   at: _load (core/io/resource_loader.cpp:317)
+ERROR: Can't load script: res://android/smoke_test.gd
+   at: start (main/main.cpp:4301)
