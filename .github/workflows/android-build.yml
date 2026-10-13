@@ -1,0 +1,202 @@
+name: Android Port - Build APK
+
+# Phase 2: recover the Godot project from windows.zip (GDRE Tools),
+# apply the Android port overlay (touch controls, Mobile renderer,
+# ETC2 textures, character model fixes), export a signed Android APK
+# with the matching Godot 4.8-dev3 editor + templates, and publish it
+# as a GitHub Release the user can download on their Android device.
+
+on:
+  push:
+    branches:
+      - arena/a8b5a558-salah
+    paths:
+      - "android-port/build.trigger"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  GODOT_TAG: 4.8-dev3
+  DRIVE_FILE_ID: 1xweuYvek8Z41HqdybAiIqHPatIHbmb02
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Download game from Google Drive
+        run: |
+          pip install --quiet gdown
+          python3 -m gdown "$DRIVE_FILE_ID" -O windows.zip
+          ls -lh windows.zip
+          unzip -o windows.zip -d game_win
+          find game_win -type f -exec ls -lh {} \;
+
+      - name: Download GDRE Tools
+        run: |
+          curl -L -o gdre.zip "https://github.com/GDRETools/gdsdecomp/releases/download/v2.7.4/GDRE_tools-v2.7.4-linux.zip"
+          unzip -o gdre.zip -d gdre
+          GDRE_BIN="$(find gdre -type f -name '*GDRE*' | head -1)"
+          if [ -z "$GDRE_BIN" ]; then GDRE_BIN="$(find gdre -type f -perm -u+x | head -1)"; fi
+          echo "GDRE_BIN=$GDRE_BIN" >> "$GITHUB_ENV"
+          chmod +x "$GDRE_BIN" || true
+
+      - name: Recover project
+        run: |
+          PCK="$(find game_win -name '*.pck' | head -1)"
+          echo "PCK=$PCK"
+          "$GDRE_BIN" --headless --recover="$PCK" --output="$PWD/recovered_full" 2>&1 | tee recover.log || true
+          test -f recovered_full/project.godot
+          find recovered_full -maxdepth 2 -type d | sort | head -30
+
+      - name: Apply Android port overlay
+        run: |
+          python3 android-port/patch_project.py recovered_full android-port/overlay
+          ls -la recovered_full/android/
+          cat recovered_full/export_presets.cfg
+
+      - name: Download Godot 4.8-dev3 editor + export templates
+        run: |
+          curl -L -o godot.zip "https://github.com/godotengine/godot-builds/releases/download/${GODOT_TAG}/Godot_v${GODOT_TAG}_linux.x86_64.zip"
+          unzip -o godot.zip -d godot_editor
+          GODOT_BIN="$(find godot_editor -type f -name 'Godot*' | head -1)"
+          chmod +x "$GODOT_BIN"
+          echo "GODOT_BIN=$PWD/$GODOT_BIN" >> "$GITHUB_ENV"
+          "$GODOT_BIN" --version
+          curl -L -o templates.tpz "https://github.com/godotengine/godot-builds/releases/download/${GODOT_TAG}/Godot_v${GODOT_TAG}_export_templates.tpz"
+          ls -lh templates.tpz
+          unzip -o templates.tpz -d templates_pkg
+          TPL_VERSION="$(cat templates_pkg/templates/version.txt)"
+          echo "Template version: $TPL_VERSION"
+          TPL_DIR="$HOME/.local/share/godot/export_templates/$TPL_VERSION"
+          mkdir -p "$TPL_DIR"
+          cp -r templates_pkg/templates/* "$TPL_DIR/"
+          ls -lh "$TPL_DIR" | head -20
+
+      - name: Create debug keystore
+        run: |
+          keytool -genkeypair -v -keystore "$HOME/debug.keystore" -alias androiddebugkey \
+            -storepass android -keypass android -keyalg RSA -keysize 2048 -validity 10000 \
+            -dname "CN=Android Debug,O=Android,C=US"
+          sed -i "s|__KEYSTORE__|$HOME/debug.keystore|g" recovered_full/export_presets.cfg
+
+      - name: Configure Godot editor settings (Android SDK)
+        run: |
+          mkdir -p dummy && printf '; Engine configuration file.\nconfig_version=5\n\n[application]\nconfig/name="dummy"\n' > dummy/project.godot
+          "$GODOT_BIN" --headless --editor --path dummy --quit 2>&1 | tail -5 || true
+          SETTINGS="$(find "$HOME/.config/godot" -name 'editor_settings*.tres' | head -1)"
+          echo "Settings file: $SETTINGS"
+          test -n "$SETTINGS"
+          echo "SETTINGS=$SETTINGS" >> "$GITHUB_ENV"
+          SDK_PATH="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          echo "SDK: $SDK_PATH"; ls "$SDK_PATH" || true
+          JAVA_PATH="$(dirname "$(dirname "$(readlink -f "$(which java)")")")"
+          echo "Java: $JAVA_PATH"
+          python3 - "$SETTINGS" "$SDK_PATH" "$JAVA_PATH" "$HOME/debug.keystore" << 'EOF'
+          import sys
+          path, sdk, java, ks = sys.argv[1:5]
+          txt = open(path).read()
+          settings = {
+              "export/android/android_sdk_path": sdk,
+              "export/android/java_sdk_path": java,
+              "export/android/debug_keystore": ks,
+              "export/android/debug_keystore_user": "androiddebugkey",
+              "export/android/debug_keystore_password": "android",
+          }
+          lines = txt.splitlines()
+          out, seen = [], set()
+          for line in lines:
+              replaced = False
+              for k, v in settings.items():
+                  if line.startswith(k + " =") or line.startswith(k + "="):
+                      out.append(f'{k} = "{v}"')
+                      seen.add(k); replaced = True; break
+              if not replaced:
+                  out.append(line)
+          for k, v in settings.items():
+              if k not in seen:
+                  out.append(f'{k} = "{v}"')
+          open(path, "w").write("\n".join(out) + "\n")
+          print("\n".join(l for l in out if "export/android" in l))
+          EOF
+
+      - name: Import project (ETC2 textures, Mobile renderer)
+        run: |
+          cd recovered_full
+          timeout 1500 "$GODOT_BIN" --headless --path . --import 2>&1 | tee ../import.log || true
+          cd ..
+          echo "---- import errors (if any) ----"
+          grep -iE "error|failed" import.log | grep -v "ERROR: Parameter" | head -50 || true
+
+      - name: Export Android APK
+        run: |
+          mkdir -p out
+          cd recovered_full
+          "$GODOT_BIN" --headless --path . --export-release "Android" "$GITHUB_WORKSPACE/out/AwakeOrNot.apk" 2>&1 | tee ../export.log
+          cd ..
+          ls -lh out/
+          test -f out/AwakeOrNot.apk
+
+      - name: Verify APK
+        run: |
+          AAPT="$(find "${ANDROID_HOME:-/usr/local/lib/android/sdk}/build-tools" -name aapt | sort | tail -1)"
+          APKSIGNER="$(find "${ANDROID_HOME:-/usr/local/lib/android/sdk}/build-tools" -name apksigner | sort | tail -1)"
+          echo "aapt: $AAPT"
+          "$AAPT" dump badging out/AwakeOrNot.apk | head -8
+          "$APKSIGNER" verify --print-certs out/AwakeOrNot.apk | head -6
+          unzip -l out/AwakeOrNot.apk | grep -E "\.so$|classes.*dex" | head
+          sha256sum out/AwakeOrNot.apk | tee out/sha256.txt
+          ls -lh out/AwakeOrNot.apk
+
+      - name: Upload logs + APK as workflow artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: awake-or-not-android
+          path: |
+            out/AwakeOrNot.apk
+            recover.log
+            import.log
+            export.log
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: Publish GitHub Release with APK
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          NOTES="Android version of **Awake or Not? (مستيقظ أم لا؟)** — converted from the Windows Godot build in windows.zip.
+
+          ## Install on your Android device
+          1. Download \`AwakeOrNot.apk\` below on your phone.
+          2. Tap the file. If asked, allow **Install unknown apps** for your browser/Files app.
+          3. Tap **Install**, then open **مستيقظ أم لا؟**.
+
+          ## Controls
+          - **Left joystick** — move
+          - **Drag on the right side of the screen** — look around
+          - **USE (تفاعل)** — interact (glows when something can be used: bed = sleep, door = go to work)
+          - **JUMP (قفز)** / **RUN (ركض, toggle)** — jump / sprint
+          - In cutscenes: tap anywhere to continue, **SKIP** to skip.
+
+          Requirements: Android 6.0+ (arm64), landscape. Signed with a debug key, so it installs without the Play Store."
+          if gh release view awake-or-not-android-v1 >/dev/null 2>&1; then
+            gh release upload awake-or-not-android-v1 out/AwakeOrNot.apk --clobber
+          else
+            gh release create awake-or-not-android-v1 out/AwakeOrNot.apk \
+              --target "$GITHUB_SHA" \
+              --title "Awake or Not? — Android (مستيقظ أم لا؟)" \
+              --notes "$NOTES"
+          fi
+          gh release view awake-or-not-android-v1
