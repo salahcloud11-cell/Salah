@@ -183,7 +183,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "APK unchanged"
           else
-            git commit -m "Android APK v2 (PS3 controller + low-end optimizations) [skip ci]"
+            git commit -m "Android APK v3 Lite (32-bit + Android 11 low-end) [skip ci]"
             git push origin HEAD:arena/a8b5a558-salah
           fi
 
@@ -194,9 +194,11 @@ jobs:
           git pull --rebase origin arena/a8b5a558-salah || true
           NOTES="Android version of **Awake or Not? (مستيقظ أم لا؟)** — converted from the Windows Godot build in windows.zip. Also available on Google Drive.
 
-          ## What's new in v2
-          - **PS3 / gamepad support** (USB-OTG or Bluetooth): left stick/D-pad move, right stick camera, ✕ jump, ▢/△ interact, L3/L1 sprint, Start = skip/back, ✕ in cutscenes = next. Touch UI hides while the pad is used.
-          - **Low-end optimizations**: adaptive render resolution (auto-scales 3D rendering to hold FPS), 0.75 base render scale, smaller shadow atlas, earlier mesh LOD, 60 FPS cap.
+          ## What's new in v3 Lite (for Android 11, 2 GB RAM, 32-bit)
+          - **32-bit + 64-bit universal APK**: installs on armeabi-v7a (32-bit) and arm64 phones.
+          - **Compatibility (OpenGL) renderer** instead of Vulkan: runs on old/weak GPUs and uses much less RAM (some glow effects are simplified).
+          - **540p base rendering** with adaptive resolution (auto-scales down to hold FPS), textures capped at 1024px, smaller shadow atlas, 60 FPS cap.
+          - Includes everything from v2: PS3 controller support + touch controls.
 
           ## Install on your Android device
           1. Download \`AwakeOrNot.apk\` below on your phone (or from Google Drive).
@@ -211,12 +213,12 @@ jobs:
           - In cutscenes: tap anywhere to continue, **SKIP** to skip.
 
           Landscape, arm64 Android. Signed with a debug key, so it installs without the Play Store."
-          if gh release view awake-or-not-android-v2 >/dev/null 2>&1; then
-            gh release upload awake-or-not-android-v2 out/AwakeOrNot.apk --clobber
+          if gh release view awake-or-not-android-v3 >/dev/null 2>&1; then
+            gh release upload awake-or-not-android-v3 out/AwakeOrNot.apk --clobber
           else
-            gh release create awake-or-not-android-v2 out/AwakeOrNot.apk \
+            gh release create awake-or-not-android-v3 out/AwakeOrNot.apk \
               --target "$GITHUB_SHA" \
-              --title "Awake or Not? — Android v2 (PS3 controller + low-end)" \
+              --title "Awake or Not? — Android v3 Lite (32-bit, 2 GB RAM)" \
               --notes "$NOTES"
           fi
-          gh release view awake-or-not-android-v2
+          gh release view awake-or-not-android-v3

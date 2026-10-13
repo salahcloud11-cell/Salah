@@ -25,7 +25,7 @@ const JOY_DEADZONE := 0.12
 const PAD_DEADZONE := 0.18
 const PAD_LOOK_YAW_SPEED := 2.8
 const PAD_LOOK_PITCH_SPEED := 2.1
-const SCALE_STEPS: Array[float] = [1.0, 0.85, 0.7, 0.55, 0.45]
+const SCALE_STEPS: Array[float] = [0.85, 0.7, 0.6, 0.5, 0.4]
 
 var _is_touch := false
 var _on_android := false
@@ -48,7 +48,7 @@ var _pad_mode := false
 var _pad_look := Vector2.ZERO
 
 # --- adaptive resolution state ---
-var _scale_idx := 1
+var _scale_idx := 2
 var _fps_timer := 0.0
 var _low_windows := 0
 var _high_windows := 0
@@ -330,9 +330,16 @@ func _apply_pad_look(delta: float) -> void:
 
 # --- low-end support: dynamic render resolution --------------------
 func _apply_render_scale() -> void:
+	var s := SCALE_STEPS[_scale_idx]
 	var vp := get_viewport()
 	if vp != null:
-		vp.scaling_3d_scale = SCALE_STEPS[_scale_idx]
+		vp.scaling_3d_scale = s
+	# Compatibility renderer ignores scaling_3d, so also shrink the
+	# window content scale (guaranteed render-resolution cap, 2 GB RAM).
+	var win := get_window()
+	if win != null:
+		win.content_scale_size = Vector2i(
+			maxi(320, int(1152.0 * s)), maxi(240, int(648.0 * s)))
 
 
 func _update_adaptive_resolution(delta: float) -> void:

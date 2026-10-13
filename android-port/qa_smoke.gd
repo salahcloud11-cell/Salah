@@ -76,6 +76,12 @@ func _run() -> void:
 	if get_node_or_null("/root/Settings") == null:
 		_fail("Settings autoload missing")
 
+
+	var renderer := str(ProjectSettings.get_setting("rendering/renderer/rendering_method", ""))
+	if renderer == "glcompatibility":
+		_ok("lite renderer active: glcompatibility (32-bit/low-end build)")
+	else:
+		_fail("expected glcompatibility renderer, got: %s" % renderer)
 	var start_btn := get_tree().current_scene.get_node_or_null("MenuWrap/MenuContainer/StartButton") as Button
 	if start_btn == null:
 		_fail("StartButton not found")

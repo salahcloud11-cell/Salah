@@ -66,6 +66,26 @@ for d in [".assets", ".autoconverted", ".godot"]:
         shutil.rmtree(p)
         log("removed", d)
 
+# 3b) cap texture size at 1024px on import (RAM saver for 2 GB devices)
+capped = 0
+for root, _dirs, files in os.walk(proj):
+    if ".godot" in root.split(os.sep):
+        continue
+    for fn in files:
+        if not fn.endswith(".import"):
+            continue
+        p = os.path.join(root, fn)
+        try:
+            txt = open(p, encoding="utf-8").read()
+        except Exception:
+            continue
+        if 'importer="texture"' in txt and "process/size_limit=" in txt:
+            txt2 = re.sub(r"process/size_limit=\d+", "process/size_limit=1024", txt)
+            if txt2 != txt:
+                open(p, "w", encoding="utf-8").write(txt2)
+                capped += 1
+log("texture size_limit=1024 applied to", capped, "imports")
+
 # 4) overlay files
 for root, _dirs, files in os.walk(overlay):
     for fn in files:
@@ -100,15 +120,18 @@ def set_key(text, section, key, value):
 
 
 pg = set_key(pg, "autoload", "TouchControls", '"*res://android/touch_controls.gd"')
-pg = set_key(pg, "application", "config/features", 'PackedStringArray("4.8", "Mobile")')
+pg = set_key(pg, "application", "config/features", 'PackedStringArray("4.8", "GL Compatibility")')
 pg = set_key(pg, "application", "run/max_fps", "60")
 pg = set_key(pg, "display", "window/handheld/orientation", '"landscape"')
-pg = set_key(pg, "rendering", "renderer/rendering_method", '"mobile"')
-pg = set_key(pg, "rendering", "renderer/rendering_method.mobile", '"mobile"')
+pg = set_key(pg, "rendering", "renderer/rendering_method", '"glcompatibility"')
+pg = set_key(pg, "rendering", "renderer/rendering_method.mobile", '"glcompatibility"')
 pg = set_key(pg, "rendering", "textures/vram_compression/import_etc2_astc", "true")
 # --- low-end device support ---
-pg = set_key(pg, "rendering", "scaling_3d/scale", "0.75")
-pg = set_key(pg, "rendering", "lights_and_shadows/positional_shadow/atlas_size", "2048")
+pg = set_key(pg, "display", "window/size/viewport_width", "960")
+pg = set_key(pg, "display", "window/size/viewport_height", "540")
+pg = set_key(pg, "display", "window/stretch/aspect", '"expand"')
+pg = set_key(pg, "rendering", "scaling_3d/scale", "0.6")
+pg = set_key(pg, "rendering", "lights_and_shadows/positional_shadow/atlas_size", "1024")
 pg = set_key(pg, "rendering", "mesh_lod/lod_change/threshold_pixels", "2.0")
 
 # --- PS3 / generic gamepad bindings -------------------------------------
