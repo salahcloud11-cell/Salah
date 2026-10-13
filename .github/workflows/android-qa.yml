@@ -2,7 +2,7 @@ name: Android Port - QA Smoke Test
 
 # Recovers + patches the project, imports it with Godot 4.8-dev3,
 # then actually runs the game headless: menu -> Start -> skip intro ->
-# walk/look -> load dream scene. Commits the log back for inspection.
+# walk/look -> load dream scene. Commits the logs back for inspection.
 
 on:
   push:
@@ -27,17 +27,31 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Download game + GDRE + recover
+      - name: Download game from Google Drive
         run: |
           pip install --quiet gdown
-          python3 -m gdown "$DRIVE_FILE_ID" -O windows.zip
+          for i in 1 2 3; do
+            python3 -m gdown "$DRIVE_FILE_ID" -O windows.zip && break || sleep 15
+          done
+          ls -lh windows.zip
           unzip -o windows.zip -d game_win
+          find game_win -type f -exec ls -lh {} \;
+
+      - name: Download GDRE Tools
+        run: |
           curl -L -o gdre.zip "https://github.com/GDRETools/gdsdecomp/releases/download/v2.7.4/GDRE_tools-v2.7.4-linux.zip"
           unzip -o gdre.zip -d gdre
+          find gdre -type f | head -20
           GDRE_BIN="$(find gdre -type f -name '*GDRE*' | head -1)"
+          if [ -z "$GDRE_BIN" ]; then GDRE_BIN="$(find gdre -type f -perm -u+x | head -1)"; fi
+          echo "GDRE_BIN=$GDRE_BIN" >> "$GITHUB_ENV"
           chmod +x "$GDRE_BIN" || true
+
+      - name: Recover project
+        run: |
           PCK="$(find game_win -name '*.pck' | head -1)"
-          "$GDRE_BIN" --headless --recover="$PCK" --output="$PWD/recovered_full" 2>&1 | tail -20
+          echo "PCK=$PCK"
+          "$GDRE_BIN" --headless --recover="$PCK" --output="$PWD/recovered_full" 2>&1 | tee recover.log || true
           test -f recovered_full/project.godot
 
       - name: Apply Android port overlay + smoke test script
@@ -64,21 +78,23 @@ jobs:
         run: |
           set +e
           timeout 400 "$GODOT_BIN" --headless --path recovered_full --script res://android/smoke_test.gd 2>&1 | tee smoke.log
-          CODE=${PIPESTATUS[0]}
-          echo "smoke exit code: $CODE"
-          grep -E "SMOKE|SCRIPT ERROR|ERROR" smoke.log | head -80 || true
-          cp smoke.log qa_import.log android-port/ 2>/dev/null || true
+          echo "smoke pipe status: ${PIPESTATUS[*]}"
+          grep -E "SMOKE|SCRIPT ERROR" smoke.log | head -80 || true
           true
 
       - name: Commit QA logs back to branch
         if: always()
         run: |
+          mkdir -p android-port/qa-logs
+          cp -f recover.log android-port/qa-logs/ 2>/dev/null || true
+          cp -f qa_import.log android-port/qa-logs/ 2>/dev/null || true
+          cp -f smoke.log android-port/qa-logs/ 2>/dev/null || true
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add android-port/smoke.log android-port/qa_import.log 2>/dev/null || true
+          git add android-port/qa-logs
           if git diff --cached --quiet; then
             echo "no logs to commit"
           else
-            git commit -m "Android QA smoke test logs [skip ci]"
+            git commit -m "Android QA logs [skip ci]"
             git push origin HEAD:arena/a8b5a558-salah
           fi
