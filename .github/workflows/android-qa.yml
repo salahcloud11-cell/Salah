@@ -54,10 +54,12 @@ jobs:
           "$GDRE_BIN" --headless --recover="$PCK" --output="$PWD/recovered_full" 2>&1 | tee recover.log || true
           test -f recovered_full/project.godot
 
-      - name: Apply Android port overlay + smoke test script
+      - name: Apply Android port overlay + smoke test autoload
         run: |
           python3 android-port/patch_project.py recovered_full android-port/overlay
-          cp android-port/smoke_test.gd recovered_full/android/smoke_test.gd
+          cp android-port/qa_smoke.gd recovered_full/android/qa_smoke.gd
+          sed -i 's|TouchControls="\*res://android/touch_controls.gd"|&\nQaSmoke="*res://android/qa_smoke.gd"|' recovered_full/project.godot
+          grep -A2 "autoload" recovered_full/project.godot | head -8
 
       - name: Download Godot editor
         run: |

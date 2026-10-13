@@ -1,7 +1,8 @@
-extends SceneTree
-## Headless smoke test for the Android port (run by android-qa.yml).
-## Loads the menu, presses Start, skips the intro, walks the player,
-## checks camera look and the dream scene, then reports SMOKE PASS/FAIL.
+extends Node
+## QaSmoke — temporary autoload injected ONLY by android-qa.yml.
+## Runs inside the real game (normal main loop, autoloads active):
+## menu -> Start -> skip intro -> look -> walk -> dream/character checks.
+## Prints SMOKE PASS/FAIL and quits with a matching exit code. Never shipped.
 
 var failures: Array[String] = []
 
@@ -15,12 +16,12 @@ func _fail(msg: String) -> void:
 	printerr("SMOKE-FAIL: ", msg)
 
 
-func _initialize() -> void:
+func _ready() -> void:
 	_run.call_deferred()
 
 
 func _wait(sec: float) -> void:
-	await create_timer(sec).timeout
+	await get_tree().create_timer(sec).timeout
 
 
 func _send_key(keycode: Key) -> void:
@@ -48,55 +49,60 @@ func _find_player(node: Node) -> Node:
 	return null
 
 
+func _dump_tree(node: Node, depth: int, max_depth: int) -> void:
+	var pad := ""
+	for i in depth:
+		pad += "  "
+	print("TREE: ", pad, node.name, " (", node.get_class(), ")")
+	if depth >= max_depth:
+		return
+	for child in node.get_children():
+		_dump_tree(child, depth + 1, max_depth)
+
+
 func _run() -> void:
-	await _wait(1.0)
-	var names := []
-	for c in root.get_children():
-		names.append(c.name)
-	_ok("root children (autoloads): %s" % [names])
-	if root.get_node_or_null("TouchControls") == null:
+	await _wait(1.5)
+	_ok("scene at boot: %s" % (get_tree().current_scene.name if get_tree().current_scene else "null"))
+	if get_node_or_null("/root/TouchControls") == null:
 		_fail("TouchControls autoload missing")
-	if root.get_node_or_null("Settings") == null:
+	if get_node_or_null("/root/Settings") == null:
 		_fail("Settings autoload missing")
 
-	# 1) main menu
-	var err := change_scene_to_file("res://ui/MainMenu.tscn")
-	if err != OK:
-		_fail("change_scene_to_file(MainMenu) err=%d" % err)
-	await _wait(2.0)
-	if current_scene == null:
-		_fail("no current scene after menu load")
-		_finish()
-		return
-	_ok("menu scene: %s" % current_scene.name)
-	var start_btn := current_scene.get_node_or_null("MenuWrap/MenuContainer/StartButton") as Button
+	var start_btn := get_tree().current_scene.get_node_or_null("MenuWrap/MenuContainer/StartButton") as Button
 	if start_btn == null:
-		_fail("StartButton not found in menu")
+		_fail("StartButton not found")
 		_finish()
 		return
-
-	# 2) press Start -> apartment scene
 	start_btn.pressed.emit()
 	var waited := 0.0
 	while waited < 15.0:
 		await _wait(0.5)
 		waited += 0.5
-		if current_scene != null and current_scene.name != "MainMenu":
+		if get_tree().current_scene != null and get_tree().current_scene.name != "MainMenu":
 			break
-	if current_scene == null or current_scene.name == "MainMenu":
-		_fail("game scene did not load after Start (scene=%s)" % (current_scene.name if current_scene else "null"))
+	if get_tree().current_scene == null or get_tree().current_scene.name == "MainMenu":
+		_fail("game scene did not load after Start")
 		_finish()
 		return
-	_ok("game scene: %s" % current_scene.name)
+	_ok("game scene: %s" % get_tree().current_scene.name)
+	var scene := get_tree().current_scene
 
-	var player := _find_player(current_scene)
+	if scene.get_node_or_null("Bedroom/Furniture/Bed") == null:
+		_fail("Bed interactable missing")
+	else:
+		_ok("Bed interactable present")
+	if scene.get_node_or_null("FrontDoor") == null:
+		_fail("FrontDoor interactable missing")
+	else:
+		_ok("FrontDoor interactable present")
+
+	var player := _find_player(scene)
 	if player == null:
-		_fail("player not found in game scene")
+		_fail("player not found")
 		_finish()
 		return
 	_ok("player found")
 
-	# 3) skip intro (Escape), wait for gameplay input
 	for i in 3:
 		_send_key(KEY_ESCAPE)
 		await _wait(1.0)
@@ -112,7 +118,6 @@ func _run() -> void:
 	else:
 		_fail("player input never enabled (intro stuck?)")
 
-	# 4) look: mouse motion should change target yaw
 	var yaw_before: float = player.get("target_yaw")
 	var motion := InputEventMouseMotion.new()
 	motion.relative = Vector2(240, 0)
@@ -122,9 +127,8 @@ func _run() -> void:
 	if not is_equal_approx(yaw_before, yaw_after):
 		_ok("camera look works (yaw %.3f -> %.3f)" % [yaw_before, yaw_after])
 	else:
-		_fail("camera look did not respond to mouse motion")
+		_fail("camera look did not respond")
 
-	# 5) walk forward
 	var pos_before: Vector3 = player.global_position
 	Input.action_press("up")
 	await _wait(1.6)
@@ -134,15 +138,35 @@ func _run() -> void:
 	if moved > 0.4:
 		_ok("player walked %.2f m" % moved)
 	else:
-		_fail("player did not move (moved %.3f m)" % moved)
+		_fail("player did not move (%.3f m)" % moved)
 
-	# 6) dream scene integrity (character models etc.)
+	# character models (redirected FBX->GLB)
+	for path in ["res://apartment/assets/characters/character_male.tscn", "res://apartment/assets/characters/character_female.tscn"]:
+		var ps := load(path) as PackedScene
+		if ps == null:
+			_fail("%s failed to load" % path)
+			continue
+		var inst := ps.instantiate()
+		add_child(inst)
+		await _wait(0.5)
+		var skel: Skeleton3D = null
+		for n in inst.find_children("*", "Skeleton3D", true, false):
+			skel = n as Skeleton3D
+			break
+		if skel != null:
+			_ok("%s has Skeleton3D (%d bones)" % [path.get_file(), skel.get_bone_count()])
+		else:
+			_fail("%s: NO Skeleton3D under model" % path.get_file())
+			_dump_tree(inst, 0, 4)
+		inst.queue_free()
+		await _wait(0.3)
+
 	var dream_ps := load("res://dreams/DreamCorridor.tscn") as PackedScene
 	if dream_ps == null:
 		_fail("DreamCorridor.tscn failed to load")
 	else:
 		var dream := dream_ps.instantiate()
-		root.add_child(dream)
+		get_tree().root.add_child(dream)
 		await _wait(1.5)
 		_ok("DreamCorridor instantiated")
 		dream.queue_free()
@@ -154,8 +178,8 @@ func _run() -> void:
 func _finish() -> void:
 	if failures.is_empty():
 		print("SMOKE PASS")
-		quit(0)
+		get_tree().quit(0)
 	else:
 		printerr("SMOKE FAILED (%d): %s" % [failures.size(), failures])
 		print("SMOKE FAIL")
-		quit(1)
+		get_tree().quit(1)
