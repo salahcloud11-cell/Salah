@@ -5,9 +5,9 @@ Android version of the Windows game found in `windows.zip` on Google Drive
 
 ## 📱 Download & install
 
-- **Google Drive:** https://drive.google.com/file/d/1mCO4du-ZFAjV2ORdgsVdkfO3hBk3zgAX/view
-  (file: `AwakeOrNot.apk`, v2, 49 MB, in the same Drive as `windows.zip`)
-- **GitHub Release (mirror):** https://github.com/salahcloud11-cell/Salah/releases/tag/awake-or-not-android-v2
+- **Google Drive:** https://drive.google.com/file/d/12qZgfc8WYruOMCOiuNP0zvbFp_jSdp7a/view
+  (file: `AwakeOrNot.apk`, **v3 Lite**, 74 MB universal 32-bit+64-bit, in the same Drive as `windows.zip`)
+- **GitHub Release (mirror):** https://github.com/salahcloud11-cell/Salah/releases/tag/awake-or-not-android-v3
 
 1. Open a link on your Android phone and download `AwakeOrNot.apk`.
 2. Tap the downloaded file → allow "Install unknown apps" if asked → **Install**.
@@ -44,16 +44,19 @@ Pair the controller in Android Bluetooth settings (or plug it in with an
 OTG cable) before or during the game. When the pad is used, the touch
 buttons hide automatically; touch the screen to bring them back.
 
-## ⚡ Low-end device support (v2)
+## ⚡ Low-end support — v3 Lite (Android 11 · 2 GB RAM · 32-bit)
 
-- Adaptive render resolution: the 3D render scale steps between
-  1.0 → 0.85 → 0.7 → 0.55 → 0.45 automatically to hold a playable FPS
-  (lighter work for weak GPUs, full quality when the phone is fast).
-- Base render scale 0.75, Mobile renderer, ETC2 textures (phone GPUs
-  can't use the Windows S3TC ones), smaller shadow atlas (2048),
-  earlier mesh LOD, 60 FPS cap.
-- Works best on phones with Vulkan (most phones from ~2019 onward);
-  on very weak devices the adaptive scaler keeps it playable.
+- **32-bit + 64-bit universal APK** (armeabi-v7a + arm64-v8a): installs
+  on old 32-bit phones and modern ones with the same file.
+- **Compatibility (OpenGL ES) renderer** instead of Vulkan: runs on
+  weak/old GPUs that struggle with or lack Vulkan, and uses much less
+  RAM. (Trade-off: some glow effects are simplified.)
+- **540p base render resolution** (960×540, expand to screen aspect)
+  with adaptive resolution on top: render scale steps
+  0.85 → 0.7 → 0.6 → 0.5 → 0.4 automatically to hold playable FPS.
+- **Textures capped at 1024 px** on import + ETC2 compression
+  (big RAM saving), shadow atlas 1024, earlier mesh LOD, 60 FPS cap.
+- Target: Android 11 (works on Android 7+), 2 GB RAM devices.
 
 ## 🔧 How the conversion was done
 
@@ -91,7 +94,7 @@ build workflow regenerates + republishes the APK (it needs `windows.zip`
 temporarily link-shared on Google Drive — set it back to private
 afterwards). Then upload `android-port/dist/AwakeOrNot.apk` to Drive.
 
-SHA-256 (v2): see `android-port/dist/sha256.txt`.
+SHA-256 (v3): see `android-port/dist/sha256.txt`.
 
 Known notes: performance still depends on your GPU (the adaptive
 scaler is the main defense on weak phones); one book-stack model lost
