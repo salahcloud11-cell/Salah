@@ -1,0 +1,84 @@
+name: Android Port - QA Smoke Test
+
+# Recovers + patches the project, imports it with Godot 4.8-dev3,
+# then actually runs the game headless: menu -> Start -> skip intro ->
+# walk/look -> load dream scene. Commits the log back for inspection.
+
+on:
+  push:
+    branches:
+      - arena/a8b5a558-salah
+    paths:
+      - "android-port/qa.trigger"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  GODOT_TAG: 4.8-dev3
+  DRIVE_FILE_ID: 1xweuYvek8Z41HqdybAiIqHPatIHbmb02
+
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download game + GDRE + recover
+        run: |
+          pip install --quiet gdown
+          python3 -m gdown "$DRIVE_FILE_ID" -O windows.zip
+          unzip -o windows.zip -d game_win
+          curl -L -o gdre.zip "https://github.com/GDRETools/gdsdecomp/releases/download/v2.7.4/GDRE_tools-v2.7.4-linux.zip"
+          unzip -o gdre.zip -d gdre
+          GDRE_BIN="$(find gdre -type f -name '*GDRE*' | head -1)"
+          chmod +x "$GDRE_BIN" || true
+          PCK="$(find game_win -name '*.pck' | head -1)"
+          "$GDRE_BIN" --headless --recover="$PCK" --output="$PWD/recovered_full" 2>&1 | tail -20
+          test -f recovered_full/project.godot
+
+      - name: Apply Android port overlay + smoke test script
+        run: |
+          python3 android-port/patch_project.py recovered_full android-port/overlay
+          cp android-port/smoke_test.gd recovered_full/android/smoke_test.gd
+
+      - name: Download Godot editor
+        run: |
+          curl -L -o godot.zip "https://github.com/godotengine/godot-builds/releases/download/${GODOT_TAG}/Godot_v${GODOT_TAG}_linux.x86_64.zip"
+          unzip -o godot.zip -d godot_editor
+          GODOT_BIN="$(find godot_editor -type f -name 'Godot*' | head -1)"
+          chmod +x "$GODOT_BIN"
+          echo "GODOT_BIN=$PWD/$GODOT_BIN" >> "$GITHUB_ENV"
+          "$GODOT_BIN" --version
+
+      - name: Import project
+        run: |
+          cd recovered_full
+          timeout 1500 "$GODOT_BIN" --headless --path . --import 2>&1 | tee ../qa_import.log || true
+          cd ..
+
+      - name: Run smoke test
+        run: |
+          set +e
+          timeout 400 "$GODOT_BIN" --headless --path recovered_full --script res://android/smoke_test.gd 2>&1 | tee smoke.log
+          CODE=${PIPESTATUS[0]}
+          echo "smoke exit code: $CODE"
+          grep -E "SMOKE|SCRIPT ERROR|ERROR" smoke.log | head -80 || true
+          cp smoke.log qa_import.log android-port/ 2>/dev/null || true
+          true
+
+      - name: Commit QA logs back to branch
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add android-port/smoke.log android-port/qa_import.log 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "no logs to commit"
+          else
+            git commit -m "Android QA smoke test logs [skip ci]"
+            git push origin HEAD:arena/a8b5a558-salah
+          fi
