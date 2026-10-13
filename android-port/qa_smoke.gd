@@ -148,6 +148,40 @@ func _run() -> void:
 	else:
 		_fail("player did not move (%.3f m)" % moved)
 
+
+	# 7) gamepad: bindings exist for every gameplay action
+	for action in ["up", "down", "left", "right", "jump", "sprint", "interact"]:
+		var has_pad := false
+		for ev in InputMap.action_get_events(action):
+			if ev is InputEventJoypadButton or ev is InputEventJoypadMotion:
+				has_pad = true
+		if has_pad:
+			_ok("gamepad binding present: %s" % action)
+		else:
+			_fail("gamepad binding MISSING: %s" % action)
+
+	# 8) gamepad: right stick turns the camera (via TouchControls pad look)
+	var pad_yaw_before: float = player.get("target_yaw")
+	_send_joy_motion(JOY_AXIS_RIGHT_X, 1.0)
+	await _wait(0.8)
+	_send_joy_motion(JOY_AXIS_RIGHT_X, 0.0)
+	await _wait(0.2)
+	var pad_yaw_after: float = player.get("target_yaw")
+	if absf(pad_yaw_after - pad_yaw_before) > 0.3:
+		_ok("right stick look works (yaw %.3f -> %.3f)" % [pad_yaw_before, pad_yaw_after])
+	else:
+		_fail("right stick look did not turn camera")
+
+	# 9) gamepad: left stick drives the 'up' action with analog strength
+	_send_joy_motion(JOY_AXIS_LEFT_Y, -1.0)
+	await _wait(0.4)
+	var stick_vec := Input.get_vector("left", "right", "up", "down")
+	_send_joy_motion(JOY_AXIS_LEFT_Y, 0.0)
+	if stick_vec.y < -0.5:
+		_ok("left stick movement works (vector %s)" % stick_vec)
+	else:
+		_fail("left stick did not drive movement actions (%s)" % stick_vec)
+
 	# character models (redirected FBX->GLB)
 	for path in ["res://apartment/assets/characters/character_male.tscn", "res://apartment/assets/characters/character_female.tscn"]:
 		var ps := load(path) as PackedScene
