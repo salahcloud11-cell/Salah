@@ -1,0 +1,91 @@
+name: Android Port - Recover Project
+
+# Phase 1 of the Android port: download windows.zip from Google Drive,
+# recover the Godot project inside "Awake or not.pck" with GDRE Tools,
+# and commit the recovered TEXT sources (scripts/scenes/project.godot)
+# back to this branch under recovered_src/ so they can be inspected
+# and patched for Android. Heavy binary assets are not committed.
+
+on:
+  push:
+    branches:
+      - arena/a8b5a558-salah
+    paths:
+      - "android-port/recover.trigger"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download game from Google Drive
+        run: |
+          pip install --quiet gdown
+          python3 -m gdown "1xweuYvek8Z41HqdybAiIqHPatIHbmb02" -O windows.zip
+          ls -lh windows.zip
+          unzip -o windows.zip -d game_win
+          find game_win -type f -exec ls -lh {} \;
+
+      - name: Download GDRE Tools
+        run: |
+          curl -L -o gdre.zip "https://github.com/GDRETools/gdsdecomp/releases/download/v2.7.4/GDRE_tools-v2.7.4-linux.zip"
+          unzip -o gdre.zip -d gdre
+          find gdre -type f | head -20
+          GDRE_BIN="$(find gdre -type f -name '*GDRE*' | head -1)"
+          if [ -z "$GDRE_BIN" ]; then GDRE_BIN="$(find gdre -type f -perm -u+x | head -1)"; fi
+          echo "GDRE_BIN=$GDRE_BIN" >> "$GITHUB_ENV"
+          chmod +x "$GDRE_BIN" || true
+          ls -lh gdre
+
+      - name: GDRE version + bytecode list
+        run: |
+          "$GDRE_BIN" --headless --gdre-version 2>&1 | tee gdre_version.log || true
+          "$GDRE_BIN" --headless --list-bytecode-versions 2>&1 | tee bytecode_versions.log || true
+
+      - name: Recover project
+        run: |
+          PCK="$(find game_win -name '*.pck' | head -1)"
+          echo "PCK=$PCK"
+          mkdir -p recovered_full
+          "$GDRE_BIN" --headless --recover="$PCK" --output="$PWD/recovered_full" 2>&1 | tee recover.log || true
+          echo "---- recovered tree (counts) ----"
+          find recovered_full -type f | wc -l
+          du -sh recovered_full || true
+          find recovered_full -type f | sort | head -100
+
+      - name: Collect text sources
+        run: |
+          mkdir -p recovered_src
+          cp -f recover.log recovered_src/ 2>/dev/null || true
+          cp -f gdre_version.log recovered_src/ 2>/dev/null || true
+          cp -f bytecode_versions.log recovered_src/ 2>/dev/null || true
+          (cd recovered_full && find . -type f | sort) > recovered_src/ALL_FILES.txt || true
+          # copy only lightweight text files, preserving paths
+          cd recovered_full
+          find . -type f \( -name '*.gd' -o -name '*.tscn' -o -name '*.tres' \
+            -o -name '*.gdshader' -o -name '*.godot' -o -name '*.cfg' \
+            -o -name '*.import' -o -name '*.translation' -o -name '*.md' \
+            -o -name '*.txt' -o -name '*.svg' \) \
+            -exec cp --parents {} ../recovered_src/ \; || true
+          cd ..
+          find recovered_src -type f | sort
+          du -sh recovered_src
+
+      - name: Commit recovered sources back to branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add recovered_src
+          if git diff --cached --quiet; then
+            echo "Nothing to commit"
+          else
+            git commit -m "Recover Godot project sources from windows.zip [skip ci]"
+            git push origin HEAD:arena/a8b5a558-salah
+          fi
