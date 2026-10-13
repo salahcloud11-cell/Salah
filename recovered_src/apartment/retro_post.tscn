@@ -1,0 +1,29 @@
+[gd_scene format=3 uid="uid://c1jufuxwdiwmy"]
+
+[ext_resource type="Script" uid="uid://cytsm2kuq7l7w" path="res://shaders/retro_toggle.gd" id="1"]
+[ext_resource type="Shader" uid="uid://bmlsdkrhuu3pw" path="res://shaders/psx_dither_postprocess.gdshader" id="2"]
+
+[sub_resource type="ShaderMaterial" id="Mat_retro"]
+shader = ExtResource("2")
+shader_parameter/effect_strength = 1.0
+shader_parameter/dither_strength = 0.094000004465
+shader_parameter/color_levels = 13.60800055138
+shader_parameter/pixel_scale = 2.0
+shader_parameter/saturation = 1.05
+shader_parameter/contrast = 1.05
+shader_parameter/brightness = 0.0
+shader_parameter/vignette_strength = 0.4400000209
+shader_parameter/opacity = 1.0
+
+[node name="RetroPost" type="CanvasLayer" unique_id=41272546]
+layer = -1
+script = ExtResource("1")
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=240448255]
+material = SubResource("Mat_retro")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2

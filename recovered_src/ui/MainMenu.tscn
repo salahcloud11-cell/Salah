@@ -1,0 +1,464 @@
+[gd_scene format=3 uid="uid://c2bdbjc8200d"]
+
+[ext_resource type="Script" uid="uid://bqhnu4msw2372" path="res://ui/main_menu.gd" id="1"]
+[ext_resource type="PackedScene" uid="uid://b1mg5unib83bj" path="res://apartment/ApartmentBlockout.tscn" id="2"]
+[ext_resource type="Texture2D" uid="uid://beq5uwkmaxx7r" path="res://apartment/assets/Textures/Wallpaper002A_1K-JPG_Color.jpg" id="3"]
+
+[sub_resource type="StyleBoxFlat" id="btn_normal"]
+content_margin_left = 18.0
+content_margin_top = 8.0
+content_margin_right = 18.0
+content_margin_bottom = 8.0
+bg_color = Color(0.68537986, 0.5766802, 0.38669863, 1)
+
+[sub_resource type="StyleBoxFlat" id="btn_pressed"]
+content_margin_left = 18.0
+content_margin_top = 8.0
+content_margin_right = 18.0
+content_margin_bottom = 8.0
+bg_color = Color(0.55, 0.38, 0.15, 0.55)
+
+[sub_resource type="StyleBoxFlat" id="btn_hover"]
+content_margin_left = 18.0
+content_margin_top = 8.0
+content_margin_right = 18.0
+content_margin_bottom = 8.0
+bg_color = Color(0.38, 0.25, 0.1, 0.38)
+
+[sub_resource type="StyleBoxEmpty" id="btn_focus"]
+
+[sub_resource type="StyleBoxFlat" id="slider_track"]
+content_margin_top = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0.16, 0.15, 0.13, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="slider_fill"]
+content_margin_top = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0.58, 0.52, 0.38, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="slider_fill_hover"]
+content_margin_top = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0.7, 0.62, 0.44, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[node name="MainMenu" type="Control" unique_id=661293705]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1")
+
+[node name="MenuApartment" parent="." unique_id=2115709254 instance=ExtResource("2")]
+menu_background_mode = true
+
+[node name="BgTexture" type="TextureRect" parent="." unique_id=167065857]
+visible = false
+modulate = Color(1, 1, 1, 0.16)
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("3")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Background" type="ColorRect" parent="." unique_id=1144465010]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.02, 0.018, 0.015, 0.55)
+
+[node name="Fade" type="ColorRect" parent="." unique_id=1595914751]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0)
+
+[node name="MenuWrap" type="CenterContainer" parent="." unique_id=1998581358]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MenuContainer" type="VBoxContainer" parent="MenuWrap" unique_id=430985085]
+layout_mode = 2
+alignment = 1
+
+[node name="TitleLabel" type="Label" parent="MenuWrap/MenuContainer" unique_id=1064838541]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.82, 0.71, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 12
+theme_override_font_sizes/font_size = 46
+text = "مستيقظ أم لا؟"
+horizontal_alignment = 1
+
+[node name="TitleSpacer" type="Control" parent="MenuWrap/MenuContainer" unique_id=55129543]
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="StartButton" type="Button" parent="MenuWrap/MenuContainer" unique_id=1282779226]
+custom_minimum_size = Vector2(340, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0.95, 0.74, 0.4, 1)
+theme_override_colors/font_focus_color = Color(1, 0.86, 0.55, 1)
+theme_override_colors/font_pressed_color = Color(0.9, 0.62, 0.3, 1)
+theme_override_colors/font_hover_color = Color(1, 0.86, 0.55, 1)
+theme_override_font_sizes/font_size = 30
+theme_override_styles/normal = SubResource("btn_normal")
+theme_override_styles/pressed = SubResource("btn_pressed")
+theme_override_styles/hover = SubResource("btn_hover")
+theme_override_styles/focus = SubResource("btn_focus")
+text = "ابدأ"
+
+[node name="SettingsButton" type="Button" parent="MenuWrap/MenuContainer" unique_id=1086045417]
+custom_minimum_size = Vector2(340, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0.95, 0.74, 0.4, 1)
+theme_override_colors/font_focus_color = Color(1, 0.86, 0.55, 1)
+theme_override_colors/font_pressed_color = Color(0.9, 0.62, 0.3, 1)
+theme_override_colors/font_hover_color = Color(1, 0.86, 0.55, 1)
+theme_override_font_sizes/font_size = 30
+theme_override_styles/normal = SubResource("btn_normal")
+theme_override_styles/pressed = SubResource("btn_pressed")
+theme_override_styles/hover = SubResource("btn_hover")
+theme_override_styles/focus = SubResource("btn_focus")
+text = "الإعدادات"
+
+[node name="CreditsButton" type="Button" parent="MenuWrap/MenuContainer" unique_id=1729992855]
+custom_minimum_size = Vector2(340, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0.95, 0.74, 0.4, 1)
+theme_override_colors/font_focus_color = Color(1, 0.86, 0.55, 1)
+theme_override_colors/font_pressed_color = Color(0.9, 0.62, 0.3, 1)
+theme_override_colors/font_hover_color = Color(1, 0.86, 0.55, 1)
+theme_override_font_sizes/font_size = 30
+theme_override_styles/normal = SubResource("btn_normal")
+theme_override_styles/pressed = SubResource("btn_pressed")
+theme_override_styles/hover = SubResource("btn_hover")
+theme_override_styles/focus = SubResource("btn_focus")
+text = "فريق العمل"
+
+[node name="QuitButton" type="Button" parent="MenuWrap/MenuContainer" unique_id=1973097214]
+custom_minimum_size = Vector2(340, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0.95, 0.74, 0.4, 1)
+theme_override_colors/font_focus_color = Color(1, 0.86, 0.55, 1)
+theme_override_colors/font_pressed_color = Color(0.9, 0.62, 0.3, 1)
+theme_override_colors/font_hover_color = Color(1, 0.86, 0.55, 1)
+theme_override_font_sizes/font_size = 30
+theme_override_styles/normal = SubResource("btn_normal")
+theme_override_styles/pressed = SubResource("btn_pressed")
+theme_override_styles/hover = SubResource("btn_hover")
+theme_override_styles/focus = SubResource("btn_focus")
+text = "خروج"
+
+[node name="SettingsWrap" type="CenterContainer" parent="." unique_id=1666815688]
+visible = false
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="SettingsPanel" type="VBoxContainer" parent="SettingsWrap" unique_id=1919488955]
+custom_minimum_size = Vector2(620, 0)
+layout_mode = 2
+alignment = 1
+
+[node name="SettingsTitle" type="Label" parent="SettingsWrap/SettingsPanel" unique_id=945787651]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.82, 0.71, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 10
+theme_override_font_sizes/font_size = 34
+text = "الإعدادات"
+horizontal_alignment = 1
+
+[node name="SettingsSpacer" type="Control" parent="SettingsWrap/SettingsPanel" unique_id=1950682144]
+custom_minimum_size = Vector2(0, 16)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="MasterRow" type="HBoxContainer" parent="SettingsWrap/SettingsPanel" unique_id=438616052]
+layout_mode = 2
+
+[node name="MasterLabel" type="Label" parent="SettingsWrap/SettingsPanel/MasterRow" unique_id=1059963680]
+custom_minimum_size = Vector2(270, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.74, 0.62, 1)
+theme_override_font_sizes/font_size = 22
+text = "الصوت الرئيسي"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="MasterSlider" type="HSlider" parent="SettingsWrap/SettingsPanel/MasterRow" unique_id=1148169837]
+custom_minimum_size = Vector2(240, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_styles/slider = SubResource("slider_track")
+theme_override_styles/grabber_area = SubResource("slider_fill")
+theme_override_styles/grabber_area_highlight = SubResource("slider_fill_hover")
+max_value = 1.0
+step = 0.01
+value = 1.0
+
+[node name="MasterValue" type="Label" parent="SettingsWrap/SettingsPanel/MasterRow" unique_id=1999128388]
+custom_minimum_size = Vector2(64, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.74, 0.62, 1)
+theme_override_font_sizes/font_size = 22
+text = "100%"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="MusicRow" type="HBoxContainer" parent="SettingsWrap/SettingsPanel" unique_id=2099238558]
+layout_mode = 2
+
+[node name="MusicLabel" type="Label" parent="SettingsWrap/SettingsPanel/MusicRow" unique_id=401088426]
+custom_minimum_size = Vector2(270, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.74, 0.62, 1)
+theme_override_font_sizes/font_size = 22
+text = "الموسيقى"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="MusicSlider" type="HSlider" parent="SettingsWrap/SettingsPanel/MusicRow" unique_id=269488829]
+custom_minimum_size = Vector2(240, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_styles/slider = SubResource("slider_track")
+theme_override_styles/grabber_area = SubResource("slider_fill")
+theme_override_styles/grabber_area_highlight = SubResource("slider_fill_hover")
+max_value = 1.0
+step = 0.01
+value = 0.8
+
+[node name="MusicValue" type="Label" parent="SettingsWrap/SettingsPanel/MusicRow" unique_id=1288401415]
+custom_minimum_size = Vector2(64, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.74, 0.62, 1)
+theme_override_font_sizes/font_size = 22
+text = "80%"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="SfxRow" type="HBoxContainer" parent="SettingsWrap/SettingsPanel" unique_id=1627672979]
+layout_mode = 2
+
+[node name="SfxLabel" type="Label" parent="SettingsWrap/SettingsPanel/SfxRow" unique_id=375824523]
+custom_minimum_size = Vector2(270, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.74, 0.62, 1)
+theme_override_font_sizes/font_size = 22
+text = "المؤثرات الصوتية"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="SfxSlider" type="HSlider" parent="SettingsWrap/SettingsPanel/SfxRow" unique_id=1052844505]
+custom_minimum_size = Vector2(240, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_styles/slider = SubResource("slider_track")
+theme_override_styles/grabber_area = SubResource("slider_fill")
+theme_override_styles/grabber_area_highlight = SubResource("slider_fill_hover")
+max_value = 1.0
+step = 0.01
+value = 0.8
+
+[node name="SfxValue" type="Label" parent="SettingsWrap/SettingsPanel/SfxRow" unique_id=1771290561]
+custom_minimum_size = Vector2(64, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.74, 0.62, 1)
+theme_override_font_sizes/font_size = 22
+text = "80%"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="SensRow" type="HBoxContainer" parent="SettingsWrap/SettingsPanel" unique_id=857593243]
+layout_mode = 2
+
+[node name="SensLabel" type="Label" parent="SettingsWrap/SettingsPanel/SensRow" unique_id=805757444]
+custom_minimum_size = Vector2(270, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.74, 0.62, 1)
+theme_override_font_sizes/font_size = 22
+text = "حساسية الفأرة"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="SensSlider" type="HSlider" parent="SettingsWrap/SettingsPanel/SensRow" unique_id=1629720252]
+custom_minimum_size = Vector2(240, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_styles/slider = SubResource("slider_track")
+theme_override_styles/grabber_area = SubResource("slider_fill")
+theme_override_styles/grabber_area_highlight = SubResource("slider_fill_hover")
+min_value = 0.001
+max_value = 0.02
+step = 0.0005
+value = 0.004
+
+[node name="SensValue" type="Label" parent="SettingsWrap/SettingsPanel/SensRow" unique_id=272194276]
+custom_minimum_size = Vector2(64, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.74, 0.62, 1)
+theme_override_font_sizes/font_size = 22
+text = "0.004"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="FullscreenRow" type="HBoxContainer" parent="SettingsWrap/SettingsPanel" unique_id=1718715264]
+layout_mode = 2
+
+[node name="FullscreenLabel" type="Label" parent="SettingsWrap/SettingsPanel/FullscreenRow" unique_id=1883407714]
+custom_minimum_size = Vector2(270, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.74, 0.62, 1)
+theme_override_font_sizes/font_size = 22
+text = "ملء الشاشة"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="FullscreenButton" type="Button" parent="SettingsWrap/SettingsPanel/FullscreenRow" unique_id=1312013042]
+custom_minimum_size = Vector2(240, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.95, 0.74, 0.4, 1)
+theme_override_colors/font_pressed_color = Color(0.9, 0.62, 0.3, 1)
+theme_override_colors/font_hover_color = Color(1, 0.86, 0.55, 1)
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("btn_normal")
+theme_override_styles/pressed = SubResource("btn_pressed")
+theme_override_styles/hover = SubResource("btn_hover")
+text = "ملء الشاشة   [ تشغيل ]"
+
+[node name="SettingsSpacer2" type="Control" parent="SettingsWrap/SettingsPanel" unique_id=15994547]
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="BackButton" type="Button" parent="SettingsWrap/SettingsPanel" unique_id=1432652506]
+custom_minimum_size = Vector2(220, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0.95, 0.74, 0.4, 1)
+theme_override_colors/font_focus_color = Color(1, 0.86, 0.55, 1)
+theme_override_colors/font_pressed_color = Color(0.9, 0.62, 0.3, 1)
+theme_override_colors/font_hover_color = Color(1, 0.86, 0.55, 1)
+theme_override_font_sizes/font_size = 26
+theme_override_styles/normal = SubResource("btn_normal")
+theme_override_styles/pressed = SubResource("btn_pressed")
+theme_override_styles/hover = SubResource("btn_hover")
+theme_override_styles/focus = SubResource("btn_focus")
+text = "رجوع"
+
+[node name="CreditsWrap" type="CenterContainer" parent="." unique_id=1452156500]
+visible = false
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="CreditsPanel" type="VBoxContainer" parent="CreditsWrap" unique_id=1781978140]
+custom_minimum_size = Vector2(620, 0)
+layout_mode = 2
+alignment = 1
+
+[node name="CreditsTitle" type="Label" parent="CreditsWrap/CreditsPanel" unique_id=1007375060]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.82, 0.71, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 10
+theme_override_font_sizes/font_size = 34
+text = "فريق العمل"
+horizontal_alignment = 1
+
+[node name="CreditsSpacer" type="Control" parent="CreditsWrap/CreditsPanel" unique_id=642793663]
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="VoiceActress" type="Label" parent="CreditsWrap/CreditsPanel" unique_id=61719672]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.74, 0.62, 1)
+theme_override_font_sizes/font_size = 24
+text = "الممثلة الصوتية: spyvoiceact"
+horizontal_alignment = 1
+
+[node name="VoiceActor" type="Label" parent="CreditsWrap/CreditsPanel" unique_id=88156960]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.74, 0.62, 1)
+theme_override_font_sizes/font_size = 24
+text = "الممثل الصوتي: musaabk99"
+horizontal_alignment = 1
+
+[node name="EverythingElse" type="Label" parent="CreditsWrap/CreditsPanel" unique_id=1144491960]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.74, 0.62, 1)
+theme_override_font_sizes/font_size = 24
+text = "برمجة اخراج رسم تصميم كل شيء ثاني: Sop.dev"
+horizontal_alignment = 1
+
+[node name="CreditsSpacer2" type="Control" parent="CreditsWrap/CreditsPanel" unique_id=596744438]
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="CreditsBackButton" type="Button" parent="CreditsWrap/CreditsPanel" unique_id=1562852238]
+custom_minimum_size = Vector2(220, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0.95, 0.74, 0.4, 1)
+theme_override_colors/font_focus_color = Color(1, 0.86, 0.55, 1)
+theme_override_colors/font_pressed_color = Color(0.9, 0.62, 0.3, 1)
+theme_override_colors/font_hover_color = Color(1, 0.86, 0.55, 1)
+theme_override_font_sizes/font_size = 26
+theme_override_styles/normal = SubResource("btn_normal")
+theme_override_styles/pressed = SubResource("btn_pressed")
+theme_override_styles/hover = SubResource("btn_hover")
+theme_override_styles/focus = SubResource("btn_focus")
+text = "رجوع"
+
+[node name="Audio" type="Node" parent="." unique_id=363007590]
+
+[node name="HoverSFX" type="AudioStreamPlayer" parent="Audio" unique_id=126150833]
+
+[node name="ClickSFX" type="AudioStreamPlayer" parent="Audio" unique_id=1998739448]
+
+[node name="StartSFX" type="AudioStreamPlayer" parent="Audio" unique_id=1795888257]

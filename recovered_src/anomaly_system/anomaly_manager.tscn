@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" uid="uid://wt8lfqq8jcvi" path="res://anomaly_system/anomaly_manager.gd" id="1"]
+
+[node name="AnomalyManager" type="Node" unique_id=926717710]
+script = ExtResource("1")

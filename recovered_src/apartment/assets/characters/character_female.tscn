@@ -1,0 +1,9 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" uid="uid://b1y34oaqm0q7g" path="res://apartment/assets/characters/character_pose.gd" id="1"]
+[ext_resource type="PackedScene" uid="uid://b1a6h6ml1aftr" path="res://apartment/assets/characters/Character_Female_02.fbx" id="2"]
+
+[node name="Woman" type="Node3D" unique_id=1646428477]
+script = ExtResource("1")
+
+[node name="Model" parent="." unique_id=1184809479 instance=ExtResource("2")]

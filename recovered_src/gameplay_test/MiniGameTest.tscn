@@ -1,0 +1,677 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" uid="uid://b41vfd4blfihg" path="res://gameplay_test/game_manager.gd" id="1"]
+[ext_resource type="Script" uid="uid://wt8lfqq8jcvi" path="res://anomaly_system/anomaly_manager.gd" id="2"]
+[ext_resource type="PackedScene" uid="uid://b7fppgc31wofr" path="res://player/player.tscn" id="3"]
+[ext_resource type="Script" uid="uid://bc8ps6kwu37qs" path="res://gameplay_test/interactable.gd" id="4"]
+[ext_resource type="Script" uid="uid://mbd44f4xdch0" path="res://anomaly_system/anomaly_object.gd" id="5"]
+
+[sub_resource type="ProceduralSkyMaterial" id="SkyMat"]
+sky_top_color = Color(0.35, 0.45, 0.65, 1)
+sky_horizon_color = Color(0.7, 0.72, 0.75, 1)
+
+[sub_resource type="Sky" id="SkyRes"]
+sky_material = SubResource("SkyMat")
+
+[sub_resource type="Environment" id="EnvRes"]
+background_mode = 2
+sky = SubResource("SkyRes")
+
+[sub_resource type="StandardMaterial3D" id="MatFloor"]
+albedo_color = Color(0.32, 0.32, 0.34, 1)
+
+[sub_resource type="BoxMesh" id="MeshFloor"]
+material = SubResource("MatFloor")
+size = Vector3(8, 0.2, 12)
+
+[sub_resource type="BoxShape3D" id="ShapeFloor"]
+size = Vector3(8, 0.2, 12)
+
+[sub_resource type="StandardMaterial3D" id="MatWall"]
+albedo_color = Color(0.72, 0.72, 0.74, 1)
+
+[sub_resource type="BoxMesh" id="MeshWall8"]
+material = SubResource("MatWall")
+size = Vector3(8, 2.6, 0.2)
+
+[sub_resource type="BoxShape3D" id="ShapeWall8"]
+size = Vector3(8, 2.6, 0.2)
+
+[sub_resource type="BoxMesh" id="MeshWallL4"]
+material = SubResource("MatWall")
+size = Vector3(0.2, 2.6, 4)
+
+[sub_resource type="BoxShape3D" id="ShapeWallL4"]
+size = Vector3(0.2, 2.6, 4)
+
+[sub_resource type="BoxMesh" id="MeshWallSeg"]
+material = SubResource("MatWall")
+size = Vector3(2.75, 2.6, 0.2)
+
+[sub_resource type="BoxShape3D" id="ShapeWallSeg"]
+size = Vector3(2.75, 2.6, 0.2)
+
+[sub_resource type="BoxMesh" id="MeshWallCorr"]
+material = SubResource("MatWall")
+size = Vector3(0.2, 2.6, 2)
+
+[sub_resource type="BoxShape3D" id="ShapeWallCorr"]
+size = Vector3(0.2, 2.6, 2)
+
+[sub_resource type="BoxMesh" id="MeshWallL6"]
+material = SubResource("MatWall")
+size = Vector3(0.2, 2.6, 6)
+
+[sub_resource type="BoxShape3D" id="ShapeWallL6"]
+size = Vector3(0.2, 2.6, 6)
+
+[sub_resource type="BoxMesh" id="MeshWallFront"]
+material = SubResource("MatWall")
+size = Vector3(3.3, 2.6, 0.2)
+
+[sub_resource type="BoxShape3D" id="ShapeWallFront"]
+size = Vector3(3.3, 2.6, 0.2)
+
+[sub_resource type="BoxShape3D" id="ShapeBed"]
+size = Vector3(1.6, 0.5, 2.1)
+
+[sub_resource type="StandardMaterial3D" id="MatWood"]
+albedo_color = Color(0.55, 0.4, 0.26, 1)
+
+[sub_resource type="BoxMesh" id="MeshBedFrame"]
+material = SubResource("MatWood")
+size = Vector3(1.7, 0.25, 2.2)
+
+[sub_resource type="StandardMaterial3D" id="MatBed"]
+albedo_color = Color(0.6, 0.6, 0.62, 1)
+
+[sub_resource type="BoxMesh" id="MeshBedMattress"]
+material = SubResource("MatBed")
+size = Vector3(1.5, 0.15, 2)
+
+[sub_resource type="BoxMesh" id="MeshBedHeadboard"]
+material = SubResource("MatWood")
+size = Vector3(1.7, 0.6, 0.1)
+
+[sub_resource type="StandardMaterial3D" id="MatPillow"]
+albedo_color = Color(0.92, 0.92, 0.93, 1)
+
+[sub_resource type="BoxMesh" id="MeshBedPillow"]
+material = SubResource("MatPillow")
+size = Vector3(0.5, 0.12, 0.3)
+
+[sub_resource type="BoxShape3D" id="ShapeDoor"]
+size = Vector3(1.3, 2.2, 0.1)
+
+[sub_resource type="StandardMaterial3D" id="MatDoor"]
+albedo_color = Color(0.42, 0.32, 0.22, 1)
+
+[sub_resource type="BoxMesh" id="MeshDoor"]
+material = SubResource("MatDoor")
+size = Vector3(1.3, 2.2, 0.08)
+
+[sub_resource type="BoxMesh" id="MeshTableTop"]
+material = SubResource("MatWood")
+size = Vector3(1.2, 0.08, 0.6)
+
+[sub_resource type="BoxMesh" id="MeshTableLeg"]
+material = SubResource("MatWood")
+size = Vector3(0.05, 0.72, 0.05)
+
+[sub_resource type="StandardMaterial3D" id="MatChair"]
+albedo_color = Color(0.45, 0.3, 0.2, 1)
+
+[sub_resource type="BoxMesh" id="MeshChairSeat"]
+material = SubResource("MatChair")
+size = Vector3(0.45, 0.08, 0.45)
+
+[sub_resource type="BoxMesh" id="MeshChairBack"]
+material = SubResource("MatChair")
+size = Vector3(0.45, 0.5, 0.06)
+
+[sub_resource type="BoxMesh" id="MeshChairLeg"]
+material = SubResource("MatChair")
+size = Vector3(0.05, 0.46, 0.05)
+
+[sub_resource type="StandardMaterial3D" id="MatPainting"]
+albedo_color = Color(0.3, 0.5, 0.7, 1)
+
+[sub_resource type="BoxMesh" id="MeshPainting"]
+material = SubResource("MatPainting")
+size = Vector3(1, 0.6, 0.06)
+
+[sub_resource type="StandardMaterial3D" id="MatClockBack"]
+albedo_color = Color(0.1, 0.1, 0.12, 1)
+
+[sub_resource type="BoxMesh" id="MeshClockBack"]
+material = SubResource("MatClockBack")
+size = Vector3(1.2, 0.7, 0.06)
+
+[sub_resource type="StandardMaterial3D" id="MatLampMetal"]
+albedo_color = Color(0.6, 0.6, 0.62, 1)
+
+[sub_resource type="CylinderMesh" id="MeshLampBase"]
+material = SubResource("MatLampMetal")
+top_radius = 0.18
+bottom_radius = 0.18
+height = 0.06
+
+[sub_resource type="CylinderMesh" id="MeshLampPole"]
+material = SubResource("MatLampMetal")
+top_radius = 0.03
+bottom_radius = 0.03
+height = 1.2
+
+[sub_resource type="StandardMaterial3D" id="MatLampShade"]
+albedo_color = Color(0.95, 0.9, 0.6, 1)
+
+[sub_resource type="SphereMesh" id="MeshLampShade"]
+material = SubResource("MatLampShade")
+radius = 0.18
+height = 0.36
+
+[node name="MiniGameTest" type="Node3D" unique_id=879664539]
+script = ExtResource("1")
+
+[node name="AnomalyManager" type="Node" parent="." unique_id=1088599114]
+script = ExtResource("2")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1015778094]
+environment = SubResource("EnvRes")
+
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=239922817]
+transform = Transform3D(0.87758255, -0.37554693, 0.2980157, 0, 0.62161, 0.7833269, -0.47942555, -0.687434, 0.54551405, 0, 0, 0)
+shadow_enabled = true
+
+[node name="SpawnPoint" type="Node3D" parent="." unique_id=633791545]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 1, -3.6)
+
+[node name="Player" parent="." unique_id=782138064 instance=ExtResource("3")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 1, -3.6)
+
+[node name="Apartment" type="Node3D" parent="." unique_id=1737478375]
+
+[node name="Floor" type="StaticBody3D" parent="Apartment" unique_id=1755095996]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Apartment/Floor" unique_id=573839308]
+mesh = SubResource("MeshFloor")
+
+[node name="Collision" type="CollisionShape3D" parent="Apartment/Floor" unique_id=2046224207]
+shape = SubResource("ShapeFloor")
+
+[node name="Walls" type="Node3D" parent="Apartment" unique_id=1888106933]
+
+[node name="BackWall" type="StaticBody3D" parent="Apartment/Walls" unique_id=2057966789]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.3, -6)
+
+[node name="Mesh" type="MeshInstance3D" parent="Apartment/Walls/BackWall" unique_id=1552996447]
+mesh = SubResource("MeshWall8")
+
+[node name="Collision" type="CollisionShape3D" parent="Apartment/Walls/BackWall" unique_id=96549163]
+shape = SubResource("ShapeWall8")
+
+[node name="BedroomLeft" type="StaticBody3D" parent="Apartment/Walls" unique_id=824981800]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 1.3, -4)
+
+[node name="Mesh" type="MeshInstance3D" parent="Apartment/Walls/BedroomLeft" unique_id=509193679]
+mesh = SubResource("MeshWallL4")
+
+[node name="Collision" type="CollisionShape3D" parent="Apartment/Walls/BedroomLeft" unique_id=1792560355]
+shape = SubResource("ShapeWallL4")
+
+[node name="BedroomRight" type="StaticBody3D" parent="Apartment/Walls" unique_id=1416302518]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 1.3, -4)
+
+[node name="Mesh" type="MeshInstance3D" parent="Apartment/Walls/BedroomRight" unique_id=1005759671]
+mesh = SubResource("MeshWallL4")
+
+[node name="Collision" type="CollisionShape3D" parent="Apartment/Walls/BedroomRight" unique_id=2020599741]
+shape = SubResource("ShapeWallL4")
+
+[node name="HallBoundary1" type="StaticBody3D" parent="Apartment/Walls" unique_id=540083336]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.625, 1.3, -2)
+
+[node name="Mesh" type="MeshInstance3D" parent="Apartment/Walls/HallBoundary1" unique_id=894906932]
+mesh = SubResource("MeshWallSeg")
+
+[node name="Collision" type="CollisionShape3D" parent="Apartment/Walls/HallBoundary1" unique_id=1188047252]
+shape = SubResource("ShapeWallSeg")
+
+[node name="HallBoundary2" type="StaticBody3D" parent="Apartment/Walls" unique_id=1156537306]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.625, 1.3, -2)
+
+[node name="Mesh" type="MeshInstance3D" parent="Apartment/Walls/HallBoundary2" unique_id=798085241]
+mesh = SubResource("MeshWallSeg")
+
+[node name="Collision" type="CollisionShape3D" parent="Apartment/Walls/HallBoundary2" unique_id=968791918]
+shape = SubResource("ShapeWallSeg")
+
+[node name="HallCorridor1" type="StaticBody3D" parent="Apartment/Walls" unique_id=1998859949]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.25, 1.3, -1)
+
+[node name="Mesh" type="MeshInstance3D" parent="Apartment/Walls/HallCorridor1" unique_id=748776712]
+mesh = SubResource("MeshWallCorr")
+
+[node name="Collision" type="CollisionShape3D" parent="Apartment/Walls/HallCorridor1" unique_id=1501776868]
+shape = SubResource("ShapeWallCorr")
+
+[node name="HallCorridor2" type="StaticBody3D" parent="Apartment/Walls" unique_id=1473741480]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.25, 1.3, -1)
+
+[node name="Mesh" type="MeshInstance3D" parent="Apartment/Walls/HallCorridor2" unique_id=848118519]
+mesh = SubResource("MeshWallCorr")
+
+[node name="Collision" type="CollisionShape3D" parent="Apartment/Walls/HallCorridor2" unique_id=196097811]
+shape = SubResource("ShapeWallCorr")
+
+[node name="HallExit1" type="StaticBody3D" parent="Apartment/Walls" unique_id=13860131]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.625, 1.3, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Apartment/Walls/HallExit1" unique_id=843040263]
+mesh = SubResource("MeshWallSeg")
+
+[node name="Collision" type="CollisionShape3D" parent="Apartment/Walls/HallExit1" unique_id=185344110]
+shape = SubResource("ShapeWallSeg")
+
+[node name="HallExit2" type="StaticBody3D" parent="Apartment/Walls" unique_id=319538411]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.625, 1.3, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Apartment/Walls/HallExit2" unique_id=726456278]
+mesh = SubResource("MeshWallSeg")
+
+[node name="Collision" type="CollisionShape3D" parent="Apartment/Walls/HallExit2" unique_id=554596722]
+shape = SubResource("ShapeWallSeg")
+
+[node name="LivingLeft" type="StaticBody3D" parent="Apartment/Walls" unique_id=1398370756]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 1.3, 3)
+
+[node name="Mesh" type="MeshInstance3D" parent="Apartment/Walls/LivingLeft" unique_id=1127461469]
+mesh = SubResource("MeshWallL6")
+
+[node name="Collision" type="CollisionShape3D" parent="Apartment/Walls/LivingLeft" unique_id=1776037463]
+shape = SubResource("ShapeWallL6")
+
+[node name="LivingRight" type="StaticBody3D" parent="Apartment/Walls" unique_id=595859756]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 1.3, 3)
+
+[node name="Mesh" type="MeshInstance3D" parent="Apartment/Walls/LivingRight" unique_id=1124006347]
+mesh = SubResource("MeshWallL6")
+
+[node name="Collision" type="CollisionShape3D" parent="Apartment/Walls/LivingRight" unique_id=1748568869]
+shape = SubResource("ShapeWallL6")
+
+[node name="FrontWall1" type="StaticBody3D" parent="Apartment/Walls" unique_id=1197764551]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.35, 1.3, 6)
+
+[node name="Mesh" type="MeshInstance3D" parent="Apartment/Walls/FrontWall1" unique_id=1775268018]
+mesh = SubResource("MeshWallFront")
+
+[node name="Collision" type="CollisionShape3D" parent="Apartment/Walls/FrontWall1" unique_id=1003969254]
+shape = SubResource("ShapeWallFront")
+
+[node name="FrontWall2" type="StaticBody3D" parent="Apartment/Walls" unique_id=1210082794]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.35, 1.3, 6)
+
+[node name="Mesh" type="MeshInstance3D" parent="Apartment/Walls/FrontWall2" unique_id=2020610536]
+mesh = SubResource("MeshWallFront")
+
+[node name="Collision" type="CollisionShape3D" parent="Apartment/Walls/FrontWall2" unique_id=1295016467]
+shape = SubResource("ShapeWallFront")
+
+[node name="Bedroom" type="Node3D" parent="Apartment" unique_id=1378337404]
+
+[node name="Bed" type="StaticBody3D" parent="Apartment/Bedroom" unique_id=25282601]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -4.9)
+script = ExtResource("4")
+prompt = "E - Go Back To Sleep"
+
+[node name="Collision" type="CollisionShape3D" parent="Apartment/Bedroom/Bed" unique_id=850022287]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 0)
+shape = SubResource("ShapeBed")
+
+[node name="Frame" type="MeshInstance3D" parent="Apartment/Bedroom/Bed" unique_id=965143996]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.125, 0)
+mesh = SubResource("MeshBedFrame")
+
+[node name="Mattress" type="MeshInstance3D" parent="Apartment/Bedroom/Bed" unique_id=1227805556]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.33, 0)
+mesh = SubResource("MeshBedMattress")
+
+[node name="Headboard" type="MeshInstance3D" parent="Apartment/Bedroom/Bed" unique_id=883518758]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, -1.05)
+mesh = SubResource("MeshBedHeadboard")
+
+[node name="Pillow" type="MeshInstance3D" parent="Apartment/Bedroom/Bed" unique_id=1781771290]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.45, 0.42, -0.8)
+mesh = SubResource("MeshBedPillow")
+
+[node name="LivingRoom" type="Node3D" parent="Apartment" unique_id=522930083]
+
+[node name="FrontDoor" type="StaticBody3D" parent="Apartment/LivingRoom" unique_id=1500125983]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 5.55)
+script = ExtResource("4")
+prompt = "E - Leave For Work"
+decision = 1
+
+[node name="Collision" type="CollisionShape3D" parent="Apartment/LivingRoom/FrontDoor" unique_id=148064765]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
+shape = SubResource("ShapeDoor")
+
+[node name="Slab" type="MeshInstance3D" parent="Apartment/LivingRoom/FrontDoor" unique_id=195878195]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
+mesh = SubResource("MeshDoor")
+
+[node name="Table" type="Node3D" parent="Apartment/LivingRoom" unique_id=1727679165]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0, 2.6)
+
+[node name="Top" type="MeshInstance3D" parent="Apartment/LivingRoom/Table" unique_id=97333399]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
+mesh = SubResource("MeshTableTop")
+
+[node name="Leg1" type="MeshInstance3D" parent="Apartment/LivingRoom/Table" unique_id=1639014458]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0.36, 0.24)
+mesh = SubResource("MeshTableLeg")
+
+[node name="Leg2" type="MeshInstance3D" parent="Apartment/LivingRoom/Table" unique_id=881495342]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 0.36, 0.24)
+mesh = SubResource("MeshTableLeg")
+
+[node name="Leg3" type="MeshInstance3D" parent="Apartment/LivingRoom/Table" unique_id=749533772]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0.36, -0.24)
+mesh = SubResource("MeshTableLeg")
+
+[node name="Leg4" type="MeshInstance3D" parent="Apartment/LivingRoom/Table" unique_id=432636349]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 0.36, -0.24)
+mesh = SubResource("MeshTableLeg")
+
+[node name="ChairAnomaly" type="Node3D" parent="Apartment/LivingRoom" unique_id=226457847]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0, 1.5)
+script = ExtResource("5")
+
+[node name="Variants" type="Node3D" parent="Apartment/LivingRoom/ChairAnomaly" unique_id=1745557712]
+
+[node name="Normal" type="Node3D" parent="Apartment/LivingRoom/ChairAnomaly/Variants" unique_id=1563719631]
+
+[node name="Seat" type="MeshInstance3D" parent="Apartment/LivingRoom/ChairAnomaly/Variants/Normal" unique_id=803215172]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+mesh = SubResource("MeshChairSeat")
+
+[node name="Back" type="MeshInstance3D" parent="Apartment/LivingRoom/ChairAnomaly/Variants/Normal" unique_id=97160447]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, -0.19)
+mesh = SubResource("MeshChairBack")
+
+[node name="Leg1" type="MeshInstance3D" parent="Apartment/LivingRoom/ChairAnomaly/Variants/Normal" unique_id=281932031]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.18, 0.23, 0.18)
+mesh = SubResource("MeshChairLeg")
+
+[node name="Leg2" type="MeshInstance3D" parent="Apartment/LivingRoom/ChairAnomaly/Variants/Normal" unique_id=562613034]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.18, 0.23, 0.18)
+mesh = SubResource("MeshChairLeg")
+
+[node name="Leg3" type="MeshInstance3D" parent="Apartment/LivingRoom/ChairAnomaly/Variants/Normal" unique_id=926139210]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.18, 0.23, -0.18)
+mesh = SubResource("MeshChairLeg")
+
+[node name="Leg4" type="MeshInstance3D" parent="Apartment/LivingRoom/ChairAnomaly/Variants/Normal" unique_id=1889355145]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.18, 0.23, -0.18)
+mesh = SubResource("MeshChairLeg")
+
+[node name="Rotated" type="Node3D" parent="Apartment/LivingRoom/ChairAnomaly/Variants" unique_id=1118070625]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0)
+
+[node name="Seat" type="MeshInstance3D" parent="Apartment/LivingRoom/ChairAnomaly/Variants/Rotated" unique_id=188778545]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+mesh = SubResource("MeshChairSeat")
+
+[node name="Back" type="MeshInstance3D" parent="Apartment/LivingRoom/ChairAnomaly/Variants/Rotated" unique_id=954653553]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, -0.19)
+mesh = SubResource("MeshChairBack")
+
+[node name="Leg1" type="MeshInstance3D" parent="Apartment/LivingRoom/ChairAnomaly/Variants/Rotated" unique_id=923635250]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.18, 0.23, 0.18)
+mesh = SubResource("MeshChairLeg")
+
+[node name="Leg2" type="MeshInstance3D" parent="Apartment/LivingRoom/ChairAnomaly/Variants/Rotated" unique_id=1567934956]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.18, 0.23, 0.18)
+mesh = SubResource("MeshChairLeg")
+
+[node name="Leg3" type="MeshInstance3D" parent="Apartment/LivingRoom/ChairAnomaly/Variants/Rotated" unique_id=854725702]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.18, 0.23, -0.18)
+mesh = SubResource("MeshChairLeg")
+
+[node name="Leg4" type="MeshInstance3D" parent="Apartment/LivingRoom/ChairAnomaly/Variants/Rotated" unique_id=1213784299]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.18, 0.23, -0.18)
+mesh = SubResource("MeshChairLeg")
+
+[node name="Giant" type="Node3D" parent="Apartment/LivingRoom/ChairAnomaly/Variants" unique_id=933574866]
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0)
+
+[node name="Seat" type="MeshInstance3D" parent="Apartment/LivingRoom/ChairAnomaly/Variants/Giant" unique_id=346293134]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+mesh = SubResource("MeshChairSeat")
+
+[node name="Back" type="MeshInstance3D" parent="Apartment/LivingRoom/ChairAnomaly/Variants/Giant" unique_id=866234637]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, -0.19)
+mesh = SubResource("MeshChairBack")
+
+[node name="Leg1" type="MeshInstance3D" parent="Apartment/LivingRoom/ChairAnomaly/Variants/Giant" unique_id=1652329239]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.18, 0.23, 0.18)
+mesh = SubResource("MeshChairLeg")
+
+[node name="Leg2" type="MeshInstance3D" parent="Apartment/LivingRoom/ChairAnomaly/Variants/Giant" unique_id=930761656]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.18, 0.23, 0.18)
+mesh = SubResource("MeshChairLeg")
+
+[node name="Leg3" type="MeshInstance3D" parent="Apartment/LivingRoom/ChairAnomaly/Variants/Giant" unique_id=328415536]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.18, 0.23, -0.18)
+mesh = SubResource("MeshChairLeg")
+
+[node name="Leg4" type="MeshInstance3D" parent="Apartment/LivingRoom/ChairAnomaly/Variants/Giant" unique_id=606399062]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.18, 0.23, -0.18)
+mesh = SubResource("MeshChairLeg")
+
+[node name="Missing" type="Node3D" parent="Apartment/LivingRoom/ChairAnomaly/Variants" unique_id=1128156406]
+
+[node name="PaintingAnomaly" type="Node3D" parent="Apartment/LivingRoom" unique_id=1874703211]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 3.85, 1.8, 2)
+script = ExtResource("5")
+
+[node name="Variants" type="Node3D" parent="Apartment/LivingRoom/PaintingAnomaly" unique_id=736534244]
+
+[node name="Normal" type="Node3D" parent="Apartment/LivingRoom/PaintingAnomaly/Variants" unique_id=1723221838]
+
+[node name="Canvas" type="MeshInstance3D" parent="Apartment/LivingRoom/PaintingAnomaly/Variants/Normal" unique_id=2023161843]
+mesh = SubResource("MeshPainting")
+
+[node name="UpsideDown" type="Node3D" parent="Apartment/LivingRoom/PaintingAnomaly/Variants" unique_id=660526842]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="Canvas" type="MeshInstance3D" parent="Apartment/LivingRoom/PaintingAnomaly/Variants/UpsideDown" unique_id=128608007]
+mesh = SubResource("MeshPainting")
+
+[node name="Larger" type="Node3D" parent="Apartment/LivingRoom/PaintingAnomaly/Variants" unique_id=1993329040]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0)
+
+[node name="Canvas" type="MeshInstance3D" parent="Apartment/LivingRoom/PaintingAnomaly/Variants/Larger" unique_id=1771965691]
+mesh = SubResource("MeshPainting")
+
+[node name="Missing" type="Node3D" parent="Apartment/LivingRoom/PaintingAnomaly/Variants" unique_id=1747906875]
+
+[node name="ClockAnomaly" type="Node3D" parent="Apartment/LivingRoom" unique_id=86417212]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -3.85, 1.6, 3)
+script = ExtResource("5")
+
+[node name="Variants" type="Node3D" parent="Apartment/LivingRoom/ClockAnomaly" unique_id=1451722073]
+
+[node name="Normal" type="Node3D" parent="Apartment/LivingRoom/ClockAnomaly/Variants" unique_id=1102878759]
+
+[node name="Back" type="MeshInstance3D" parent="Apartment/LivingRoom/ClockAnomaly/Variants/Normal" unique_id=590816625]
+mesh = SubResource("MeshClockBack")
+
+[node name="Text" type="Label3D" parent="Apartment/LivingRoom/ClockAnomaly/Variants/Normal" unique_id=2024478726]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.05)
+pixel_size = 0.002
+text = "MONDAY
+06:45 AM"
+font_size = 96
+outline_size = 8
+
+[node name="Tuesday" type="Node3D" parent="Apartment/LivingRoom/ClockAnomaly/Variants" unique_id=1480434152]
+
+[node name="Back" type="MeshInstance3D" parent="Apartment/LivingRoom/ClockAnomaly/Variants/Tuesday" unique_id=129845394]
+mesh = SubResource("MeshClockBack")
+
+[node name="Text" type="Label3D" parent="Apartment/LivingRoom/ClockAnomaly/Variants/Tuesday" unique_id=71899469]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.05)
+pixel_size = 0.002
+text = "TUESDAY
+06:45 AM"
+font_size = 96
+outline_size = 8
+
+[node name="Later" type="Node3D" parent="Apartment/LivingRoom/ClockAnomaly/Variants" unique_id=2082117360]
+
+[node name="Back" type="MeshInstance3D" parent="Apartment/LivingRoom/ClockAnomaly/Variants/Later" unique_id=1821584041]
+mesh = SubResource("MeshClockBack")
+
+[node name="Text" type="Label3D" parent="Apartment/LivingRoom/ClockAnomaly/Variants/Later" unique_id=1456691634]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.05)
+pixel_size = 0.002
+text = "MONDAY
+11:30 AM"
+font_size = 96
+outline_size = 8
+
+[node name="Impossible" type="Node3D" parent="Apartment/LivingRoom/ClockAnomaly/Variants" unique_id=198492778]
+
+[node name="Back" type="MeshInstance3D" parent="Apartment/LivingRoom/ClockAnomaly/Variants/Impossible" unique_id=657412919]
+mesh = SubResource("MeshClockBack")
+
+[node name="Text" type="Label3D" parent="Apartment/LivingRoom/ClockAnomaly/Variants/Impossible" unique_id=904207747]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.05)
+pixel_size = 0.002
+text = "MONDAY
+28:71"
+font_size = 96
+outline_size = 8
+
+[node name="LampAnomaly" type="Node3D" parent="Apartment/LivingRoom" unique_id=1936407968]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.8, 0, 1.8)
+script = ExtResource("5")
+
+[node name="Variants" type="Node3D" parent="Apartment/LivingRoom/LampAnomaly" unique_id=566785434]
+
+[node name="Normal" type="Node3D" parent="Apartment/LivingRoom/LampAnomaly/Variants" unique_id=770004082]
+
+[node name="Base" type="MeshInstance3D" parent="Apartment/LivingRoom/LampAnomaly/Variants/Normal" unique_id=1301759548]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.03, 0)
+mesh = SubResource("MeshLampBase")
+
+[node name="Pole" type="MeshInstance3D" parent="Apartment/LivingRoom/LampAnomaly/Variants/Normal" unique_id=297820110]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.65, 0)
+mesh = SubResource("MeshLampPole")
+
+[node name="Shade" type="MeshInstance3D" parent="Apartment/LivingRoom/LampAnomaly/Variants/Normal" unique_id=1321245013]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, 0)
+mesh = SubResource("MeshLampShade")
+
+[node name="Tall" type="Node3D" parent="Apartment/LivingRoom/LampAnomaly/Variants" unique_id=1533440591]
+transform = Transform3D(1, 0, 0, 0, 2.2, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="Base" type="MeshInstance3D" parent="Apartment/LivingRoom/LampAnomaly/Variants/Tall" unique_id=602136366]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.03, 0)
+mesh = SubResource("MeshLampBase")
+
+[node name="Pole" type="MeshInstance3D" parent="Apartment/LivingRoom/LampAnomaly/Variants/Tall" unique_id=1742258359]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.65, 0)
+mesh = SubResource("MeshLampPole")
+
+[node name="Shade" type="MeshInstance3D" parent="Apartment/LivingRoom/LampAnomaly/Variants/Tall" unique_id=2143942940]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, 0)
+mesh = SubResource("MeshLampShade")
+
+[node name="TwoLamps" type="Node3D" parent="Apartment/LivingRoom/LampAnomaly/Variants" unique_id=696269397]
+
+[node name="Base" type="MeshInstance3D" parent="Apartment/LivingRoom/LampAnomaly/Variants/TwoLamps" unique_id=847699658]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.03, 0)
+mesh = SubResource("MeshLampBase")
+
+[node name="Pole" type="MeshInstance3D" parent="Apartment/LivingRoom/LampAnomaly/Variants/TwoLamps" unique_id=597271217]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.65, 0)
+mesh = SubResource("MeshLampPole")
+
+[node name="Shade" type="MeshInstance3D" parent="Apartment/LivingRoom/LampAnomaly/Variants/TwoLamps" unique_id=1947415548]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, 0)
+mesh = SubResource("MeshLampShade")
+
+[node name="Base2" type="MeshInstance3D" parent="Apartment/LivingRoom/LampAnomaly/Variants/TwoLamps" unique_id=595010481]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.03, 0.9)
+mesh = SubResource("MeshLampBase")
+
+[node name="Pole2" type="MeshInstance3D" parent="Apartment/LivingRoom/LampAnomaly/Variants/TwoLamps" unique_id=1656649558]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.65, 0.9)
+mesh = SubResource("MeshLampPole")
+
+[node name="Shade2" type="MeshInstance3D" parent="Apartment/LivingRoom/LampAnomaly/Variants/TwoLamps" unique_id=356578597]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, 0.9)
+mesh = SubResource("MeshLampShade")
+
+[node name="Missing" type="Node3D" parent="Apartment/LivingRoom/LampAnomaly/Variants" unique_id=505596993]
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1840698540]
+
+[node name="FadeRect" type="ColorRect" parent="CanvasLayer" unique_id=1165792621]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 1)
+
+[node name="HUD" type="VBoxContainer" parent="CanvasLayer" unique_id=89958003]
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 520.0
+offset_bottom = 160.0
+mouse_filter = 2
+
+[node name="MorningLabel" type="Label" parent="CanvasLayer/HUD" unique_id=1896233313]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 26
+text = "Morning: 1 / 5"
+
+[node name="StateLabel" type="Label" parent="CanvasLayer/HUD" unique_id=537006709]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 22
+text = "State: --"
+
+[node name="ObjectLabel" type="Label" parent="CanvasLayer/HUD" unique_id=843878852]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 22
+text = "Object: --   Variant: --"
+
+[node name="CenterMessage" type="Label" parent="CanvasLayer" unique_id=1422708795]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 10
+theme_override_font_sizes/font_size = 44
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2

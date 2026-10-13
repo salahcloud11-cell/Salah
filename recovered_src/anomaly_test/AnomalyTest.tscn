@@ -1,0 +1,356 @@
+[gd_scene format=3 uid="uid://cxfhu3bbd64wi"]
+
+[ext_resource type="Script" uid="uid://ceyc1k2nx5ohi" path="res://anomaly_test/anomaly_test.gd" id="1"]
+[ext_resource type="Script" uid="uid://wt8lfqq8jcvi" path="res://anomaly_system/anomaly_manager.gd" id="2"]
+[ext_resource type="PackedScene" uid="uid://b7fppgc31wofr" path="res://player/player.tscn" id="3"]
+[ext_resource type="Script" uid="uid://mbd44f4xdch0" path="res://anomaly_system/anomaly_object.gd" id="4"]
+
+[sub_resource type="ProceduralSkyMaterial" id="SkyMat"]
+sky_top_color = Color(0.4, 0.5, 0.7, 1)
+sky_horizon_color = Color(0.7, 0.72, 0.75, 1)
+
+[sub_resource type="Sky" id="SkyRes"]
+sky_material = SubResource("SkyMat")
+
+[sub_resource type="Environment" id="EnvRes"]
+background_mode = 2
+sky = SubResource("SkyRes")
+
+[sub_resource type="StandardMaterial3D" id="MatFloor"]
+albedo_color = Color(0.416, 0.416, 0.416, 1)
+
+[sub_resource type="BoxMesh" id="MeshFloor"]
+material = SubResource("MatFloor")
+size = Vector3(10, 0.2, 10)
+
+[sub_resource type="StandardMaterial3D" id="MatWall"]
+albedo_color = Color(0.812, 0.812, 0.812, 1)
+
+[sub_resource type="BoxMesh" id="MeshWall"]
+material = SubResource("MatWall")
+size = Vector3(10, 3, 0.1)
+
+[sub_resource type="BoxShape3D" id="ShapeFloor"]
+size = Vector3(10, 0.2, 10)
+
+[sub_resource type="BoxShape3D" id="ShapeWall"]
+size = Vector3(10, 3, 0.1)
+
+[sub_resource type="StandardMaterial3D" id="MatWood"]
+albedo_color = Color(0.545, 0.353, 0.169, 1)
+
+[sub_resource type="BoxMesh" id="MeshChairSeat"]
+material = SubResource("MatWood")
+size = Vector3(0.45, 0.08, 0.45)
+
+[sub_resource type="BoxMesh" id="MeshChairBack"]
+material = SubResource("MatWood")
+size = Vector3(0.45, 0.5, 0.06)
+
+[sub_resource type="BoxMesh" id="MeshChairLeg"]
+material = SubResource("MatWood")
+size = Vector3(0.05, 0.46, 0.05)
+
+[sub_resource type="StandardMaterial3D" id="MatTable"]
+albedo_color = Color(0.478, 0.29, 0.133, 1)
+
+[sub_resource type="BoxMesh" id="MeshTable"]
+material = SubResource("MatTable")
+size = Vector3(1.4, 0.1, 0.8)
+
+[sub_resource type="StandardMaterial3D" id="MatPedestal"]
+albedo_color = Color(0.667, 0.667, 0.667, 1)
+
+[sub_resource type="CylinderMesh" id="MeshPedestal"]
+material = SubResource("MatPedestal")
+top_radius = 0.12
+bottom_radius = 0.12
+height = 0.6
+
+[sub_resource type="StandardMaterial3D" id="MatDecor"]
+albedo_color = Color(0.878, 0.29, 0.498, 1)
+
+[sub_resource type="SphereMesh" id="MeshBall"]
+material = SubResource("MatDecor")
+radius = 0.3
+height = 0.6
+
+[sub_resource type="StandardMaterial3D" id="MatWallDecor"]
+albedo_color = Color(0.227, 0.482, 0.835, 1)
+
+[sub_resource type="BoxMesh" id="MeshWallDecor"]
+material = SubResource("MatWallDecor")
+size = Vector3(1, 0.5, 0.06)
+
+[sub_resource type="StandardMaterial3D" id="MatCrate"]
+albedo_color = Color(0.788, 0.627, 0.416, 1)
+
+[sub_resource type="BoxMesh" id="MeshCrate"]
+material = SubResource("MatCrate")
+size = Vector3(0.5, 0.5, 0.5)
+
+[node name="AnomalyTest" type="Node3D" unique_id=1134583459]
+script = ExtResource("1")
+
+[node name="AnomalyManager" type="Node" parent="." unique_id=805322223]
+script = ExtResource("2")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=205835127]
+environment = SubResource("EnvRes")
+
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=1118421685]
+transform = Transform3D(0.87758255, -0.37554693, 0.2980157, 0, 0.62161, 0.7833269, -0.47942555, -0.687434, 0.54551405, 0, 0, 0)
+shadow_enabled = true
+
+[node name="Player" parent="." unique_id=990236016 instance=ExtResource("3")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.5)
+
+[node name="Floor" type="MeshInstance3D" parent="." unique_id=871111626]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
+mesh = SubResource("MeshFloor")
+
+[node name="BackWall" type="MeshInstance3D" parent="." unique_id=1404371388]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -5)
+mesh = SubResource("MeshWall")
+
+[node name="LeftWall" type="MeshInstance3D" parent="." unique_id=301823684]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -5, 1.5, 0)
+mesh = SubResource("MeshWall")
+
+[node name="FloorCollision" type="StaticBody3D" parent="." unique_id=1890107750]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
+
+[node name="Shape" type="CollisionShape3D" parent="FloorCollision" unique_id=980186158]
+shape = SubResource("ShapeFloor")
+
+[node name="BackWallCollision" type="StaticBody3D" parent="." unique_id=2130054185]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -5)
+
+[node name="Shape" type="CollisionShape3D" parent="BackWallCollision" unique_id=1726279549]
+shape = SubResource("ShapeWall")
+
+[node name="LeftWallCollision" type="StaticBody3D" parent="." unique_id=2012013889]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -5, 1.5, 0)
+
+[node name="Shape" type="CollisionShape3D" parent="LeftWallCollision" unique_id=1540135796]
+shape = SubResource("ShapeWall")
+
+[node name="ChairAnomaly" type="Node3D" parent="." unique_id=659555044]
+script = ExtResource("4")
+
+[node name="Variants" type="Node3D" parent="ChairAnomaly" unique_id=1740810961]
+
+[node name="Normal" type="Node3D" parent="ChairAnomaly/Variants" unique_id=1296414125]
+
+[node name="Seat" type="MeshInstance3D" parent="ChairAnomaly/Variants/Normal" unique_id=336476853]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+mesh = SubResource("MeshChairSeat")
+
+[node name="Back" type="MeshInstance3D" parent="ChairAnomaly/Variants/Normal" unique_id=2054389613]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, -0.19)
+mesh = SubResource("MeshChairBack")
+
+[node name="Leg1" type="MeshInstance3D" parent="ChairAnomaly/Variants/Normal" unique_id=828444697]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.18, 0.23, 0.18)
+mesh = SubResource("MeshChairLeg")
+
+[node name="Leg2" type="MeshInstance3D" parent="ChairAnomaly/Variants/Normal" unique_id=2144475049]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.18, 0.23, 0.18)
+mesh = SubResource("MeshChairLeg")
+
+[node name="Leg3" type="MeshInstance3D" parent="ChairAnomaly/Variants/Normal" unique_id=218625409]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.18, 0.23, -0.18)
+mesh = SubResource("MeshChairLeg")
+
+[node name="Leg4" type="MeshInstance3D" parent="ChairAnomaly/Variants/Normal" unique_id=1834932887]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.18, 0.23, -0.18)
+mesh = SubResource("MeshChairLeg")
+
+[node name="Rotated" type="Node3D" parent="ChairAnomaly/Variants" unique_id=1278142289]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0)
+
+[node name="Seat" type="MeshInstance3D" parent="ChairAnomaly/Variants/Rotated" unique_id=950873285]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+mesh = SubResource("MeshChairSeat")
+
+[node name="Back" type="MeshInstance3D" parent="ChairAnomaly/Variants/Rotated" unique_id=491711413]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, -0.19)
+mesh = SubResource("MeshChairBack")
+
+[node name="Leg1" type="MeshInstance3D" parent="ChairAnomaly/Variants/Rotated" unique_id=1769717010]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.18, 0.23, 0.18)
+mesh = SubResource("MeshChairLeg")
+
+[node name="Leg2" type="MeshInstance3D" parent="ChairAnomaly/Variants/Rotated" unique_id=1122493097]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.18, 0.23, 0.18)
+mesh = SubResource("MeshChairLeg")
+
+[node name="Leg3" type="MeshInstance3D" parent="ChairAnomaly/Variants/Rotated" unique_id=241306781]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.18, 0.23, -0.18)
+mesh = SubResource("MeshChairLeg")
+
+[node name="Leg4" type="MeshInstance3D" parent="ChairAnomaly/Variants/Rotated" unique_id=1994551315]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.18, 0.23, -0.18)
+mesh = SubResource("MeshChairLeg")
+
+[node name="Giant" type="Node3D" parent="ChairAnomaly/Variants" unique_id=587423841]
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0)
+
+[node name="Seat" type="MeshInstance3D" parent="ChairAnomaly/Variants/Giant" unique_id=147500206]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+mesh = SubResource("MeshChairSeat")
+
+[node name="Back" type="MeshInstance3D" parent="ChairAnomaly/Variants/Giant" unique_id=527491041]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, -0.19)
+mesh = SubResource("MeshChairBack")
+
+[node name="Leg1" type="MeshInstance3D" parent="ChairAnomaly/Variants/Giant" unique_id=1090576115]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.18, 0.23, 0.18)
+mesh = SubResource("MeshChairLeg")
+
+[node name="Leg2" type="MeshInstance3D" parent="ChairAnomaly/Variants/Giant" unique_id=1417615390]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.18, 0.23, 0.18)
+mesh = SubResource("MeshChairLeg")
+
+[node name="Leg3" type="MeshInstance3D" parent="ChairAnomaly/Variants/Giant" unique_id=397215273]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.18, 0.23, -0.18)
+mesh = SubResource("MeshChairLeg")
+
+[node name="Leg4" type="MeshInstance3D" parent="ChairAnomaly/Variants/Giant" unique_id=861063318]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.18, 0.23, -0.18)
+mesh = SubResource("MeshChairLeg")
+
+[node name="Missing" type="Node3D" parent="ChairAnomaly/Variants" unique_id=2090635975]
+
+[node name="TableAnomaly" type="Node3D" parent="." unique_id=346382599]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.8, 0, 0)
+script = ExtResource("4")
+
+[node name="Variants" type="Node3D" parent="TableAnomaly" unique_id=1309164411]
+
+[node name="Normal" type="Node3D" parent="TableAnomaly/Variants" unique_id=933003836]
+
+[node name="Top" type="MeshInstance3D" parent="TableAnomaly/Variants/Normal" unique_id=1959038275]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
+mesh = SubResource("MeshTable")
+
+[node name="Taller" type="Node3D" parent="TableAnomaly/Variants" unique_id=1799156988]
+transform = Transform3D(1, 0, 0, 0, 2.5, 0, 0, 0, 1, 0, 0.075, 0)
+
+[node name="Top" type="MeshInstance3D" parent="TableAnomaly/Variants/Taller" unique_id=620910369]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
+mesh = SubResource("MeshTable")
+
+[node name="Rotated" type="Node3D" parent="TableAnomaly/Variants" unique_id=1144365688]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0, 0.8, 0)
+
+[node name="Top" type="MeshInstance3D" parent="TableAnomaly/Variants/Rotated" unique_id=1189102391]
+mesh = SubResource("MeshTable")
+
+[node name="Double" type="Node3D" parent="TableAnomaly/Variants" unique_id=1774922359]
+
+[node name="Top" type="MeshInstance3D" parent="TableAnomaly/Variants/Double" unique_id=1996802454]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
+mesh = SubResource("MeshTable")
+
+[node name="Top2" type="MeshInstance3D" parent="TableAnomaly/Variants/Double" unique_id=1343538325]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 0.8, 0)
+mesh = SubResource("MeshTable")
+
+[node name="DecorAnomaly" type="Node3D" parent="." unique_id=904553505]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.8, 0, 0)
+script = ExtResource("4")
+
+[node name="Variants" type="Node3D" parent="DecorAnomaly" unique_id=1907538198]
+
+[node name="Normal" type="Node3D" parent="DecorAnomaly/Variants" unique_id=890319557]
+
+[node name="Pedestal" type="MeshInstance3D" parent="DecorAnomaly/Variants/Normal" unique_id=1036448797]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
+mesh = SubResource("MeshPedestal")
+
+[node name="Ball" type="MeshInstance3D" parent="DecorAnomaly/Variants/Normal" unique_id=734464988]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+mesh = SubResource("MeshBall")
+
+[node name="Three" type="Node3D" parent="DecorAnomaly/Variants" unique_id=1025448776]
+
+[node name="Ball1" type="MeshInstance3D" parent="DecorAnomaly/Variants/Three" unique_id=1078384608]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.7, 0.3, 0)
+mesh = SubResource("MeshBall")
+
+[node name="Ball2" type="MeshInstance3D" parent="DecorAnomaly/Variants/Three" unique_id=529276699]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
+mesh = SubResource("MeshBall")
+
+[node name="Ball3" type="MeshInstance3D" parent="DecorAnomaly/Variants/Three" unique_id=1136190604]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.7, 0.3, 0)
+mesh = SubResource("MeshBall")
+
+[node name="Tiny" type="Node3D" parent="DecorAnomaly/Variants" unique_id=507485705]
+
+[node name="Pedestal" type="MeshInstance3D" parent="DecorAnomaly/Variants/Tiny" unique_id=1240819361]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
+mesh = SubResource("MeshPedestal")
+
+[node name="Ball" type="MeshInstance3D" parent="DecorAnomaly/Variants/Tiny" unique_id=1244479585]
+transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 0, 1, 0)
+mesh = SubResource("MeshBall")
+
+[node name="Moved" type="Node3D" parent="DecorAnomaly/Variants" unique_id=1122873473]
+
+[node name="Pedestal" type="MeshInstance3D" parent="DecorAnomaly/Variants/Moved" unique_id=1570701677]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
+mesh = SubResource("MeshPedestal")
+
+[node name="Ball" type="MeshInstance3D" parent="DecorAnomaly/Variants/Moved" unique_id=1160894853]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.2, 1, 0)
+mesh = SubResource("MeshBall")
+
+[node name="WallDecorAnomaly" type="Node3D" parent="." unique_id=915953553]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -4.5)
+script = ExtResource("4")
+
+[node name="Variants" type="Node3D" parent="WallDecorAnomaly" unique_id=1153282757]
+
+[node name="Normal" type="Node3D" parent="WallDecorAnomaly/Variants" unique_id=1126249397]
+
+[node name="Frame" type="MeshInstance3D" parent="WallDecorAnomaly/Variants/Normal" unique_id=214532151]
+mesh = SubResource("MeshWallDecor")
+
+[node name="UpsideDown" type="Node3D" parent="WallDecorAnomaly/Variants" unique_id=240461636]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="Frame" type="MeshInstance3D" parent="WallDecorAnomaly/Variants/UpsideDown" unique_id=1297270052]
+mesh = SubResource("MeshWallDecor")
+
+[node name="Larger" type="Node3D" parent="WallDecorAnomaly/Variants" unique_id=1584771319]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0)
+
+[node name="Frame" type="MeshInstance3D" parent="WallDecorAnomaly/Variants/Larger" unique_id=696670192]
+mesh = SubResource("MeshWallDecor")
+
+[node name="Missing" type="Node3D" parent="WallDecorAnomaly/Variants" unique_id=1802991085]
+
+[node name="CrateOnlyNormal" type="Node3D" parent="." unique_id=125387475]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 0, 3.5)
+script = ExtResource("4")
+
+[node name="Variants" type="Node3D" parent="CrateOnlyNormal" unique_id=318794438]
+
+[node name="Normal" type="Node3D" parent="CrateOnlyNormal/Variants" unique_id=1504037662]
+
+[node name="Crate" type="MeshInstance3D" parent="CrateOnlyNormal/Variants/Normal" unique_id=549867330]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 0)
+mesh = SubResource("MeshCrate")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=616174809]
+
+[node name="DebugLabel" type="Label" parent="CanvasLayer" unique_id=1201507955]
+offset_left = 16.0
+offset_top = 16.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 18
+text = "Anomaly System Test"

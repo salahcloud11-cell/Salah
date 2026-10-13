@@ -1,0 +1,46 @@
+[gd_scene format=3 uid="uid://b7fppgc31wofr"]
+
+[ext_resource type="Script" uid="uid://5npbvs2imp83" path="res://player/player.gd" id="1"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
+radius = 0.4
+
+[node name="Player" type="CharacterBody3D" unique_id=569558831]
+script = ExtResource("1")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1917627858]
+shape = SubResource("CapsuleShape3D_body")
+
+[node name="Head" type="Node3D" parent="." unique_id=677916886]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.679, 0)
+
+[node name="Camera3D" type="Camera3D" parent="Head" unique_id=541203016]
+current = true
+
+[node name="InteractionRay" type="RayCast3D" parent="Head/Camera3D" unique_id=1041812201]
+target_position = Vector3(0, 0, -3)
+
+[node name="FootstepPlayer" type="AudioStreamPlayer" parent="." unique_id=218080001]
+volume_db = -8.0
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=887283442]
+
+[node name="InteractPrompt" type="Label" parent="CanvasLayer" unique_id=261653106]
+visible = false
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -300.0
+offset_top = -90.0
+offset_right = 300.0
+offset_bottom = -40.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 8
+theme_override_font_sizes/font_size = 30
+text = "E - Interact"
+horizontal_alignment = 1
