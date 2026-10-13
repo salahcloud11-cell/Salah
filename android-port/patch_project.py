@@ -101,10 +101,64 @@ def set_key(text, section, key, value):
 
 pg = set_key(pg, "autoload", "TouchControls", '"*res://android/touch_controls.gd"')
 pg = set_key(pg, "application", "config/features", 'PackedStringArray("4.8", "Mobile")')
+pg = set_key(pg, "application", "run/max_fps", "60")
 pg = set_key(pg, "display", "window/handheld/orientation", '"landscape"')
 pg = set_key(pg, "rendering", "renderer/rendering_method", '"mobile"')
 pg = set_key(pg, "rendering", "renderer/rendering_method.mobile", '"mobile"')
 pg = set_key(pg, "rendering", "textures/vram_compression/import_etc2_astc", "true")
+# --- low-end device support ---
+pg = set_key(pg, "rendering", "scaling_3d/scale", "0.75")
+pg = set_key(pg, "rendering", "lights_and_shadows/positional_shadow/atlas_size", "2048")
+pg = set_key(pg, "rendering", "mesh_lod/lod_change/threshold_pixels", "2.0")
+
+# --- PS3 / generic gamepad bindings -------------------------------------
+# Godot joypad indices: A/Cross=0, B/Circle=1, X/Square=2, Y/Triangle=3,
+# Back=4, Start=6, L3=7, R3=8, L1=9, R1=10, DPad U/D/L/R=11/12/13/14.
+# Axes: LeftX=0, LeftY=1, RightX=2, RightY=3.
+
+
+def _joy_button(idx: int) -> str:
+    return (
+        'Object(InputEventJoypadButton,"resource_local_to_scene":false,'
+        '"resource_name":"","device":-1,"button_index":%d,'
+        '"pressure":0.0,"pressed":false,"script":null)' % idx
+    )
+
+
+def _joy_motion(axis: int, value: float) -> str:
+    return (
+        'Object(InputEventJoypadMotion,"resource_local_to_scene":false,'
+        '"resource_name":"","device":-1,"axis":%d,'
+        '"axis_value":%s,"script":null)' % (axis, ("%.1f" % value))
+    )
+
+
+JOY_BINDINGS = {
+    "up": [_joy_motion(1, -1.0), _joy_button(11)],
+    "down": [_joy_motion(1, 1.0), _joy_button(12)],
+    "left": [_joy_motion(0, -1.0), _joy_button(13)],
+    "right": [_joy_motion(0, 1.0), _joy_button(14)],
+    "jump": [_joy_button(0)],            # Cross
+    "sprint": [_joy_button(7), _joy_button(9)],  # L3 or L1
+    "interact": [_joy_button(2), _joy_button(3)],  # Square or Triangle
+}
+MOVE_ACTIONS = {"up", "down", "left", "right"}
+
+for action, extra in JOY_BINDINGS.items():
+    pat = re.compile(
+        r"(^" + action + r"=\{\n\"deadzone\": )([0-9.]+)(,\n\"events\": \[)(.*?)(\n\]\n\})",
+        re.M | re.S,
+    )
+    m = pat.search(pg)
+    if not m:
+        log("WARNING: input action not found:", action)
+        continue
+    deadzone = "0.2" if action in MOVE_ACTIONS else m.group(2)
+    events = m.group(4)
+    if "InputEventJoypad" not in events:
+        events = events + ",\n" + ",\n".join(extra)
+    pg = pg[: m.start()] + m.group(1) + deadzone + m.group(3) + events + m.group(5) + pg[m.end():]
+    log("gamepad bindings added:", action)
 open(pg_path, "w", encoding="utf-8").write(pg)
 log("project.godot patched")
 print("----- project.godot -----")

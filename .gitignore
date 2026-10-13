@@ -1,3 +1,4 @@
 google_drive/
 windows.zip
 *.apk
+!android-port/dist/AwakeOrNot.apk

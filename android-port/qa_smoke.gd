@@ -37,6 +37,14 @@ func _send_key(keycode: Key) -> void:
 	Input.parse_input_event(release)
 
 
+func _send_joy_motion(axis: JoyAxis, value: float) -> void:
+	var ev := InputEventJoypadMotion.new()
+	ev.device = -1
+	ev.axis = axis
+	ev.axis_value = value
+	Input.parse_input_event(ev)
+
+
 func _find_player(node: Node) -> Node:
 	if node == null:
 		return null

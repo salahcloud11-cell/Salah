@@ -172,31 +172,51 @@ jobs:
           retention-days: 14
           if-no-files-found: ignore
 
+      - name: Commit APK to android-port/dist (picked up for Google Drive upload)
+        run: |
+          mkdir -p android-port/dist
+          cp out/AwakeOrNot.apk android-port/dist/AwakeOrNot.apk
+          cp out/sha256.txt android-port/dist/sha256.txt 2>/dev/null || sha256sum android-port/dist/AwakeOrNot.apk > android-port/dist/sha256.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add android-port/dist
+          if git diff --cached --quiet; then
+            echo "APK unchanged"
+          else
+            git commit -m "Android APK v2 (PS3 controller + low-end optimizations) [skip ci]"
+            git push origin HEAD:arena/a8b5a558-salah
+          fi
+
       - name: Publish GitHub Release with APK
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          NOTES="Android version of **Awake or Not? (مستيقظ أم لا؟)** — converted from the Windows Godot build in windows.zip.
+          git pull --rebase origin arena/a8b5a558-salah || true
+          NOTES="Android version of **Awake or Not? (مستيقظ أم لا؟)** — converted from the Windows Godot build in windows.zip. Also available on Google Drive.
+
+          ## What's new in v2
+          - **PS3 / gamepad support** (USB-OTG or Bluetooth): left stick/D-pad move, right stick camera, ✕ jump, ▢/△ interact, L3/L1 sprint, Start = skip/back, ✕ in cutscenes = next. Touch UI hides while the pad is used.
+          - **Low-end optimizations**: adaptive render resolution (auto-scales 3D rendering to hold FPS), 0.75 base render scale, smaller shadow atlas, earlier mesh LOD, 60 FPS cap.
 
           ## Install on your Android device
-          1. Download \`AwakeOrNot.apk\` below on your phone.
+          1. Download \`AwakeOrNot.apk\` below on your phone (or from Google Drive).
           2. Tap the file. If asked, allow **Install unknown apps** for your browser/Files app.
-          3. Tap **Install**, then open **مستيقظ أم لا؟**.
+          3. Tap **Install**, then open **مستيقظ أم لا؟**. (Uninstall v1 first — same app, new version installs over it if signature matches; if it refuses, uninstall then install.)
 
-          ## Controls
+          ## Touch controls
           - **Left joystick** — move
           - **Drag on the right side of the screen** — look around
           - **USE (تفاعل)** — interact (glows when something can be used: bed = sleep, door = go to work)
           - **JUMP (قفز)** / **RUN (ركض, toggle)** — jump / sprint
           - In cutscenes: tap anywhere to continue, **SKIP** to skip.
 
-          Requirements: Android 6.0+ (arm64), landscape. Signed with a debug key, so it installs without the Play Store."
-          if gh release view awake-or-not-android-v1 >/dev/null 2>&1; then
-            gh release upload awake-or-not-android-v1 out/AwakeOrNot.apk --clobber
+          Landscape, arm64 Android. Signed with a debug key, so it installs without the Play Store."
+          if gh release view awake-or-not-android-v2 >/dev/null 2>&1; then
+            gh release upload awake-or-not-android-v2 out/AwakeOrNot.apk --clobber
           else
-            gh release create awake-or-not-android-v1 out/AwakeOrNot.apk \
+            gh release create awake-or-not-android-v2 out/AwakeOrNot.apk \
               --target "$GITHUB_SHA" \
-              --title "Awake or Not? — Android (مستيقظ أم لا؟)" \
+              --title "Awake or Not? — Android v2 (PS3 controller + low-end)" \
               --notes "$NOTES"
           fi
-          gh release view awake-or-not-android-v1
+          gh release view awake-or-not-android-v2
