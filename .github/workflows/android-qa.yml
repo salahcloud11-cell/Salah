@@ -76,11 +76,11 @@ jobs:
           timeout 1500 "$GODOT_BIN" --headless --path . --import 2>&1 | tee ../qa_import.log || true
           cd ..
 
-      - name: Run smoke test
+      - name: Run smoke test (real game run, QA autoload drives it)
         run: |
           set +e
-          timeout 400 "$GODOT_BIN" --headless --path recovered_full --script res://android/smoke_test.gd 2>&1 | tee smoke.log
-          echo "smoke pipe status: ${PIPESTATUS[*]}"
+          timeout 400 "$GODOT_BIN" --headless --path recovered_full 2>&1 | tee smoke.log
+          echo "game pipe status: ${PIPESTATUS[*]}"
           grep -E "SMOKE|SCRIPT ERROR" smoke.log | head -80 || true
           true
 
