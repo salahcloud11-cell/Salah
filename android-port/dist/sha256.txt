@@ -1,0 +1,1 @@
+a6f7535b78d83e8d2fcbc5f92c2adf7b69634fd4de4f2f5db78d608f06fdfa64  out/AwakeOrNot.apk
