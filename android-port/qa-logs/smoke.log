@@ -37,81 +37,81 @@ WARNING: [CharacterPose] No Skeleton3D found under Man
      at: push_warning (core/variant/variant_utility.cpp:1034)
      GDScript backtrace (most recent call first):
          [0] _ready (res://apartment/assets/characters/character_pose.gd:15)
-         [1] _run (res://android/qa_smoke.gd:150)
+         [1] _run (res://android/qa_smoke.gd:158)
          [2] _wait (res://android/qa_smoke.gd:24)
 SMOKE-OK: character_male.tscn has Skeleton3D (28 bones)
 WARNING: [CharacterPose] No Skeleton3D found under Woman
      at: push_warning (core/variant/variant_utility.cpp:1034)
      GDScript backtrace (most recent call first):
          [0] _ready (res://apartment/assets/characters/character_pose.gd:15)
-         [1] _run (res://android/qa_smoke.gd:150)
+         [1] _run (res://android/qa_smoke.gd:158)
          [2] _wait (res://android/qa_smoke.gd:24)
 SMOKE-OK: character_female.tscn has Skeleton3D (28 bones)
 WARNING: [CharacterPose] No Skeleton3D found under Man
      at: push_warning (core/variant/variant_utility.cpp:1034)
      GDScript backtrace (most recent call first):
          [0] _ready (res://apartment/assets/characters/character_pose.gd:15)
-         [1] _run (res://android/qa_smoke.gd:169)
+         [1] _run (res://android/qa_smoke.gd:177)
          [2] _wait (res://android/qa_smoke.gd:24)
 WARNING: [CharacterPose] No Skeleton3D found under Woman
      at: push_warning (core/variant/variant_utility.cpp:1034)
      GDScript backtrace (most recent call first):
          [0] _ready (res://apartment/assets/characters/character_pose.gd:15)
-         [1] _run (res://android/qa_smoke.gd:169)
+         [1] _run (res://android/qa_smoke.gd:177)
          [2] _wait (res://android/qa_smoke.gd:24)
 WARNING: [CharacterPose] No Skeleton3D found under Man
      at: push_warning (core/variant/variant_utility.cpp:1034)
      GDScript backtrace (most recent call first):
          [0] _ready (res://apartment/assets/characters/character_pose.gd:15)
-         [1] _run (res://android/qa_smoke.gd:169)
+         [1] _run (res://android/qa_smoke.gd:177)
          [2] _wait (res://android/qa_smoke.gd:24)
 WARNING: [CharacterPose] No Skeleton3D found under Woman
      at: push_warning (core/variant/variant_utility.cpp:1034)
      GDScript backtrace (most recent call first):
          [0] _ready (res://apartment/assets/characters/character_pose.gd:15)
-         [1] _run (res://android/qa_smoke.gd:169)
+         [1] _run (res://android/qa_smoke.gd:177)
          [2] _wait (res://android/qa_smoke.gd:24)
 WARNING: [CharacterPose] No Skeleton3D found under Man
      at: push_warning (core/variant/variant_utility.cpp:1034)
      GDScript backtrace (most recent call first):
          [0] _ready (res://apartment/assets/characters/character_pose.gd:15)
-         [1] _run (res://android/qa_smoke.gd:169)
+         [1] _run (res://android/qa_smoke.gd:177)
          [2] _wait (res://android/qa_smoke.gd:24)
 WARNING: [CharacterPose] No Skeleton3D found under Woman
      at: push_warning (core/variant/variant_utility.cpp:1034)
      GDScript backtrace (most recent call first):
          [0] _ready (res://apartment/assets/characters/character_pose.gd:15)
-         [1] _run (res://android/qa_smoke.gd:169)
+         [1] _run (res://android/qa_smoke.gd:177)
          [2] _wait (res://android/qa_smoke.gd:24)
 WARNING: [CharacterPose] No Skeleton3D found under Man
      at: push_warning (core/variant/variant_utility.cpp:1034)
      GDScript backtrace (most recent call first):
          [0] _ready (res://apartment/assets/characters/character_pose.gd:15)
-         [1] _run (res://android/qa_smoke.gd:169)
+         [1] _run (res://android/qa_smoke.gd:177)
          [2] _wait (res://android/qa_smoke.gd:24)
 WARNING: [CharacterPose] No Skeleton3D found under Woman
      at: push_warning (core/variant/variant_utility.cpp:1034)
      GDScript backtrace (most recent call first):
          [0] _ready (res://apartment/assets/characters/character_pose.gd:15)
-         [1] _run (res://android/qa_smoke.gd:169)
+         [1] _run (res://android/qa_smoke.gd:177)
          [2] _wait (res://android/qa_smoke.gd:24)
 WARNING: [CharacterPose] No Skeleton3D found under Man
      at: push_warning (core/variant/variant_utility.cpp:1034)
      GDScript backtrace (most recent call first):
          [0] _ready (res://apartment/assets/characters/character_pose.gd:15)
-         [1] _run (res://android/qa_smoke.gd:169)
+         [1] _run (res://android/qa_smoke.gd:177)
          [2] _wait (res://android/qa_smoke.gd:24)
 WARNING: [CharacterPose] No Skeleton3D found under Man
      at: push_warning (core/variant/variant_utility.cpp:1034)
      GDScript backtrace (most recent call first):
          [0] _ready (res://apartment/assets/characters/character_pose.gd:15)
-         [1] _run (res://android/qa_smoke.gd:169)
+         [1] _run (res://android/qa_smoke.gd:177)
          [2] _wait (res://android/qa_smoke.gd:24)
 WARNING: [CharacterPose] No Skeleton3D found under Man
      at: push_warning (core/variant/variant_utility.cpp:1034)
      GDScript backtrace (most recent call first):
          [0] _ready (res://apartment/assets/characters/character_pose.gd:15)
-         [1] _run (res://android/qa_smoke.gd:169)
+         [1] _run (res://android/qa_smoke.gd:177)
          [2] _wait (res://android/qa_smoke.gd:24)
 SMOKE-OK: DreamCorridor instantiated
 SMOKE PASS
