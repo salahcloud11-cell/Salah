@@ -183,7 +183,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "APK unchanged"
           else
-            git commit -m "Android APK v4 Lite (lag/zoom/text fixes) [skip ci]"
+            git commit -m "Android APK v5 Lite (1.5 GB RAM devices) [skip ci]"
             git push origin HEAD:arena/a8b5a558-salah
           fi
 
@@ -194,10 +194,11 @@ jobs:
           git pull --rebase origin arena/a8b5a558-salah || true
           NOTES="Android version of **Awake or Not? (مستيقظ أم لا؟)** — converted from the Windows Godot build in windows.zip. Also available on Google Drive.
 
-          ## What's new in v4 Lite
-          - **Fixed zoomed-in image + huge text** (v3 shrank the whole window; v4 keeps the game's design resolution 1152x648 for UI and only scales the 3D render buffer).
-          - **Less lag**: light shadows disabled, textures capped at 512px, 3D render scale 0.55 with adaptive steps down to 0.33, earlier mesh LOD, 30 FPS cap for stable pacing.
-          - Still: 32-bit + 64-bit universal APK, Compatibility (OpenGL) renderer for Android 11 / 2 GB RAM devices, PS3 controller + touch controls.
+          ## What's new in v5 Lite (for 1.5 GB RAM devices)
+          - **Much lighter on RAM + GPU**: world textures capped at 256px (menus/room surfaces kept at 512px), per-vertex lighting, no anisotropic filtering, physics matched to the 30 FPS cap.
+          - **3D render scale 0.40**, auto-drops to 0.25 if the frame rate dips; new **Q-/Q+ buttons** (top-right) let you lower/raise quality by hand.
+          - Text/UI stay at the game's normal design size (1152x648) — never zoomed.
+          - Still: 32-bit + 64-bit universal APK, Compatibility (OpenGL) renderer for Android 11, light shadows off, PS3 controller + touch controls.
 
           ## Install on your Android device
           1. Download \`AwakeOrNot.apk\` below on your phone (or from Google Drive).
@@ -210,14 +211,15 @@ jobs:
           - **USE (تفاعل)** — interact (glows when something can be used: bed = sleep, door = go to work)
           - **JUMP (قفز)** / **RUN (ركض, toggle)** — jump / sprint
           - In cutscenes: tap anywhere to continue, **SKIP** to skip.
+          - **Q- / Q+** (top-right) — lower/raise the 3D quality if the game still feels slow (or to sharpen it).
 
-          Landscape, arm64 Android. Signed with a debug key, so it installs without the Play Store."
-          if gh release view awake-or-not-android-v4 >/dev/null 2>&1; then
-            gh release upload awake-or-not-android-v4 out/AwakeOrNot.apk --clobber
+          Landscape, 32-bit + 64-bit universal Android. Signed with a debug key, so it installs without the Play Store."
+          if gh release view awake-or-not-android-v5 >/dev/null 2>&1; then
+            gh release upload awake-or-not-android-v5 out/AwakeOrNot.apk --clobber
           else
-            gh release create awake-or-not-android-v4 out/AwakeOrNot.apk \
+            gh release create awake-or-not-android-v5 out/AwakeOrNot.apk \
               --target "$GITHUB_SHA" \
-              --title "Awake or Not? — Android v4 Lite" \
+              --title "Awake or Not? — Android v5 Lite" \
               --notes "$NOTES"
           fi
-          gh release view awake-or-not-android-v4
+          gh release view awake-or-not-android-v5

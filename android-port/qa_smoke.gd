@@ -97,6 +97,28 @@ func _run() -> void:
 		_ok("all light shadows disabled (low-end)")
 	else:
 		_fail("%d lights still cast shadows" % shadow_lights)
+
+	# v5 lowest-end (1.5 GB RAM class) settings
+	if bool(ProjectSettings.get_setting("rendering/shading/overrides/force_vertex_shading", false)):
+		_ok("vertex shading forced (cheap lighting for weak GPUs)")
+	else:
+		_fail("force_vertex_shading not enabled")
+	var render_scale := float(ProjectSettings.get_setting("rendering/scaling_3d/scale", 1.0))
+	if render_scale <= 0.45:
+		_ok("3D base render scale %.2f (1.5 GB class)" % render_scale)
+	else:
+		_fail("3D base render scale too high: %.2f" % render_scale)
+	var aniso := int(ProjectSettings.get_setting("rendering/textures/default_filters/anisotropic_filtering_level", 0))
+	if aniso <= 1:
+		_ok("anisotropic filtering low/off (%d)" % aniso)
+	else:
+		_fail("anisotropy too high: %d" % aniso)
+	var phys_tps := int(ProjectSettings.get_setting("physics/common/physics_ticks_per_second", 60))
+	if phys_tps <= 30:
+		_ok("physics ticks %d/s matched to 30 FPS cap" % phys_tps)
+	else:
+		_fail("physics ticks too high: %d" % phys_tps)
+
 	var start_btn := get_tree().current_scene.get_node_or_null("MenuWrap/MenuContainer/StartButton") as Button
 	if start_btn == null:
 		_fail("StartButton not found")

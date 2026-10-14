@@ -18,14 +18,14 @@ extends CanvasLayer
 ##     When a gamepad is being used the touch UI hides itself,
 ##   * adaptive render resolution on Android: the 3D render scale is
 ##     lowered/raised in steps to hold a playable frame rate on
-##     low-end GPUs.
+##     low-end GPUs; Q-/Q+ buttons (top-right) adjust it manually.
 
 const JOY_RADIUS := 64.0
 const JOY_DEADZONE := 0.12
 const PAD_DEADZONE := 0.18
 const PAD_LOOK_YAW_SPEED := 2.8
 const PAD_LOOK_PITCH_SPEED := 2.1
-const SCALE_STEPS: Array[float] = [0.7, 0.6, 0.5, 0.4, 0.33]
+const SCALE_STEPS: Array[float] = [0.6, 0.5, 0.4, 0.33, 0.25]
 
 var _is_touch := false
 var _on_android := false
@@ -42,6 +42,8 @@ var _joy_mouse := false
 var _joy_was_active := false
 var _interact_btn: Button
 var _sprint_btn: Button
+var _quality_ui: Control
+var _quality_lbl: Label
 
 # --- gamepad state ---
 var _pad_mode := false
@@ -166,6 +168,47 @@ func _build_ui() -> void:
 	hint.add_theme_color_override("font_color", Color(1, 1, 1, 0.4))
 	hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_game_ui.add_child(hint)
+
+	# ---------- quality (3D resolution) quick controls ----------
+	_quality_ui = Control.new()
+	_quality_ui.name = "QualityUI"
+	_quality_ui.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_quality_ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_quality_ui)
+
+	_quality_lbl = Label.new()
+	_quality_lbl.text = "3D 40%"
+	_quality_lbl.anchor_left = 1.0
+	_quality_lbl.anchor_right = 1.0
+	_quality_lbl.offset_left = -238.0
+	_quality_lbl.offset_right = -156.0
+	_quality_lbl.offset_top = 30.0
+	_quality_lbl.offset_bottom = 58.0
+	_quality_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_quality_lbl.add_theme_font_size_override("font_size", 17)
+	_quality_lbl.add_theme_color_override("font_color", Color(1, 1, 1, 0.55))
+	_quality_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_quality_ui.add_child(_quality_lbl)
+
+	var q_minus := _make_button("Q-", 56, Color(1, 1, 1, 1))
+	q_minus.anchor_left = 1.0
+	q_minus.anchor_right = 1.0
+	q_minus.offset_left = -148.0
+	q_minus.offset_right = -84.0
+	q_minus.offset_top = 16.0
+	q_minus.offset_bottom = 72.0
+	_quality_ui.add_child(q_minus)
+	q_minus.pressed.connect(func() -> void: _step_quality(1))
+
+	var q_plus := _make_button("Q+", 56, Color(1, 1, 1, 1))
+	q_plus.anchor_left = 1.0
+	q_plus.anchor_right = 1.0
+	q_plus.offset_left = -76.0
+	q_plus.offset_right = -12.0
+	q_plus.offset_top = 16.0
+	q_plus.offset_bottom = 72.0
+	_quality_ui.add_child(q_plus)
+	q_plus.pressed.connect(func() -> void: _step_quality(-1))
 
 	# ---------- cutscene controls ----------
 	_cine_ui = Control.new()
@@ -295,6 +338,9 @@ func _process(delta: float) -> void:
 	var show_cine := _player != null and not in_game and _disabled_time > 2.0 and show_touch
 	if _cine_ui.visible != show_cine:
 		_cine_ui.visible = show_cine
+	# quality buttons ride along with whichever control set is visible
+	if is_instance_valid(_quality_ui):
+		_quality_ui.visible = _game_ui.visible or _cine_ui.visible
 
 	# highlight USE when an interactable is in reach
 	if _player != null and is_instance_valid(_interact_btn):
@@ -336,6 +382,15 @@ func _apply_render_scale() -> void:
 	var vp := get_viewport()
 	if vp != null:
 		vp.scaling_3d_scale = SCALE_STEPS[_scale_idx]
+	if is_instance_valid(_quality_lbl):
+		_quality_lbl.text = "3D %d%%" % int(round(SCALE_STEPS[_scale_idx] * 100.0))
+
+
+func _step_quality(dir: int) -> void:
+	_scale_idx = clampi(_scale_idx + dir, 0, SCALE_STEPS.size() - 1)
+	_low_windows = 0
+	_high_windows = 0
+	_apply_render_scale()
 
 
 func _update_adaptive_resolution(delta: float) -> void:

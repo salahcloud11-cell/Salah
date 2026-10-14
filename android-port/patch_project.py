@@ -85,8 +85,13 @@ for root, _dirs, files in os.walk(proj):
             shadow_off += n
 log("shadows disabled on", shadow_off, "lights")
 
-# 3c) cap texture size at 512px on import (RAM saver for 2 GB devices)
+# 3c) cap texture size on import (RAM saver for 1.5 GB devices):
+# world/model/furniture textures at 256px (they dominate texture memory);
+# the shared room-surface set under assets/Textures (incl. the main-menu
+# wallpaper) stays at 512px so menus and main walls don't turn blurry.
+KEEP_512_DIR = "apartment/assets/Textures"  # direct files only, not subfolders
 capped = 0
+capped_big = 0
 for root, _dirs, files in os.walk(proj):
     if ".godot" in root.split(os.sep):
         continue
@@ -99,11 +104,17 @@ for root, _dirs, files in os.walk(proj):
         except Exception:
             continue
         if 'importer="texture"' in txt and "process/size_limit=" in txt:
-            txt2 = re.sub(r"process/size_limit=\d+", "process/size_limit=512", txt)
+            rel = os.path.relpath(p, proj).replace(os.sep, "/")
+            limit = 512 if os.path.dirname(rel) == KEEP_512_DIR else 256
+            txt2 = re.sub(r"process/size_limit=\d+",
+                          "process/size_limit=%d" % limit, txt)
             if txt2 != txt:
                 open(p, "w", encoding="utf-8").write(txt2)
                 capped += 1
-log("texture size_limit=512 applied to", capped, "imports")
+                if limit == 512:
+                    capped_big += 1
+log("texture size_limit applied (256 world / 512 kept on %d) to %d imports"
+    % (capped_big, capped))
 
 # 4) overlay files
 for root, _dirs, files in os.walk(overlay):
@@ -149,10 +160,15 @@ pg = set_key(pg, "rendering", "textures/vram_compression/import_etc2_astc", "tru
 pg = set_key(pg, "display", "window/size/viewport_width", "1152")
 pg = set_key(pg, "display", "window/size/viewport_height", "648")
 pg = set_key(pg, "display", "window/stretch/aspect", '"expand"')
-pg = set_key(pg, "rendering", "scaling_3d/scale", "0.55")
-pg = set_key(pg, "rendering", "textures/default_filters/anisotropic_filtering_level", "2")
-pg = set_key(pg, "rendering", "lights_and_shadows/positional_shadow/atlas_size", "1024")
-pg = set_key(pg, "rendering", "mesh_lod/lod_change/threshold_pixels", "4.0")
+pg = set_key(pg, "rendering", "scaling_3d/scale", "0.4")
+pg = set_key(pg, "rendering", "textures/default_filters/anisotropic_filtering_level", "1")
+pg = set_key(pg, "rendering", "lights_and_shadows/positional_shadow/atlas_size", "512")
+pg = set_key(pg, "rendering", "mesh_lod/lod_change/threshold_pixels", "8.0")
+# --- lowest-end devices (1.5 GB RAM class) ---
+# per-vertex lighting: far cheaper than per-pixel on weak mobile GPUs
+pg = set_key(pg, "rendering", "shading/overrides/force_vertex_shading", "true")
+# physics at the same rate as the 30 FPS render cap (half the CPU work)
+pg = set_key(pg, "physics", "common/physics_ticks_per_second", "30")
 
 # --- PS3 / generic gamepad bindings -------------------------------------
 # Godot joypad indices: A/Cross=0, B/Circle=1, X/Square=2, Y/Triangle=3,
