@@ -1,0 +1,50 @@
+===== ARCHIVE LISTING (7z l, first 120 lines) =====
+
+7-Zip 23.01 (x64) : Copyright (c) 1999-2023 Igor Pavlov : 2023-06-20
+ 64-bit locale=C.UTF-8 Threads:4 OPEN_MAX:65536
+
+Scanning the drive for archives:
+1 file, 1083200770 bytes (1034 MiB)
+
+Listing archive: game.7z
+
+--
+Path = game.7z
+Type = 7z
+Physical Size = 1083200770
+Headers Size = 186
+Method = LZMA2:26
+Solid = -
+Blocks = 1
+
+   Date      Time    Attr         Size   Compressed  Name
+------------------- ----- ------------ ------------  ------------------------
+1996-12-25 03:32:00 ....A   1605664768   1083200584  God of War - Chains of Olympus (USA).iso
+------------------- ----- ------------ ------------  ------------------------
+1996-12-25 03:32:00         1605664768   1083200584  1 files
+
+===== EXTRACT LOG (tail) =====
+Physical Size = 1083200770
+Headers Size = 186
+Method = LZMA2:26
+Solid = -
+Blocks = 1
+
+Everything is Ok
+
+Size:       1605664768
+Compressed: 1083200770
+
+===== FILE TREE (depth <= 4, first 400) =====
+extracted
+extracted/God of War - Chains of Olympus (USA).iso
+
+===== FILE COUNT BY EXTENSION =====
+      1 iso
+
+===== 30 BIGGEST FILES =====
+1605664768 extracted/God of War - Chains of Olympus (USA).iso
+
+===== ENGINE MARKER FILES =====
+
+===== EXE ENGINE STRINGS =====
