@@ -1,0 +1,81 @@
+name: Olympia - Inspect Archive
+
+# Downloads "father of olampya.7z" from Google Drive, extracts it, and
+# commits an inspection report (file tree, biggest files, engine markers)
+# so we can tell how the game was built and how to port it to Android.
+
+on:
+  push:
+    branches:
+      - arena/a8b5a558-salah
+    paths:
+      - "olympia-port/inspect.trigger"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  DRIVE_FILE_ID: 1DFVMWsCAfZVLOiVb5ltrWN17C6b8pCks
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download archive from Google Drive
+        run: |
+          pip install --quiet gdown
+          python3 -m gdown "$DRIVE_FILE_ID" -O game.7z
+          ls -lh game.7z
+
+      - name: Extract archive
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq p7zip-full > /dev/null
+          7z l game.7z > archive-listing.txt 2>&1 || true
+          mkdir -p extracted
+          7z x game.7z -oextracted -y > extract.log 2>&1 || true
+          tail -5 extract.log
+          du -sh extracted || true
+
+      - name: Build inspection report
+        run: |
+          {
+            echo "===== ARCHIVE LISTING (7z l, first 120 lines) ====="
+            head -120 archive-listing.txt
+            echo
+            echo "===== EXTRACT LOG (tail) ====="
+            tail -10 extract.log
+            echo
+            echo "===== FILE TREE (depth <= 4, first 400) ====="
+            find extracted -maxdepth 4 | sort | head -400
+            echo
+            echo "===== FILE COUNT BY EXTENSION ====="
+            find extracted -type f | sed 's/.*\.//' | tr 'A-Z' 'a-z' | sort | uniq -c | sort -rn | head -40
+            echo
+            echo "===== 30 BIGGEST FILES ====="
+            find extracted -type f -printf "%s %p\n" | sort -rn | head -30
+            echo
+            echo "===== ENGINE MARKER FILES ====="
+            find extracted -type f \( -iname "*.exe" -o -iname "*.pck" -o -iname "*.dll" -o -iname "data.win" -o -iname "*.rpa" -o -iname "*.rpyc" -o -iname "*.rpy" -o -iname "index.html" -o -iname "*.uproject" -o -iname "globalgamemanagers" -o -iname "GameAssembly.so" -o -iname "*.x86_64" -o -iname "*.apk" \) | head -80
+            echo
+            echo "===== EXE ENGINE STRINGS ====="
+            find extracted -iname "*.exe" -print0 | head -z -n 5 | while IFS= read -r -d '' f; do
+              echo "--- $f"
+              strings "$f" 2>/dev/null | grep -iaE "godot|unity|renpy|ren'py|rpg ?maker|unreal engine|gamemaker|clickteam|construct|electron" | sort -u | head -12
+            done
+          } | tee inspect-report.txt
+
+      - name: Commit report to repo
+        run: |
+          mkdir -p olympia-port
+          cp inspect-report.txt olympia-port/inspect-report.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add olympia-port/inspect-report.txt
+          git commit -m "Olympia inspect report [skip ci]" || echo "nothing to commit"
+          git push origin HEAD:arena/a8b5a558-salah
