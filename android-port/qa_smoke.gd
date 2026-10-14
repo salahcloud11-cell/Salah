@@ -82,6 +82,21 @@ func _run() -> void:
 		_ok("lite renderer active: glcompatibility (32-bit/low-end build)")
 	else:
 		_fail("expected glcompatibility renderer, got: %s" % renderer)
+
+	var base_w := int(ProjectSettings.get_setting("display/window/size/viewport_width", 0))
+	if base_w == 1152:
+		_ok("UI base resolution 1152x648 (normal text size, no zoom)")
+	else:
+		_fail("UI base width changed: %d" % base_w)
+	var shadow_lights := 0
+	for cls in ["OmniLight3D", "SpotLight3D", "DirectionalLight3D"]:
+		for n in get_tree().current_scene.find_children("*", cls, true, false):
+			if (n as Light3D).shadow_enabled:
+				shadow_lights += 1
+	if shadow_lights == 0:
+		_ok("all light shadows disabled (low-end)")
+	else:
+		_fail("%d lights still cast shadows" % shadow_lights)
 	var start_btn := get_tree().current_scene.get_node_or_null("MenuWrap/MenuContainer/StartButton") as Button
 	if start_btn == null:
 		_fail("StartButton not found")

@@ -25,7 +25,7 @@ const JOY_DEADZONE := 0.12
 const PAD_DEADZONE := 0.18
 const PAD_LOOK_YAW_SPEED := 2.8
 const PAD_LOOK_PITCH_SPEED := 2.1
-const SCALE_STEPS: Array[float] = [0.85, 0.7, 0.6, 0.5, 0.4]
+const SCALE_STEPS: Array[float] = [0.7, 0.6, 0.5, 0.4, 0.33]
 
 var _is_touch := false
 var _on_android := false
@@ -330,16 +330,12 @@ func _apply_pad_look(delta: float) -> void:
 
 # --- low-end support: dynamic render resolution --------------------
 func _apply_render_scale() -> void:
-	var s := SCALE_STEPS[_scale_idx]
+	# Only scale the 3D render buffer. The window/content scale is left
+	# at the game's design size (1152x648) so UI text keeps its normal
+	# size and the image is not zoomed (v3 bug).
 	var vp := get_viewport()
 	if vp != null:
-		vp.scaling_3d_scale = s
-	# Compatibility renderer ignores scaling_3d, so also shrink the
-	# window content scale (guaranteed render-resolution cap, 2 GB RAM).
-	var win := get_window()
-	if win != null:
-		win.content_scale_size = Vector2i(
-			maxi(320, int(1152.0 * s)), maxi(240, int(648.0 * s)))
+		vp.scaling_3d_scale = SCALE_STEPS[_scale_idx]
 
 
 func _update_adaptive_resolution(delta: float) -> void:
