@@ -1,0 +1,153 @@
+===== ARCHIVE SUMMARY =====
+files: 102  total uncompressed: 5.92 GB
+
+===== FILE TREE (depth <= 3, first 300) =====
+Rayman Legends/Bundle_PC.ipk
+Rayman Legends/EngineData/Localisation
+Rayman Legends/Game.ico
+Rayman Legends/LumaPlay.ini
+Rayman Legends/LumaPlay_x86.dll
+Rayman Legends/LumaPlay_x86.exe
+Rayman Legends/Rayman Legends.exe
+Rayman Legends/Support/Brazilian
+Rayman Legends/Support/Danish
+Rayman Legends/Support/Dutch
+Rayman Legends/Support/English
+Rayman Legends/Support/Finnish
+Rayman Legends/Support/French
+Rayman Legends/Support/GameExplorerInstaller.exe
+Rayman Legends/Support/German
+Rayman Legends/Support/Italian
+Rayman Legends/Support/Norwegian
+Rayman Legends/Support/Polish
+Rayman Legends/Support/Russian
+Rayman Legends/Support/Spanish
+Rayman Legends/Support/Swedish
+Rayman Legends/UbiAPI.dll
+Rayman Legends/Uninstall/Setup1.jpg
+Rayman Legends/Uninstall/botva2.dll
+Rayman Legends/Uninstall/dark.png
+Rayman Legends/Uninstall/light.png
+Rayman Legends/Uninstall/unins000.dat
+Rayman Legends/Uninstall/unins000.exe
+Rayman Legends/binkw32.dll
+Rayman Legends/codex.ini
+Rayman Legends/gdf.dll
+Rayman Legends/installscript_build_242550.vdf
+Rayman Legends/persistentLoading_PC.ipk
+Rayman Legends/secure_fat.gf
+Rayman Legends/steam_api.dll
+Rayman Legends/uplay_r1_loader.dll
+Rayman Legends/version.txt
+Rayman Legends/video/cine_gameintro.bik
+Rayman Legends/video/ubilogo_lums_framework_720p.bik
+Read_Me_Instructions.txt
+STEAMRIP  » Free Pre-installed Steam Games.url
+_CommonRedist/dotNetFx40_Full_setup.exe
+_CommonRedist/dxwebsetup.exe
+_CommonRedist/oalinst.exe
+_CommonRedist/vcredist_2015-2019_x64.exe
+_CommonRedist/vcredist_2015-2019_x86.exe
+_CommonRedist/vcredist_x64.exe
+_CommonRedist/vcredist_x86.exe
+_CommonRedist/xnafx40_redist.msi
+game.rar
+
+===== FILE COUNT BY EXTENSION (top 40) =====
+    54  .txt
+    13  .pdf
+    11  .exe
+     7  .dll
+     2  .ipk
+     2  .ini
+     2  .png
+     2  .bik
+     1  .rar
+     1  .loc8
+     1  .ico
+     1  .vdf
+     1  .gf
+     1  .jpg
+     1  .dat
+     1  .url
+     1  .msi
+
+===== 30 BIGGEST FILES =====
+  5626580207  Rayman Legends/Bundle_PC.ipk
+   166740216  Rayman Legends/video/cine_gameintro.bik
+    27729556  Rayman Legends/persistentLoading_PC.ipk
+    14974024  _CommonRedist/vcredist_2015-2019_x64.exe
+    14635608  Rayman Legends/video/ubilogo_lums_framework_720p.bik
+    14412304  _CommonRedist/vcredist_2015-2019_x86.exe
+    12104880  Rayman Legends/Rayman Legends.exe
+     7054336  _CommonRedist/xnafx40_redist.msi
+     5718872  _CommonRedist/vcredist_x64.exe
+     5684912  Rayman Legends/gdf.dll
+     5073240  _CommonRedist/vcredist_x86.exe
+     1619184  Rayman Legends/EngineData/Localisation/localisation.loc8
+     1584048  Rayman Legends/secure_fat.gf
+     1549169  Rayman Legends/Uninstall/unins000.exe
+      889416  _CommonRedist/dotNetFx40_Full_setup.exe
+      829732  Rayman Legends/Support/Finnish/manual.pdf
+      829732  Rayman Legends/Support/Norwegian/manual.pdf
+      829732  Rayman Legends/Support/Swedish/manual.pdf
+      809496  _CommonRedist/oalinst.exe
+      710487  Rayman Legends/Support/Russian/manual.pdf
+      704854  Rayman Legends/Support/Polish/manual.pdf
+      659209  Rayman Legends/Support/Dutch/manual.pdf
+      653231  Rayman Legends/Support/French/manual.pdf
+      652835  Rayman Legends/Support/Spanish/manual.pdf
+      652078  Rayman Legends/Support/German/manual.pdf
+      650299  Rayman Legends/Support/Italian/manual.pdf
+      649731  Rayman Legends/Support/Brazilian/manual.pdf
+      649731  Rayman Legends/Support/Danish/manual.pdf
+      649731  Rayman Legends/Support/English/manual.pdf
+      519967  Rayman Legends/Game.ico
+
+===== ENGINE MARKER FILES =====
+(none found)
+
+===== EXE FILES =====
+Rayman Legends/LumaPlay_x86.exe
+Rayman Legends/Rayman Legends.exe
+Rayman Legends/Support/GameExplorerInstaller.exe
+Rayman Legends/Uninstall/unins000.exe
+_CommonRedist/dotNetFx40_Full_setup.exe
+_CommonRedist/dxwebsetup.exe
+_CommonRedist/oalinst.exe
+_CommonRedist/vcredist_2015-2019_x64.exe
+_CommonRedist/vcredist_2015-2019_x86.exe
+_CommonRedist/vcredist_x64.exe
+_CommonRedist/vcredist_x86.exe
+===== EXE ENGINE STRINGS =====
+--- exes/_CommonRedist/vcredist_x64.exe
+--- exes/_CommonRedist/dxwebsetup.exe
+--- exes/_CommonRedist/oalinst.exe
+This indicates a bug in your application. It is most likely the result of calling an MSIL-compiled (/clr) function from a native constructor or from DllMain.
+--- exes/_CommonRedist/vcredist_2015-2019_x64.exe
+Failed to construct %hs package cache directory name.
+Failed to construct cache path.
+`copy constructor closure'
+`default constructor closure'
+`eh vector constructor iterator'
+`eh vector copy constructor iterator'
+`eh vector vbase constructor iterator'
+`eh vector vbase copy constructor iterator'
+`local vftable constructor closure'
+`managed vector constructor iterator'
+`managed vector copy constructor iterator'
+`vector constructor iterator'
+--- exes/_CommonRedist/dotNetFx40_Full_setup.exe
+`copy constructor closure'
+`default constructor closure'
+`eh vector constructor iterator'
+`eh vector copy constructor iterator'
+`eh vector vbase constructor iterator'
+`eh vector vbase copy constructor iterator'
+`local vftable constructor closure'
+`managed vector constructor iterator'
+`managed vector copy constructor iterator'
+`vector constructor iterator'
+`vector copy constructor iterator'
+`vector vbase constructor iterator'
+--- exes/_CommonRedist/vcredist_x86.exe
