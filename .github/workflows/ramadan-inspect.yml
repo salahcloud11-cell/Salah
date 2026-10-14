@@ -1,0 +1,121 @@
+name: Ramadan - Inspect Archive
+
+# Downloads ramadn.rar (3.9 GB) from Google Drive, lists its contents
+# (no full extraction - the archive is big), pulls out any .exe files to
+# check what engine built the game, and commits an inspection report so
+# we can decide how (or whether) it can be ported to Android.
+
+on:
+  push:
+    branches:
+      - arena/a8b5a558-salah
+    paths:
+      - "ramadan-port/inspect.trigger"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  DRIVE_FILE_ID: 1zYjvuitisAbRZIZBl0IozEDa1Faar-Fv
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download archive from Google Drive
+        run: |
+          pip install --quiet gdown
+          python3 -m gdown "$DRIVE_FILE_ID" -O game.rar
+          ls -lh game.rar
+          df -h . | tail -1
+
+      - name: List archive contents
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq 7zip 7zip-rar unrar > /dev/null 2>&1 || sudo apt-get install -y -qq p7zip-full > /dev/null
+          7z l game.rar > archive-listing.txt 2>&1 || true
+          7z l -slt game.rar > archive-tech.txt 2>&1 || true
+          head -30 archive-listing.txt
+
+      - name: Build inspection report
+        run: |
+          python3 - << 'PYEOF'
+          import collections, os, re
+          entries = []  # (path, size)
+          cur = {}
+          def flush():
+              global cur
+              if cur.get("Path") and cur.get("Folder") != "+":
+                  try: size = int(cur.get("Size", "0"))
+                  except ValueError: size = 0
+                  entries.append((cur["Path"], size))
+              cur = {}
+          if os.path.exists("archive-tech.txt"):
+              for line in open("archive-tech.txt", encoding="utf-8", errors="replace"):
+                  line = line.rstrip("\n")
+                  if not line.strip():
+                      flush(); continue
+                  if " = " in line:
+                      k, v = line.split(" = ", 1)
+                      if k in ("Path", "Size", "Folder"):
+                          cur[k] = v
+              flush()
+          total = sum(s for _, s in entries)
+          exts = collections.Counter()
+          for p, s in entries:
+              ext = os.path.splitext(p)[1].lower().lstrip(".") or "(none)"
+              exts[ext] += 1
+          tree = sorted({"/".join(p.replace("\\", "/").split("/")[:3]) for p, _ in entries})
+          markers = [p for p, _ in entries if re.search(
+              r"\.(pck|rpa|rpyc|rpy|iso|apk|uproject)$|unityplayer\.dll|data\.win|globalgamemanagers|_data[/\\]|index\.html$",
+              p, re.I)]
+          exes = [p for p, _ in entries if p.lower().endswith(".exe")]
+          out = []
+          out.append("===== ARCHIVE SUMMARY =====")
+          out.append(f"files: {len(entries)}  total uncompressed: {total/1e9:.2f} GB")
+          out.append("")
+          out.append("===== FILE TREE (depth <= 3, first 300) =====")
+          out += tree[:300]
+          out.append("")
+          out.append("===== FILE COUNT BY EXTENSION (top 40) =====")
+          out += [f"{c:6d}  .{e}" for e, c in exts.most_common(40)]
+          out.append("")
+          out.append("===== 30 BIGGEST FILES =====")
+          out += [f"{s:12d}  {p}" for p, s in sorted(entries, key=lambda x: -x[1])[:30]]
+          out.append("")
+          out.append("===== ENGINE MARKER FILES =====")
+          out += markers[:80] if markers else ["(none found)"]
+          out.append("")
+          out.append("===== EXE FILES =====")
+          out += exes[:40] if exes else ["(none)"]
+          open("inspect-report.txt", "w", encoding="utf-8").write("\n".join(out) + "\n")
+          print("\n".join(out[:60]))
+          PYEOF
+
+      - name: Extract executables and scan engine strings
+        run: |
+          mkdir -p exes
+          7z x game.rar -oexes -r "*.exe" -y > exe-extract.log 2>&1 || true
+          tail -3 exe-extract.log
+          {
+            echo "===== EXE ENGINE STRINGS ====="
+            find exes -iname "*.exe" -print0 | head -z -n 6 | while IFS= read -r -d '' f; do
+              echo "--- $f"
+              strings "$f" 2>/dev/null | grep -iaE "godot|unity|renpy|ren'py|rpg ?maker|unreal engine|gamemaker|clickteam|construct|electron|mono" | sort -u | head -12
+            done
+          } | tee -a inspect-report.txt
+
+      - name: Commit report to repo
+        run: |
+          mkdir -p ramadan-port
+          cp inspect-report.txt ramadan-port/inspect-report.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add ramadan-port/inspect-report.txt
+          git commit -m "Ramadan inspect report [skip ci]" || echo "nothing to commit"
+          git push origin HEAD:arena/a8b5a558-salah
