@@ -1,1 +1,1 @@
-d1b733bcc8e92f1da0588b72e4bae9ba8a2c5810cebdf88c636fbf9012b67594  out/AwakeOrNot.apk
+4c9ffe16277d6560fdce8177c8383acfc70491b4fc2401945bb6dde1f36ac12a  out/AwakeOrNot.apk
