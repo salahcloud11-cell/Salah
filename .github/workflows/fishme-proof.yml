@@ -1,0 +1,101 @@
+name: Fish Me - Emulator Proof
+
+# Boots a real Android 11 emulator, installs the signed Fish Me APK that is
+# committed in fishme-port/dist, launches it and captures screenshots so we
+# have visual proof that the app installs and runs.
+
+on:
+  push:
+    branches:
+      - arena/a8b5a558-salah
+    paths:
+      - "fishme-port/proof.trigger"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+          ls -l /dev/kvm || echo "NO /dev/kvm"
+
+      - name: Install + launch on Android 11, capture screenshots
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          target: aosp_atd
+          arch: x86_64
+          disable-animations: true
+          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -no-snapshot -camera-back none
+          script: |
+            set +e
+            mkdir -p fishme-port/proof
+            APK=fishme-port/dist/Fish-Me-Android11-SIGNED.apk
+            {
+              echo "== Fish Me: real Android 11 emulator test =="
+              echo "date: $(date -u)"
+              adb shell getprop ro.build.version.release
+              adb shell getprop ro.build.version.sdk
+              adb shell wm size
+              echo ""
+              echo "== install $APK ($(stat -c%s "$APK") bytes) =="
+              adb install -r -g "$APK"
+              echo ""
+              echo "== launch =="
+              adb shell am start -W -n com.fishme.game/.MainActivity
+              sleep 25
+              echo "pid: $(adb shell pidof com.fishme.game | tr -d '\r')"
+              echo ""
+              echo "== screenshot 1: game screen =="
+              adb shell screencap -p /sdcard/game-1.png
+              adb pull /sdcard/game-1.png fishme-port/proof/game-1.png
+              echo ""
+              echo "== tap to cast + wait, screenshot 2: playing =="
+              adb shell input tap 960 540
+              sleep 7
+              adb shell screencap -p /sdcard/game-2.png
+              adb pull /sdcard/game-2.png fishme-port/proof/game-2.png
+              echo ""
+              echo "== memory usage =="
+              adb shell dumpsys meminfo com.fishme.game | head -15
+              echo ""
+              echo "== logcat (fish me / crashes) =="
+              adb logcat -d -v brief | grep -iE 'fishme|AndroidRuntime|FATAL|Exception' | tail -20
+              echo ""
+              echo "== proof files =="
+              ls -l fishme-port/proof/ || true
+            } > fishme-port/emulator-test.txt 2>&1
+            cat fishme-port/emulator-test.txt
+
+      - name: Commit proof
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          mkdir -p fishme-port/proof
+          if [ ! -s fishme-port/emulator-test.txt ]; then
+            echo "Emulator proof run produced no report (emulator did not boot)." > fishme-port/emulator-test.txt
+          fi
+          git add fishme-port/emulator-test.txt fishme-port/proof 2>/dev/null || git add fishme-port/emulator-test.txt
+          if git diff --cached --quiet; then
+            echo "no proof"
+          else
+            git commit -m "Fish Me: emulator proof (screenshots) [skip ci]"
+            for i in 1 2 3 4 5; do
+              git pull --rebase origin arena/a8b5a558-salah || true
+              if git push origin HEAD:arena/a8b5a558-salah; then echo "pushed (attempt $i)"; break; fi
+              sleep 15
+            done
+          fi
+          git push origin HEAD:arena/a8b5a558-salah
