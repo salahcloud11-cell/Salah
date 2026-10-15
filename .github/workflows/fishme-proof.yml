@@ -119,7 +119,7 @@ jobs:
             "$ADB" shell screencap -p /sdcard/game-1.png
             "$ADB" pull /sdcard/game-1.png fishme-port/proof/game-1.png
             echo "== tap to cast + wait -> screenshot 2 =="
-            "$ADB" shell input tap 960 540
+            "$ADB" shell input tap 320 180
             sleep 7
             "$ADB" shell screencap -p /sdcard/game-2.png
             "$ADB" pull /sdcard/game-2.png fishme-port/proof/game-2.png

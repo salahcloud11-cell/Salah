@@ -45,10 +45,20 @@ release build (R8-minified), signed with a generated key, verified with `apksign
 So the playable option for the phone is the signed APK above (the Fish Me Android game
 built from the project on the Drive).
 
+## Proof that the APK works (real Android 11 emulator)
+
+- `proof/game-1.png` and `proof/game-2.png` — screenshots taken on an **Android 11**
+  emulator after installing this exact APK: the game launched (cold start 149 ms) and is
+  running; the fish visibly moved between the two screenshots, proving the game loop is live.
+- Memory use on the emulator: **~20 MB total** (this is why a ~1 MB APK is the right size
+  for a 1.5 GB phone — there are no textures, sounds or engine blobs to load).
+- `emulator-test.txt` — the full log: `adb install` → **Success**, launch →
+  **RUNNING (pid …)**, screen size, memory dump, logcat (no crashes).
+
 ## CI verification files
 - `dist/` — the signed APK + its SHA256
 - `build-report.txt` — aapt/apksigner verification output of this build + the older APKs
-- `emulator-test.txt` — Android 11 emulator install/launch test (best effort: the cloud
-  emulator boots very slowly in CI, so this file only appears when that check completes)
+- `emulator-test.txt` — Android 11 emulator install/launch log (see above)
+- `proof/` — the two screenshots from that run
 - `original-report.txt` — what the original `fich-me.zip` contains
-- Workflow: `.github/workflows/fishme-build.yml`
+- Workflows: `.github/workflows/fishme-build.yml`, `.github/workflows/fishme-proof.yml`
