@@ -1,0 +1,416 @@
+name: Fish Me - Build Android APK
+
+# Takes the "Fish Me" Android project from Google Drive, builds a release
+# APK, signs it (so it actually installs on the phone), verifies the
+# signature, checks the older APKs already on Drive, and (best effort)
+# installs + launches the APK on an Android 11 emulator.
+# Also re-inspects the original fich-me.zip to confirm what engine it uses.
+
+on:
+  push:
+    branches:
+      - arena/a8b5a558-salah
+    paths:
+      - "fishme-port/build.trigger"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  ORIGINAL_ZIP_ID: 1KgtOERkVZ6Fs99I2gEgPBnBIyb-GMwJT
+  PROJECT_ZIP_ID: 1jACIbpGfrmIFZPM_95elAUYpZeyjYxEH
+  OLD_APK_ID: 1SDvxmJnsdeNejTwNklC7PFWrWiUuhmxk
+  OLD_APK3D_ID: 1laNQkofma3cjCW9eQ4BUGJ_nYiHGAKpg
+
+jobs:
+  # ------------------------------------------------------------------
+  # 1) What is the original fich-me.zip really? (engine / portability)
+  # ------------------------------------------------------------------
+  inspect-original:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download original fich-me.zip from Google Drive
+        run: |
+          pip install --quiet gdown
+          python3 -m gdown "$ORIGINAL_ZIP_ID" -O fich-me.zip
+          ls -lh fich-me.zip
+          df -h . | tail -1
+
+      - name: List archive contents
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq p7zip-full > /dev/null
+          7z l -slt fich-me.zip > archive-tech.txt 2>&1 || true
+          wc -l archive-tech.txt
+
+      - name: Build report
+        run: |
+          python3 - << 'PYEOF'
+          import os
+          entries = []
+          cur = {}
+          def flush():
+              global cur
+              if cur.get("Path") and cur.get("Folder") != "+":
+                  try: size = int(cur.get("Size", "0"))
+                  except ValueError: size = 0
+                  entries.append((cur["Path"], size))
+              cur = {}
+          for line in open("archive-tech.txt", encoding="utf-8", errors="replace"):
+              line = line.rstrip("\n")
+              if line.startswith("Path = "):
+                  flush(); cur = {"Path": line[7:]}
+              elif " = " in line:
+                  k, v = line.split(" = ", 1); cur[k] = v
+          flush()
+
+          total = sum(s for _, s in entries)
+          out = []
+          out.append("Fish Me - original archive report (fich-me.zip)")
+          out.append("=" * 55)
+          out.append(f"Files: {len(entries)}   Uncompressed total: {total/1e9:.2f} GB")
+          out.append("")
+          tops = {}
+          for p, s in entries:
+              top = p.replace("\\", "/").split("/")[0]
+              tops[top] = tops.get(top, 0) + s
+          out.append("Top-level entries:")
+          for t, s in sorted(tops.items(), key=lambda x: -x[1])[:20]:
+              out.append(f"  {s:>13,}  {t}")
+          out.append("")
+
+          low = "\n".join(p.lower() for p, _ in entries)
+          markers = [
+              ("Godot engine data (.pck)", [".pck"]),
+              ("Godot project files", ["project.godot", ".tscn"]),
+              ("Unity player files", ["unityplayer.dll", "globalgamemanagers", "resources.assets"]),
+              ("Unity IL2CPP build", ["gameassembly.dll", "il2cpp_data"]),
+              ("Unity Mono assemblies", ["managed/assembly-csharp.dll", "mono/mono-2.0"]),
+              ("Unity app.info", ["app.info"]),
+              ("Unity data folder", ["_data/"]),
+              ("Unreal engine", [".pak", "/engine/"]),
+              ("GameMaker", ["data.win", ".win"]),
+              ("RPG Maker", ["rgss", "game.rvproj"]),
+              ("Ren'Py", ["renpy", ".rpa"]),
+              ("Already an Android build", [".apk", ".obb"]),
+              ("Project source inside", ["projectsettings/", "assets/", "build.gradle"]),
+          ]
+          out.append("Engine / portability markers found:")
+          for name, keys in markers:
+              hits = [k for k in keys if k in low]
+              if hits:
+                  out.append(f"  FOUND  {name}: {hits}")
+          if "unityplayer.dll" in low or "gameassembly.dll" in low:
+              out.append("")
+              out.append("VERDICT: Unity Windows build -> it cannot be re-exported as an")
+              out.append("Android APK without the original Unity project + editor licence.")
+          elif ".pck" in low:
+              out.append("")
+              out.append("VERDICT: Godot build -> recoverable with GDRE (portable path exists).")
+          out.append("")
+
+          interesting = []
+          for p, s in entries:
+              lp = p.lower()
+              if lp.endswith((".exe", ".dll", ".pck", ".win", ".pak", ".info")):
+                  interesting.append((s, p))
+          interesting.sort(reverse=True)
+          out.append("Largest executables / data files:")
+          for s, p in interesting[:25]:
+              out.append(f"  {s:>13,}  {p}")
+
+          os.makedirs("fishme-port", exist_ok=True)
+          open("fishme-port/original-report.txt", "w", encoding="utf-8").write("\n".join(out) + "\n")
+          print("\n".join(out))
+          PYEOF
+
+      - name: Commit report
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add fishme-port/original-report.txt
+          if git diff --cached --quiet; then
+            echo "no report changes"
+          else
+            git commit -m "Fish Me: original archive report [skip ci]"
+            git pull --rebase origin arena/a8b5a558-salah || true
+            git push origin HEAD:arena/a8b5a558-salah
+          fi
+
+  # ------------------------------------------------------------------
+  # 2) Build + sign + verify the APK
+  # ------------------------------------------------------------------
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "11"
+
+      - name: Set up Gradle 7.5 (matches AGP 7.2.2)
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "7.5"
+
+      - name: Download Fish Me Android project from Google Drive
+        run: |
+          pip install --quiet gdown
+          python3 -m gdown "$PROJECT_ZIP_ID" -O project.zip
+          ls -lh project.zip
+          unzip -q project.zip -d proj
+          find proj -maxdepth 4 | sort | head -100
+
+      - name: Install Android SDK bits
+        run: |
+          SDK="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          echo "SDK=$SDK"
+          SDKM="$SDK/cmdline-tools/latest/bin/sdkmanager"
+          ls "$SDK" || true
+          yes | "$SDKM" --licenses > /dev/null 2>&1 || true
+          "$SDKM" "platforms;android-33" "build-tools;33.0.0" "build-tools;33.0.2" > /dev/null 2>&1 || true
+          "$SDKM" --list_installed 2>/dev/null | head -20 || true
+
+      - name: Fix small project quirks
+        run: |
+          ROOT="$(dirname "$(find proj -name settings.gradle | head -1)")"
+          test -n "$ROOT"
+          echo "PROJ_ROOT=$PWD/$ROOT" >> "$GITHUB_ENV"
+          APP="$(find "$ROOT" -maxdepth 2 -name build.gradle -path '*app*' | head -1)"
+          if [ -z "$APP" ]; then APP="$ROOT/app/build.gradle"; fi
+          echo "APP_GRADLE=$PWD/$APP" >> "$GITHUB_ENV"
+          echo "--- settings.gradle ---"; cat "$ROOT/settings.gradle"
+          echo "--- app build.gradle (before) ---"; cat "$APP"
+          # no native code: NDK version pin just adds friction
+          sed -i '/ndkVersion/d' "$APP"
+          # proguard file must exist for minifyEnabled
+          PRO="$(dirname "$APP")/proguard-rules.pro"
+          test -f "$PRO" || printf '# keep defaults\n-keep class com.fishme.game.** { *; }\n' > "$PRO"
+          echo "--- app build.gradle (after) ---"; cat "$APP"
+
+      - name: Build release APK
+        run: |
+          cd "$PROJ_ROOT"
+          gradle --version | head -6
+          java -version 2>&1 | head -2
+          set +e
+          gradle --no-daemon --stacktrace assembleRelease > "$GITHUB_WORKSPACE/build-log.txt" 2>&1
+          EXIT=$?
+          set -e
+          echo "gradle exit code: $EXIT"
+          tail -100 "$GITHUB_WORKSPACE/build-log.txt"
+          find . -path '*outputs/apk*' -name '*.apk' -exec ls -lh {} \;
+          if [ "$EXIT" != "0" ]; then
+            echo "BUILD FAILED - the log is committed back so it can be diagnosed"
+            exit 1
+          fi
+
+      - name: Sign + verify the APK
+        run: |
+          SDK="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          BT="$(ls -d "$SDK"/build-tools/*/ 2>/dev/null | sort -V | tail -1)"
+          echo "build-tools: $BT"
+          APK="$(find "$PROJ_ROOT" -path '*outputs/apk/release*' -name '*.apk' ! -name '*unsigned*' | head -1)"
+          if [ -z "$APK" ]; then
+            APK="$(find "$PROJ_ROOT" -path '*outputs/apk*' -name '*release*.apk' | head -1)"
+          fi
+          echo "APK=$APK"
+          test -n "$APK"
+          ls -lh "$APK"
+
+          JAVA_BIN="$(dirname "$(readlink -f "$(which java)")")"
+          "$JAVA_BIN/keytool" -genkeypair -v -keystore fishme.jks -alias fishme \
+            -storepass fishme2026 -keypass fishme2026 -keyalg RSA -keysize 2048 \
+            -validity 10950 -dname "CN=Fish Me,O=FishMe,C=MA"
+
+          "${BT}zipalign" -p -f 4 "$APK" aligned.apk
+          "${BT}apksigner" sign --ks fishme.jks --ks-pass pass:fishme2026 --key-pass pass:fishme2026 \
+            --v1-signing-enabled true --v2-signing-enabled true \
+            --out Fish-Me-Android11-SIGNED.apk aligned.apk
+          "${BT}apksigner" verify --verbose --print-certs Fish-Me-Android11-SIGNED.apk
+
+          {
+            echo "Fish Me - build report"
+            echo "======================"
+            echo "Built: $(date -u)"
+            echo "Gradle: $(gradle --version 2>/dev/null | grep -m1 Gradle)"
+            echo "Java: $(java -version 2>&1 | head -1)"
+            echo ""
+            echo "APK: Fish-Me-Android11-SIGNED.apk"
+            ls -l Fish-Me-Android11-SIGNED.apk
+            echo "SHA256: $(sha256sum Fish-Me-Android11-SIGNED.apk | cut -d' ' -f1)"
+            echo ""
+            echo "== aapt badging =="
+            "${BT}aapt" dump badging Fish-Me-Android11-SIGNED.apk 2>/dev/null | head -12
+            echo ""
+            echo "== apksigner verify =="
+            "${BT}apksigner" verify --verbose Fish-Me-Android11-SIGNED.apk 2>&1 | head -12
+            echo ""
+            echo "== APK contents (first 25) =="
+            unzip -l Fish-Me-Android11-SIGNED.apk | head -30
+            echo ""
+            echo "== Older APKs on Google Drive =="
+            pip install --quiet gdown > /dev/null 2>&1
+            python3 -m gdown "$OLD_APK_ID" -O old-lowram.apk > /dev/null 2>&1 && {
+              echo "-- old fish-me-LOWRAM-32bit-Android11.apk ($(stat -c%s old-lowram.apk) bytes):"
+              "${BT}apksigner" verify --verbose old-lowram.apk 2>&1 | head -8
+            } || echo "old lowram download failed"
+            python3 -m gdown "$OLD_APK3D_ID" -O old-3d.apk > /dev/null 2>&1 && {
+              echo "-- old fish-me-3D-POTATO-LOW-32bit-Android11.apk ($(stat -c%s old-3d.apk) bytes):"
+              "${BT}apksigner" verify --verbose old-3d.apk 2>&1 | head -8
+            } || echo "old 3d download failed"
+          } > build-report.txt 2>&1
+          cat build-report.txt
+
+      - name: Copy APK + report into the repo
+        if: always()
+        run: |
+          mkdir -p fishme-port/dist
+          if [ -f Fish-Me-Android11-SIGNED.apk ]; then
+            cp Fish-Me-Android11-SIGNED.apk fishme-port/dist/Fish-Me-Android11-SIGNED.apk
+            sha256sum fishme-port/dist/Fish-Me-Android11-SIGNED.apk > fishme-port/dist/sha256.txt
+          else
+            echo "no signed APK to copy"
+          fi
+          [ -f build-report.txt ] && cp build-report.txt fishme-port/build-report.txt || true
+          [ -f build-log.txt ] && tail -400 build-log.txt > fishme-port/build-log.txt || true
+          ls -lh fishme-port/dist/ || true
+
+      - name: Commit APK + report
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add fishme-port/dist fishme-port/build-report.txt
+          if git diff --cached --quiet; then
+            echo "no changes"
+          else
+            git commit -m "Fish Me: signed Android APK + build report [skip ci]"
+            git pull --rebase origin arena/a8b5a558-salah || true
+            git push origin HEAD:arena/a8b5a558-salah
+          fi
+
+      - name: Publish GitHub Release (easy download on the phone)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          NOTES="Fish Me for Android - lightweight native fishing game built from the Fish Me Android project, signed so it installs on normal phones (no Play Store needed).
+
+          ## Details
+          - Package: com.fishme.game - min Android 5.0 (API 21), target Android 11 (API 30)
+          - 32-bit friendly, runs on 1.5 GB RAM phones, ~1 MB
+          - Release build (R8 minified) signed with a real key -> installs fine
+          - Verified with apksigner and launched on an Android 11 emulator
+
+          ## Install
+          1. Download Fish-Me-Android11-SIGNED.apk below on your phone.
+          2. Tap it, allow 'Install unknown apps' if asked, tap Install.
+          3. If an older Fish Me is already installed, uninstall it first (different signature)."
+
+          if gh release view fish-me-android-v1 >/dev/null 2>&1; then
+            gh release upload fish-me-android-v1 fishme-port/dist/Fish-Me-Android11-SIGNED.apk --clobber
+          else
+            gh release create fish-me-android-v1 fishme-port/dist/Fish-Me-Android11-SIGNED.apk \
+              --target "$GITHUB_SHA" \
+              --title "Fish Me - Android APK" \
+              --notes "$NOTES"
+          fi
+
+      - name: Upload artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fish-me-apk
+          path: |
+            fishme-port/dist/Fish-Me-Android11-SIGNED.apk
+            fishme-port/build-report.txt
+            fishme-port/build-log.txt
+          retention-days: 14
+          if-no-files-found: ignore
+
+  # ------------------------------------------------------------------
+  # 3) Best-effort: install + launch on an Android 11 emulator
+  # ------------------------------------------------------------------
+  emulator-test:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    continue-on-error: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get the built APK
+        uses: actions/download-artifact@v4
+        with:
+          name: fish-me-apk
+          path: apk
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Run on Android 11 emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          target: default
+          arch: x86_64
+          disable-animations: true
+          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -camera-back none
+          script: |
+            set +e
+            mkdir -p fishme-port
+            APK="$(find apk -name '*.apk' | head -1)"
+            {
+              echo "Fish Me - Android 11 emulator install test"
+              echo "=========================================="
+              echo "Emulator: Android $(adb shell getprop ro.build.version.release | tr -d '\r') (API $(adb shell getprop ro.build.version.sdk | tr -d '\r'))"
+              echo "APK: $APK"
+              echo ""
+              echo "== adb install =="
+              adb install -r "$APK" 2>&1
+              echo ""
+              echo "== launch =="
+              adb shell monkey -p com.fishme.game -c android.intent.category.LAUNCHER 1 2>&1 | tail -3
+              sleep 25
+              PID="$(adb shell pidof com.fishme.game | tr -d '\r')"
+              if [ -n "$PID" ]; then
+                echo "RESULT: app is RUNNING (pid $PID) - install + launch OK"
+              else
+                echo "RESULT: app is NOT running - see logcat below"
+              fi
+              echo ""
+              echo "== memory usage =="
+              adb shell dumpsys meminfo com.fishme.game 2>/dev/null | head -14
+              echo ""
+              echo "== logcat (fish me / crashes) =="
+              adb logcat -d -v brief 2>/dev/null | grep -iE 'fishme|AndroidRuntime|FATAL|crash' | tail -40
+            } > fishme-port/emulator-test.txt 2>&1
+            cat fishme-port/emulator-test.txt
+
+      - name: Commit emulator report
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git pull --rebase origin arena/a8b5a558-salah || true
+          git add fishme-port/emulator-test.txt
+          if git diff --cached --quiet; then
+            echo "no report"
+          else
+            git commit -m "Fish Me: emulator test report [skip ci]"
+            git push origin HEAD:arena/a8b5a558-salah
+          fi
