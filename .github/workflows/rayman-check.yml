@@ -1,0 +1,132 @@
+name: Rayman Mini - Android Compatibility Check
+
+# Downloads Rayman-Mini-v1.4-full-apkvision.apk from Google Drive (443 MB) and
+# checks exactly what a phone needs to install/run it:
+#   - which CPU architectures (ABIs) the native libraries support
+#   - min/target Android version, OpenGL requirement, permissions
+#   - signature validity, engine used, asset size
+# Also analyses the "How to Fish" APK on Drive (233 MB) as a bonus.
+# Commits a plain-text report.
+
+on:
+  push:
+    branches:
+      - arena/a8b5a558-salah
+    paths:
+      - "rayman-port/check.trigger"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  RAYMAN_APK_ID: 1NIcpAzN8MG4aZHq9VlUQ2zTzHAogCgYf
+  HOWTOFISH_APK_ID: 1CZf0XirfG45pAZ2Kj6peuwwNaTb5BFTC
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download APKs from Google Drive
+        run: |
+          pip install --quiet gdown
+          mkdir -p apks
+          python3 -m gdown "$RAYMAN_APK_ID" -O apks/rayman-mini.apk
+          ls -lh apks/rayman-mini.apk
+          python3 -m gdown "$HOWTOFISH_APK_ID" -O apks/how-to-fish.apk || echo "how-to-fish download failed"
+          ls -lh apks/ || true
+
+      - name: Analyse
+        run: |
+          SDK="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          BT="$(ls -d "$SDK"/build-tools/*/ 2>/dev/null | sort -V | tail -1)"
+          AAPT="${BT}aapt"
+          APKSIGNER="${BT}apksigner"
+          mkdir -p rayman-port
+
+          analyse() {
+            APK="$1"
+            NAME="$2"
+            echo "################################################################"
+            echo "# $NAME"
+            echo "# file: $APK  size: $(stat -c%s "$APK") bytes  sha256: $(sha256sum "$APK" | cut -c1-24)…"
+            echo "################################################################"
+            echo ""
+            echo "== Android manifest (aapt badging) =="
+            "$AAPT" dump badging "$APK" 2>/dev/null | grep -E "^package|^sdkVersion|^targetSdkVersion|^uses-permission|^uses-feature|^native-code|^application-label:|^launchable-activity|^supports-screens|^densities|^application:" | head -30
+            echo ""
+            echo "== CPU architectures inside (native libraries) =="
+            unzip -l "$APK" 2>/dev/null | grep -E "lib/" | head -40
+            echo ""
+            echo "-- per-ABI totals --"
+            for abi in armeabi-v7a arm64-v8a x86 x86_64; do
+              N=$(unzip -l "$APK" 2>/dev/null | grep -c "lib/$abi/")
+              S=$(unzip -l "$APK" 2>/dev/null | grep "lib/$abi/" | awk '{sum+=$1} END {print sum+0}')
+              if [ "$N" != "0" ]; then echo "  $abi : $N .so files, $S bytes"; else echo "  $abi : (none)"; fi
+            done
+            echo ""
+            echo "== big contents summary =="
+            unzip -l "$APK" 2>/dev/null | awk 'NR>3 && NF>=4 {path=$4; if (path ~ /^assets\//) a+=$1; else if (path ~ /^lib\//) l+=$1; else if (path ~ /^res\//) r+=$1; else if (path ~ /\.dex$/) d+=$1; else o+=$1} END {printf "  assets/: %10.1f MB\n  lib/:    %10.1f MB\n  res/:    %10.1f MB\n  *.dex:   %10.1f MB\n  other:   %10.1f MB\n", a/1048576, l/1048576, r/1048576, d/1048576, o/1048576}'
+            echo ""
+            echo "-- 12 largest files --"
+            unzip -l "$APK" 2>/dev/null | sort -rn | head -12
+            echo ""
+            echo "== signature =="
+            "$APKSIGNER" verify --verbose --print-certs "$APK" 2>&1 | grep -E "Verified using|Number of signers|Signer #1 certificate DN|WARNING: .*not protected" | head -8
+            echo ""
+            echo "== engine markers =="
+            unzip -l "$APK" 2>/dev/null | grep -iE "libunity|libil2cpp|libmono|libUE4|libmain|libcocos|libgame|libgdx|libflutter|libTorque|libubisoft" | head -12
+            for m in "assets/bin/Data" "lib/arm64-v8a/libunity.so" "lib/arm64-v8a/libil2cpp.so" "classes.dex" "assets/obb" "unity" "il2cpp"; do
+              c=$(unzip -l "$APK" 2>/dev/null | grep -ci "$m" || true)
+              [ "$c" != "0" ] && echo "  marker '$m': $c hits"
+            done
+            echo ""
+            echo "== VERDICT for a 32-bit Android device (armeabi-v7a runtime) =="
+            if unzip -l "$APK" 2>/dev/null | grep -q "lib/armeabi-v7a/"; then
+              echo "  This APK CONTAINS 32-bit (armeabi-v7a) native libraries -> it can install on a 32-bit device."
+            else
+              echo "  This APK has NO 32-bit (armeabi-v7a) native libraries."
+              echo "  -> A 32-bit-only Android device CANNOT INSTALL this APK (INSTALL_FAILED_NO_MATCHING_ABIS)."
+            fi
+            echo ""
+            echo "== free space needed on the phone =="
+            echo "  APK: $(( $(stat -c%s "$APK") / 1048576 )) MB download/install + roughly 1-2x that during installation."
+            echo ""
+          }
+
+          {
+            echo "Rayman Mini APK - Android compatibility report"
+            echo "date: $(date -u)"
+            echo ""
+            analyse apks/rayman-mini.apk "RAYMAN MINI (Rayman-Mini-v1.4-full-apkvision.apk)"
+            if [ -f apks/how-to-fish.apk ]; then
+              analyse apks/how-to-fish.apk "HOW TO FISH (How-to-Fish-v1.0.2-full-apkvision.apk)"
+            fi
+          } > rayman-port/report.txt 2>&1
+          cat rayman-port/report.txt
+
+      - name: Commit report
+        if: always()
+        run: |
+          mkdir -p rayman-port
+          if [ ! -s rayman-port/report.txt ]; then
+            echo "Report generation failed." > rayman-port/report.txt
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -f rayman-port/report.txt
+          if git diff --cached --quiet; then
+            echo "no changes"
+          else
+            git commit -m "Rayman Mini: Android compatibility report [skip ci]"
+            for i in 1 2 3 4 5; do
+              git pull --rebase origin arena/a8b5a558-salah || true
+              if git push origin HEAD:arena/a8b5a558-salah; then echo "pushed (attempt $i)"; break; fi
+              sleep 15
+            done
+          fi
+          git push origin HEAD:arena/a8b5a558-salah
