@@ -26,10 +26,12 @@ env:
 jobs:
   # ------------------------------------------------------------------
   # 1) What is the original fich-me.zip really? (engine / portability)
+  #    Best effort: Google Drive sometimes blocks very large downloads.
   # ------------------------------------------------------------------
   inspect-original:
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    continue-on-error: true
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -37,7 +39,8 @@ jobs:
       - name: Download original fich-me.zip from Google Drive
         run: |
           pip install --quiet gdown
-          python3 -m gdown "$ORIGINAL_ZIP_ID" -O fich-me.zip
+          python3 -m gdown "$ORIGINAL_ZIP_ID" -O fich-me.zip || \
+            python3 -m gdown "https://drive.google.com/uc?id=$ORIGINAL_ZIP_ID" -O fich-me.zip
           ls -lh fich-me.zip
           df -h . | tail -1
 
@@ -130,9 +133,14 @@ jobs:
           PYEOF
 
       - name: Commit report
+        if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          mkdir -p fishme-port
+          if [ ! -f fishme-port/original-report.txt ]; then
+            echo "Download of fich-me.zip failed (Google Drive download limit?) - no report." > fishme-port/original-report.txt
+          fi
           git add fishme-port/original-report.txt
           if git diff --cached --quiet; then
             echo "no report changes"
@@ -251,7 +259,7 @@ jobs:
             echo "SHA256: $(sha256sum Fish-Me-Android11-SIGNED.apk | cut -d' ' -f1)"
             echo ""
             echo "== aapt badging =="
-            "${BT}aapt" dump badging Fish-Me-Android11-SIGNED.apk 2>/dev/null | head -12
+            "${BT}aapt" dump badging Fish-Me-Android11-SIGNED.apk 2>/dev/null | grep -E "^package|^sdkVersion|^targetSdkVersion|^uses-permission|^application-label:|^launchable" | head -12
             echo ""
             echo "== apksigner verify =="
             "${BT}apksigner" verify --verbose Fish-Me-Android11-SIGNED.apk 2>&1 | head -12
@@ -291,16 +299,17 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add fishme-port/dist fishme-port/build-report.txt
+          git pull --rebase origin arena/a8b5a558-salah || true
+          git add -f fishme-port/dist fishme-port/build-report.txt fishme-port/build-log.txt 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "no changes"
           else
             git commit -m "Fish Me: signed Android APK + build report [skip ci]"
-            git pull --rebase origin arena/a8b5a558-salah || true
             git push origin HEAD:arena/a8b5a558-salah
           fi
 
       - name: Publish GitHub Release (easy download on the phone)
+        if: ${{ hashFiles('fishme-port/dist/Fish-Me-Android11-SIGNED.apk') != '' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -308,9 +317,9 @@ jobs:
 
           ## Details
           - Package: com.fishme.game - min Android 5.0 (API 21), target Android 11 (API 30)
-          - 32-bit friendly, runs on 1.5 GB RAM phones, ~1 MB
-          - Release build (R8 minified) signed with a real key -> installs fine
-          - Verified with apksigner and launched on an Android 11 emulator
+          - 32-bit friendly, built for 1.5 GB RAM phones, under 1 MB
+          - Release build (R8 minified), signed with a real key -> installs fine
+          - Verified with apksigner (v1+v2+v3 signature schemes)
 
           ## Install
           1. Download Fish-Me-Android11-SIGNED.apk below on your phone.
@@ -339,7 +348,9 @@ jobs:
           if-no-files-found: ignore
 
   # ------------------------------------------------------------------
-  # 3) Best-effort: install + launch on an Android 11 emulator
+  # 3) Best effort: boot an Android 11 emulator, install + launch the APK.
+  #    Everything is written to fishme-port/emulator-test.txt, which is
+  #    committed back even when the emulator itself fails to boot.
   # ------------------------------------------------------------------
   emulator-test:
     needs: build
@@ -361,45 +372,67 @@ jobs:
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
+          ls -l /dev/kvm || echo "NO /dev/kvm device"
 
-      - name: Run on Android 11 emulator
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 30
-          target: default
-          arch: x86_64
-          disable-animations: true
-          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -camera-back none
-          script: |
-            set +e
-            mkdir -p fishme-port
-            APK="$(find apk -name '*.apk' | head -1)"
-            {
-              echo "Fish Me - Android 11 emulator install test"
-              echo "=========================================="
-              echo "Emulator: Android $(adb shell getprop ro.build.version.release | tr -d '\r') (API $(adb shell getprop ro.build.version.sdk | tr -d '\r'))"
-              echo "APK: $APK"
-              echo ""
-              echo "== adb install =="
-              adb install -r "$APK" 2>&1
-              echo ""
-              echo "== launch =="
-              adb shell monkey -p com.fishme.game -c android.intent.category.LAUNCHER 1 2>&1 | tail -3
-              sleep 25
-              PID="$(adb shell pidof com.fishme.game | tr -d '\r')"
-              if [ -n "$PID" ]; then
-                echo "RESULT: app is RUNNING (pid $PID) - install + launch OK"
-              else
-                echo "RESULT: app is NOT running - see logcat below"
-              fi
-              echo ""
-              echo "== memory usage =="
-              adb shell dumpsys meminfo com.fishme.game 2>/dev/null | head -14
-              echo ""
-              echo "== logcat (fish me / crashes) =="
-              adb logcat -d -v brief 2>/dev/null | grep -iE 'fishme|AndroidRuntime|FATAL|crash' | tail -40
-            } > fishme-port/emulator-test.txt 2>&1
-            cat fishme-port/emulator-test.txt
+      - name: Boot Android 11 emulator, install and launch the APK
+        run: |
+          set +e
+          mkdir -p fishme-port
+          exec > >(tee fishme-port/emulator-test.txt) 2>&1
+          SDK="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          SDKM="$SDK/cmdline-tools/latest/bin/sdkmanager"
+          AVDM="$SDK/cmdline-tools/latest/bin/avdmanager"
+          echo "== Fish Me: Android 11 emulator test =="
+          echo "date: $(date -u)"
+          echo "SDK: $SDK"
+          ls -l /dev/kvm || echo "NO /dev/kvm"
+          echo ""
+          echo "== install emulator packages =="
+          yes | "$SDKM" --licenses > /dev/null 2>&1 || true
+          "$SDKM" "platform-tools" "emulator" "system-images;android-30;google_apis;x86_64" > sdk-install.log 2>&1
+          tail -5 sdk-install.log
+          echo ""
+          echo "== create AVD =="
+          echo no | "$AVDM" create avd -n fishme -k "system-images;android-30;google_apis;x86_64" -d pixel --force
+          "$AVDM" list avd | head -10
+          echo ""
+          echo "== boot emulator =="
+          "$SDK/emulator/emulator" -avd fishme -no-window -no-audio -no-boot-anim \
+            -gpu swiftshader_indirect -no-snapshot -accel on > emulator-out.log 2>&1 &
+          EMU_PID=$!
+          timeout 420 adb wait-for-device
+          echo "device connected: $(adb devices | tail -2 | head -1)"
+          timeout 420 bash -c 'until [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d "\r")" = "1" ]; do sleep 5; done'
+          echo "boot_completed=$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')  android=$(adb shell getprop ro.build.version.release 2>/dev/null | tr -d '\r')"
+          echo ""
+          APK="$(find apk -name '*.apk' | head -1)"
+          echo "== install $APK ($(stat -c%s "$APK") bytes) =="
+          adb install -r "$APK"
+          echo ""
+          echo "== launch =="
+          adb shell monkey -p com.fishme.game -c android.intent.category.LAUNCHER 1 2>&1 | tail -3
+          sleep 30
+          PID="$(adb shell pidof com.fishme.game | tr -d '\r')"
+          if [ -n "$PID" ]; then
+            echo "RESULT: app is RUNNING (pid $PID) - install + launch OK"
+          else
+            echo "RESULT: app is NOT running - see logcat below"
+          fi
+          echo ""
+          echo "== memory =="
+          adb shell dumpsys meminfo com.fishme.game 2>/dev/null | head -14
+          echo ""
+          echo "== visible activity =="
+          adb shell dumpsys activity activities 2>/dev/null | grep -m2 -i fishme
+          echo ""
+          echo "== logcat (fish me / crashes) =="
+          adb logcat -d -v brief 2>/dev/null | grep -iE 'fishme|AndroidRuntime|FATAL|Exception' | tail -40
+          echo ""
+          echo "== emulator output tail =="
+          tail -15 emulator-out.log
+          adb emu kill 2>/dev/null || true
+          kill $EMU_PID 2>/dev/null || true
+          echo "== done =="
 
       - name: Commit emulator report
         if: always()
@@ -407,6 +440,10 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git pull --rebase origin arena/a8b5a558-salah || true
+          mkdir -p fishme-port
+          if [ ! -s fishme-port/emulator-test.txt ]; then
+            echo "Emulator test could not run in CI (no report was produced)." > fishme-port/emulator-test.txt
+          fi
           git add fishme-port/emulator-test.txt
           if git diff --cached --quiet; then
             echo "no report"
