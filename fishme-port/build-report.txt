@@ -1,0 +1,89 @@
+Fish Me - build report
+======================
+Built: Thu Oct 15 13:13:27 UTC 2026
+Gradle: Gradle 7.5
+Java: openjdk version "11.0.32.1" 2026-08-18
+
+APK: Fish-Me-Android11-SIGNED.apk
+-rw-r--r-- 1 runner runner 835663 Oct 15 13:13 Fish-Me-Android11-SIGNED.apk
+SHA256: bdb9b8fdb1ac00074c5a164e88cda75a2a16e50c3cc8a8eebba8300fde3b760c
+
+== aapt badging ==
+package: name='com.fishme.game' versionCode='1' versionName='1.0-lowram-32bit' platformBuildVersionName='13' platformBuildVersionCode='33' compileSdkVersion='33' compileSdkVersionCodename='13'
+sdkVersion:'21'
+targetSdkVersion:'30'
+uses-permission: name='android.permission.VIBRATE'
+application-label:'Fish Me - Low RAM'
+application-label-af:'Fish Me - Low RAM'
+application-label-am:'Fish Me - Low RAM'
+application-label-ar:'Fish Me - Low RAM'
+application-label-as:'Fish Me - Low RAM'
+application-label-az:'Fish Me - Low RAM'
+application-label-be:'Fish Me - Low RAM'
+application-label-bg:'Fish Me - Low RAM'
+
+== apksigner verify ==
+Verifies
+Verified using v1 scheme (JAR signing): true
+Verified using v2 scheme (APK Signature Scheme v2): true
+Verified using v3 scheme (APK Signature Scheme v3): true
+Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+Verified using v3.2 scheme (APK Signature Scheme v3.2): false
+Verified using v4 scheme (APK Signature Scheme v4): false
+Verified for SourceStamp: false
+Number of signers: 1
+WARNING: META-INF/com/android/build/gradle/app-metadata.properties not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.activity_activity.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.annotation_annotation-experimental.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+
+== APK contents (first 25) ==
+Archive:  Fish-Me-Android11-SIGNED.apk
+  Length      Date    Time    Name
+---------  ---------- -----   ----
+       56  1981-01-01 01:01   META-INF/com/android/build/gradle/app-metadata.properties
+      760  1981-01-01 01:01   assets/dexopt/baseline.prof
+      165  1981-01-01 01:01   assets/dexopt/baseline.profm
+   866400  1981-01-01 01:01   classes.dex
+     4004  1981-01-01 01:01   AndroidManifest.xml
+     1396  1981-01-01 01:01   res/-Y.xml
+      532  1981-01-01 01:01   res/-o.xml
+     1100  1981-01-01 01:01   res/-u.xml
+      404  1981-01-01 01:01   res/06.png
+       77  1981-01-01 01:01   res/09.9.png
+      207  1981-01-01 01:01   res/0H.9.png
+      432  1981-01-01 01:01   res/0I.png
+      464  1981-01-01 01:01   res/0b.xml
+      159  1981-01-01 01:01   res/11.png
+     2660  1981-01-01 01:01   res/1L.xml
+      516  1981-01-01 01:01   res/1y.xml
+       77  1981-01-01 01:01   res/2C.9.png
+      920  1981-01-01 01:01   res/2D.xml
+     2463  1981-01-01 01:01   res/33.9.png
+      468  1981-01-01 01:01   res/36.xml
+      197  1981-01-01 01:01   res/3_.png
+      640  1981-01-01 01:01   res/3c.xml
+      112  1981-01-01 01:01   res/3m.xml
+     1096  1981-01-01 01:01   res/3z.xml
+      388  1981-01-01 01:01   res/43.xml
+      513  1981-01-01 01:01   res/48.png
+      112  1981-01-01 01:01   res/4W.xml
+
+== Older APKs on Google Drive ==
+-- old fish-me-LOWRAM-32bit-Android11.apk (835667 bytes):
+Verifies
+Verified using v1 scheme (JAR signing): true
+Verified using v2 scheme (APK Signature Scheme v2): true
+Verified using v3 scheme (APK Signature Scheme v3): true
+Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+Verified using v3.2 scheme (APK Signature Scheme v3.2): false
+Verified using v4 scheme (APK Signature Scheme v4): false
+Verified for SourceStamp: false
+-- old fish-me-3D-POTATO-LOW-32bit-Android11.apk (2379814 bytes):
+Verifies
+Verified using v1 scheme (JAR signing): true
+Verified using v2 scheme (APK Signature Scheme v2): true
+Verified using v3 scheme (APK Signature Scheme v3): true
+Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+Verified using v3.2 scheme (APK Signature Scheme v3.2): false
+Verified using v4 scheme (APK Signature Scheme v4): false
+Verified for SourceStamp: false
