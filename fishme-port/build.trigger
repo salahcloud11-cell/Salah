@@ -1,2 +1,2 @@
-Build the Fish Me Android project from Google Drive into a signed APK.
-Run 3 - 2026-10-15: race-proof git pushes (APK commit), emulator test via manual AVD boot.
+Build Fish Me APK + capture real screenshots of the game running on Android 11.
+Run 4 - 2026-10-15: proof screenshots + gameplay video (fast AOSP emulator image).

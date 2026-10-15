@@ -383,45 +383,50 @@ jobs:
           sudo udevadm trigger --name-match=kvm
           ls -l /dev/kvm || echo "NO /dev/kvm device"
 
-      - name: Boot Android 11 emulator, install and launch the APK
+      - name: Boot Android 11 emulator, install, launch and capture proof
         run: |
           set +e
-          mkdir -p fishme-port
+          mkdir -p fishme-port/proof
           exec > >(tee fishme-port/emulator-test.txt) 2>&1
           SDK="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
           SDKM="$SDK/cmdline-tools/latest/bin/sdkmanager"
           AVDM="$SDK/cmdline-tools/latest/bin/avdmanager"
-          echo "== Fish Me: Android 11 emulator test =="
+          ADB="$SDK/platform-tools/adb"
+          echo "== Fish Me: Android 11 emulator install + launch test =="
           echo "date: $(date -u)"
           echo "SDK: $SDK"
           ls -l /dev/kvm || echo "NO /dev/kvm"
-          echo ""
-          echo "== install emulator packages =="
           yes | "$SDKM" --licenses > /dev/null 2>&1 || true
-          "$SDKM" "platform-tools" "emulator" "system-images;android-30;google_apis;x86_64" > sdk-install.log 2>&1
-          tail -5 sdk-install.log
-          echo ""
-          ADB="$SDK/platform-tools/adb"
+          echo "== install emulator packages (fast AOSP image) =="
+          SYSIMG="system-images;android-30;aosp_atd;x86_64"
+          if ! "$SDKM" "platform-tools" "emulator" "$SYSIMG" > sdk-install.log 2>&1; then
+            echo "aosp_atd unavailable, falling back to the default x86_64 image"
+            SYSIMG="system-images;android-30;default;x86_64"
+            "$SDKM" "platform-tools" "emulator" "$SYSIMG" > sdk-install.log 2>&1
+          fi
+          grep -iE "done|error|warning" sdk-install.log | tail -3
+          echo "image used: $SYSIMG"
           echo "== create AVD =="
-          echo no | "$AVDM" create avd -n fishme -k "system-images;android-30;google_apis;x86_64" --force
-          "$AVDM" list avd | head -10
-          echo ""
+          echo no | "$AVDM" create avd -n fishme -k "$SYSIMG" --force
           echo "== boot emulator =="
           "$SDK/emulator/emulator" -avd fishme -no-window -no-audio -no-boot-anim \
-            -gpu swiftshader_indirect -no-snapshot -accel on > emulator-out.log 2>&1 &
+            -gpu swiftshader_indirect -no-snapshot -accel on -memory 2048 > emulator-out.log 2>&1 &
           EMU_PID=$!
-          timeout 420 "$ADB" wait-for-device
-          echo "device connected: $("$ADB" devices | tail -2 | head -1)"
-          timeout 420 bash -c "until [ \"\$('$ADB' shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')\" = \"1\" ]; do sleep 5; done"
-          echo "boot_completed=$("$ADB" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')  android=$("$ADB" shell getprop ro.build.version.release 2>/dev/null | tr -d '\r')"
-          echo ""
+          timeout 480 "$ADB" wait-for-device
+          timeout 480 bash -c "until [ \"\$('$ADB' shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')\" = \"1\" ]; do sleep 5; done"
+          echo "android=$("$ADB" shell getprop ro.build.version.release | tr -d '\r') api=$("$ADB" shell getprop ro.build.version.sdk | tr -d '\r')"
+          "$ADB" shell wm size
+          "$ADB" shell settings put global window_animation_scale 0
+          "$ADB" shell settings put global transition_animation_scale 0
+          "$ADB" shell settings put global animator_duration_scale 0
+          "$ADB" shell input keyevent 82 || true
           APK="$(find apk -name '*.apk' | head -1)"
-          echo "== install $APK ($(stat -c%s "$APK") bytes) =="
-          "$ADB" install -r "$APK"
+          echo "== install: $APK ($(stat -c%s "$APK") bytes) =="
+          "$ADB" install -r -g "$APK"
           echo ""
           echo "== launch =="
-          "$ADB" shell monkey -p com.fishme.game -c android.intent.category.LAUNCHER 1 2>&1 | tail -3
-          sleep 30
+          "$ADB" shell am start -W -n com.fishme.game/.MainActivity
+          sleep 25
           PID="$("$ADB" shell pidof com.fishme.game | tr -d '\r')"
           if [ -n "$PID" ]; then
             echo "RESULT: app is RUNNING (pid $PID) - install + launch OK"
@@ -429,17 +434,31 @@ jobs:
             echo "RESULT: app is NOT running - see logcat below"
           fi
           echo ""
-          echo "== memory =="
-          "$ADB" shell dumpsys meminfo com.fishme.game 2>/dev/null | head -14
+          echo "== screenshot 1: game screen =="
+          "$ADB" shell screencap -p /sdcard/game-1.png
+          "$ADB" pull /sdcard/game-1.png fishme-port/proof/game-1.png
+          echo "== tap to cast, wait, screenshot 2: playing =="
+          "$ADB" shell input tap 960 540
+          sleep 6
+          "$ADB" shell screencap -p /sdcard/game-2.png
+          "$ADB" pull /sdcard/game-2.png fishme-port/proof/game-2.png
           echo ""
-          echo "== visible activity =="
-          "$ADB" shell dumpsys activity activities 2>/dev/null | grep -m2 -i fishme
+          echo "== short gameplay video =="
+          "$ADB" shell screenrecord --time-limit 10 --bit-rate 1500000 --size 640x360 /sdcard/demo.mp4 &
+          REC=$!
+          sleep 16
+          "$ADB" pull /sdcard/demo.mp4 fishme-port/proof/game-demo.mp4 || true
+          kill $REC 2>/dev/null || true
+          ls -l fishme-port/proof/ || true
+          echo ""
+          echo "== memory =="
+          "$ADB" shell dumpsys meminfo com.fishme.game 2>/dev/null | head -15
           echo ""
           echo "== logcat (fish me / crashes) =="
-          "$ADB" logcat -d -v brief 2>/dev/null | grep -iE 'fishme|AndroidRuntime|FATAL|Exception' | tail -40
+          "$ADB" logcat -d -v brief 2>/dev/null | grep -iE 'fishme|AndroidRuntime|FATAL|Exception' | tail -30
           echo ""
-          echo "== emulator output tail =="
-          tail -15 emulator-out.log
+          echo "== emulator log tail =="
+          tail -10 emulator-out.log
           "$ADB" emu kill 2>/dev/null || true
           kill $EMU_PID 2>/dev/null || true
           echo "== done =="
@@ -453,7 +472,7 @@ jobs:
           if [ ! -s fishme-port/emulator-test.txt ]; then
             echo "Emulator test could not run in CI (no report was produced)." > fishme-port/emulator-test.txt
           fi
-          git add fishme-port/emulator-test.txt
+          git add fishme-port/emulator-test.txt fishme-port/proof 2>/dev/null || git add fishme-port/emulator-test.txt
           if git diff --cached --quiet; then
             echo "no report"
           else
