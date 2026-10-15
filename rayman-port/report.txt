@@ -1,5 +1,5 @@
 Rayman Mini APK - Android compatibility report
-date: Thu Oct 15 18:57:31 UTC 2026
+date: Thu Oct 15 19:01:39 UTC 2026
 
 ################################################################
 # RAYMAN MINI (Rayman-Mini-v1.4-full-apkvision.apk)
@@ -28,3 +28,50 @@ native-code: 'arm64-v8a'
    278832  2026-10-11 12:57   lib/arm64-v8a/libstub.so
 
 -- per-ABI totals --
+  armeabi-v7a : (none)
+  arm64-v8a : 6 .so files, 17195960 bytes
+  x86 : (none)
+  x86_64 : (none)
+
+== big contents summary ==
+  assets/:      426.7 MB
+  lib/:          16.4 MB
+  res/:           0.1 MB
+  *.dex:          0.1 MB
+  other:          0.1 MB
+
+-- 12 largest files --
+464799859                     330 files
+291278489  2026-10-11 12:57   assets/bundle/bundle_ios.ipk
+ 73039055  2026-10-11 12:57   assets/bundle/Sound/WwisePackage/iOS/BootStrap.pck
+ 13501056  2026-10-11 12:57   lib/arm64-v8a/libraymanmini.so
+ 12165744  2026-10-11 12:57   assets/bundle/ios_UA_Engine_retail
+  4327234  2026-10-11 12:57   assets/bundle/Sound/WwisePackage/iOS/NMI.pck
+  3735781  2026-10-11 12:57   assets/bundle/Sound/WwisePackage/iOS/Music_Kit_Shaolin.pck
+  3476620  2026-10-11 12:57   assets/bundle/SplashVideos/H265/16x9/5120_and_higher/16x9_Landscape_5120.mp4
+  3321979  2026-10-11 12:57   assets/bundle/SplashVideos/H265/16x9/5120_and_higher/16x9_Portrait_5120.mp4
+  3206981  2026-10-11 12:57   assets/bundle/SplashVideos/H264/16x9/5120_and_higher/16x9_Landscape_5120.mp4
+  3170348  2026-10-11 12:57   assets/bundle/pastagames.png
+  2942080  2026-10-11 12:57   assets/bundle/SplashVideos/H264/16x9/5120_and_higher/16x9_Portrait_5120.mp4
+sort: fflush failed: 'standard output': Broken pipe
+sort: write error
+
+== signature ==
+Verified using v1 scheme (JAR signing): false
+Verified using v2 scheme (APK Signature Scheme v2): true
+Verified using v3 scheme (APK Signature Scheme v3): true
+Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+Verified using v3.2 scheme (APK Signature Scheme v3.2): false
+Verified using v4 scheme (APK Signature Scheme v4): false
+Number of signers: 1
+
+== engine markers ==
+  marker 'classes.dex': 1 hits
+
+== VERDICT for a 32-bit Android device (armeabi-v7a runtime) ==
+  This APK has NO 32-bit (armeabi-v7a) native libraries.
+  -> A 32-bit-only Android device CANNOT INSTALL this APK (INSTALL_FAILED_NO_MATCHING_ABIS).
+
+== free space needed on the phone ==
+  APK: 443 MB download/install + roughly 1-2x that during installation.
+
