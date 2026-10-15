@@ -1,8 +1,9 @@
 name: Fish Me - Emulator Proof
 
-# Boots a real Android 11 emulator, installs the signed Fish Me APK that is
-# committed in fishme-port/dist, launches it and captures screenshots so we
-# have visual proof that the app installs and runs.
+# Boots a real Android 11 emulator on an emulator-friendly runner image,
+# installs the signed Fish Me APK committed in fishme-port/dist, launches it
+# and captures screenshots as visual proof that the app installs and runs.
+# Writes rich diagnostics into the report so failures are explainable.
 
 on:
   push:
@@ -17,7 +18,7 @@ permissions:
 
 jobs:
   proof:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     timeout-minutes: 45
     steps:
       - name: Checkout
@@ -29,54 +30,109 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
           ls -l /dev/kvm || echo "NO /dev/kvm"
+          sudo apt-get update -qq && sudo apt-get install -y -qq cpu-checker > /dev/null 2>&1 || true
+          kvm-ok || true
 
-      - name: Install + launch on Android 11, capture screenshots
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 30
-          target: aosp_atd
-          arch: x86_64
-          disable-animations: true
-          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -no-snapshot -camera-back none
-          script: |
-            set +e
-            mkdir -p fishme-port/proof
-            APK=fishme-port/dist/Fish-Me-Android11-SIGNED.apk
-            {
-              echo "== Fish Me: real Android 11 emulator test =="
-              echo "date: $(date -u)"
-              adb shell getprop ro.build.version.release
-              adb shell getprop ro.build.version.sdk
-              adb shell wm size
-              echo ""
-              echo "== install $APK ($(stat -c%s "$APK") bytes) =="
-              adb install -r -g "$APK"
-              echo ""
-              echo "== launch =="
-              adb shell am start -W -n com.fishme.game/.MainActivity
-              sleep 25
-              echo "pid: $(adb shell pidof com.fishme.game | tr -d '\r')"
-              echo ""
-              echo "== screenshot 1: game screen =="
-              adb shell screencap -p /sdcard/game-1.png
-              adb pull /sdcard/game-1.png fishme-port/proof/game-1.png
-              echo ""
-              echo "== tap to cast + wait, screenshot 2: playing =="
-              adb shell input tap 960 540
-              sleep 7
-              adb shell screencap -p /sdcard/game-2.png
-              adb pull /sdcard/game-2.png fishme-port/proof/game-2.png
-              echo ""
-              echo "== memory usage =="
-              adb shell dumpsys meminfo com.fishme.game | head -15
-              echo ""
-              echo "== logcat (fish me / crashes) =="
-              adb logcat -d -v brief | grep -iE 'fishme|AndroidRuntime|FATAL|Exception' | tail -20
-              echo ""
-              echo "== proof files =="
-              ls -l fishme-port/proof/ || true
-            } > fishme-port/emulator-test.txt 2>&1
-            cat fishme-port/emulator-test.txt
+      - name: Boot Android 11, install and launch Fish Me, capture screenshots
+        run: |
+          set +e
+          mkdir -p fishme-port/proof
+          exec > >(tee fishme-port/emulator-test.txt) 2>&1
+
+          SDK="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          export ANDROID_SDK_ROOT="$SDK" ANDROID_HOME="$SDK"
+          SDKM="$SDK/cmdline-tools/latest/bin/sdkmanager"
+          AVDM="$SDK/cmdline-tools/latest/bin/avdmanager"
+          ADB="$SDK/platform-tools/adb"
+
+          echo "== Fish Me: Android 11 emulator install + launch test =="
+          echo "date: $(date -u)"
+          echo "runner: $(uname -a)"
+          echo "SDK: $SDK"
+          ls -l /dev/kvm || echo "NO /dev/kvm"
+
+          yes | "$SDKM" --licenses > /dev/null 2>&1 || true
+          echo "== install emulator packages =="
+          SYSIMG="system-images;android-30;aosp_atd;x86_64"
+          if ! "$SDKM" "platform-tools" "emulator" "$SYSIMG" > sdk-install.log 2>&1; then
+            echo "aosp_atd unavailable, falling back to default image"
+            SYSIMG="system-images;android-30;default;x86_64"
+            "$SDKM" "platform-tools" "emulator" "$SYSIMG" > sdk-install.log 2>&1
+          fi
+          echo "image used: $SYSIMG"
+          echo "== create AVD =="
+          echo no | "$AVDM" create avd -n fishme -k "$SYSIMG" --force
+          "$SDK/emulator/emulator" -list-avds
+          ls -la "$HOME/.android/avd" 2>/dev/null || true
+          ls -la "$HOME/.config/.android/avd" 2>/dev/null || true
+
+          echo "== boot emulator (monitored) =="
+          "$SDK/emulator/emulator" -avd fishme -no-window -no-audio -no-boot-anim \
+            -gpu swiftshader_indirect -no-snapshot -no-metrics -accel auto \
+            -memory 2048 -cores 2 -partition-size 2048 > emulator-out.log 2>&1 &
+          EMU_PID=$!
+          echo "emulator pid: $EMU_PID"
+
+          DEV=""
+          for i in $(seq 1 30); do
+            if ! kill -0 "$EMU_PID" 2>/dev/null; then
+              echo "!! emulator process exited early (attempt $i) - its log follows below"
+              break
+            fi
+            DEV="$("$ADB" devices | sed -n '2p' | tr -d '\r')"
+            if [ -n "$DEV" ]; then echo "device appeared at attempt $i: $DEV"; break; fi
+            sleep 10
+          done
+          echo "--- adb devices ---"
+          "$ADB" devices
+          echo "--- emulator-out.log (first 50 lines) ---"
+          head -50 emulator-out.log
+          echo "--- emulator-out.log (last 30 lines) ---"
+          tail -30 emulator-out.log
+
+          if [ -z "$DEV" ]; then
+            echo ""
+            echo "RESULT: the emulator never appeared - see emulator log above."
+          else
+            echo "== wait for boot =="
+            timeout 600 bash -c "until [ \"\$('$ADB' shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')\" = \"1\" ]; do sleep 5; done" \
+              && echo "boot completed" || echo "boot wait timed out"
+            echo "android=$("$ADB" shell getprop ro.build.version.release | tr -d '\r') api=$("$ADB" shell getprop ro.build.version.sdk | tr -d '\r')"
+            "$ADB" shell wm size
+            "$ADB" shell settings put global window_animation_scale 0
+            "$ADB" shell settings put global transition_animation_scale 0
+            "$ADB" shell settings put global animator_duration_scale 0
+
+            APK="$(find fishme-port/dist -name '*.apk' | head -1)"
+            echo "== install: $APK ($(stat -c%s "$APK") bytes) =="
+            "$ADB" install -r -g "$APK"
+            echo "== launch =="
+            "$ADB" shell am start -W -n com.fishme.game/.MainActivity
+            sleep 25
+            PID="$("$ADB" shell pidof com.fishme.game | tr -d '\r')"
+            if [ -n "$PID" ]; then
+              echo "RESULT: app is RUNNING (pid $PID) - install + launch OK"
+            else
+              echo "RESULT: app is NOT running - see logcat"
+            fi
+            echo "== screenshot 1 =="
+            "$ADB" shell screencap -p /sdcard/game-1.png
+            "$ADB" pull /sdcard/game-1.png fishme-port/proof/game-1.png
+            echo "== tap to cast + wait -> screenshot 2 =="
+            "$ADB" shell input tap 960 540
+            sleep 7
+            "$ADB" shell screencap -p /sdcard/game-2.png
+            "$ADB" pull /sdcard/game-2.png fishme-port/proof/game-2.png
+            echo "== memory =="
+            "$ADB" shell dumpsys meminfo com.fishme.game | head -15
+            echo "== logcat (fish me / crashes) =="
+            "$ADB" logcat -d -v brief | grep -iE 'fishme|AndroidRuntime|FATAL|Exception' | tail -20
+            echo "== proof files =="
+            ls -l fishme-port/proof/ || true
+            "$ADB" emu kill 2>/dev/null || true
+          fi
+          kill "$EMU_PID" 2>/dev/null || true
+          echo "== done =="
 
       - name: Commit proof
         if: always()
@@ -85,13 +141,13 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           mkdir -p fishme-port/proof
           if [ ! -s fishme-port/emulator-test.txt ]; then
-            echo "Emulator proof run produced no report (emulator did not boot)." > fishme-port/emulator-test.txt
+            echo "Emulator proof run produced no report." > fishme-port/emulator-test.txt
           fi
           git add fishme-port/emulator-test.txt fishme-port/proof 2>/dev/null || git add fishme-port/emulator-test.txt
           if git diff --cached --quiet; then
             echo "no proof"
           else
-            git commit -m "Fish Me: emulator proof (screenshots) [skip ci]"
+            git commit -m "Fish Me: emulator report + screenshots [skip ci]"
             for i in 1 2 3 4 5; do
               git pull --rebase origin arena/a8b5a558-salah || true
               if git push origin HEAD:arena/a8b5a558-salah; then echo "pushed (attempt $i)"; break; fi
