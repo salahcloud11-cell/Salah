@@ -1,0 +1,30 @@
+Rayman Mini APK - Android compatibility report
+date: Thu Oct 15 18:57:31 UTC 2026
+
+################################################################
+# RAYMAN MINI (Rayman-Mini-v1.4-full-apkvision.apk)
+# file: apks/rayman-mini.apk  size: 464535736 bytes  sha256: cf867d8969cd749b6a4bec94…
+################################################################
+
+== Android manifest (aapt badging) ==
+package: name='io.github.raymanminiport' versionCode='5739' versionName='1.4' platformBuildVersionName='15' platformBuildVersionCode='35' compileSdkVersion='35' compileSdkVersionCodename='15'
+sdkVersion:'26'
+targetSdkVersion:'34'
+uses-permission: name='android.permission.INTERNET'
+uses-permission: name='android.permission.ACCESS_NETWORK_STATE'
+application-label:'Rayman Mini'
+application: label='Rayman Mini' icon='res/mipmap-mdpi-v4/ic_launcher.png'
+launchable-activity: name='com.mod.MainActivity'  label='Rayman Mini' icon=''
+supports-screens: 'small' 'normal' 'large' 'xlarge'
+densities: '160' '240' '320' '480'
+native-code: 'arm64-v8a'
+
+== CPU architectures inside (native libraries) ==
+  1260104  2026-10-11 12:57   lib/arm64-v8a/libAPKVISION.so
+  1728248  2026-10-11 12:57   lib/arm64-v8a/libc++_shared.so
+   387760  2026-10-11 12:57   lib/arm64-v8a/libminishim.so
+ 13501056  2026-10-11 12:57   lib/arm64-v8a/libraymanmini.so
+    39960  2026-10-11 12:57   lib/arm64-v8a/libraymanminiapp.so
+   278832  2026-10-11 12:57   lib/arm64-v8a/libstub.so
+
+-- per-ABI totals --
