@@ -146,9 +146,13 @@ jobs:
             echo "no report changes"
           else
             git commit -m "Fish Me: original archive report [skip ci]"
-            git pull --rebase origin arena/a8b5a558-salah || true
-            git push origin HEAD:arena/a8b5a558-salah
+            for i in 1 2 3 4 5; do
+              git pull --rebase origin arena/a8b5a558-salah || true
+              if git push origin HEAD:arena/a8b5a558-salah; then echo "pushed (attempt $i)"; break; fi
+              sleep 15
+            done
           fi
+          git push origin HEAD:arena/a8b5a558-salah
 
   # ------------------------------------------------------------------
   # 2) Build + sign + verify the APK
@@ -299,17 +303,22 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git pull --rebase origin arena/a8b5a558-salah || true
           git add -f fishme-port/dist fishme-port/build-report.txt fishme-port/build-log.txt 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "no changes"
           else
             git commit -m "Fish Me: signed Android APK + build report [skip ci]"
-            git push origin HEAD:arena/a8b5a558-salah
+            for i in 1 2 3 4 5; do
+              git pull --rebase origin arena/a8b5a558-salah || true
+              if git push origin HEAD:arena/a8b5a558-salah; then echo "pushed (attempt $i)"; break; fi
+              sleep 15
+            done
           fi
+          git push origin HEAD:arena/a8b5a558-salah
+          git status -sb | head -3
 
       - name: Publish GitHub Release (easy download on the phone)
-        if: ${{ hashFiles('fishme-port/dist/Fish-Me-Android11-SIGNED.apk') != '' }}
+        if: ${{ always() && hashFiles('fishme-port/dist/Fish-Me-Android11-SIGNED.apk') != '' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -392,27 +401,28 @@ jobs:
           "$SDKM" "platform-tools" "emulator" "system-images;android-30;google_apis;x86_64" > sdk-install.log 2>&1
           tail -5 sdk-install.log
           echo ""
+          ADB="$SDK/platform-tools/adb"
           echo "== create AVD =="
-          echo no | "$AVDM" create avd -n fishme -k "system-images;android-30;google_apis;x86_64" -d pixel --force
+          echo no | "$AVDM" create avd -n fishme -k "system-images;android-30;google_apis;x86_64" --force
           "$AVDM" list avd | head -10
           echo ""
           echo "== boot emulator =="
           "$SDK/emulator/emulator" -avd fishme -no-window -no-audio -no-boot-anim \
             -gpu swiftshader_indirect -no-snapshot -accel on > emulator-out.log 2>&1 &
           EMU_PID=$!
-          timeout 420 adb wait-for-device
-          echo "device connected: $(adb devices | tail -2 | head -1)"
-          timeout 420 bash -c 'until [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d "\r")" = "1" ]; do sleep 5; done'
-          echo "boot_completed=$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')  android=$(adb shell getprop ro.build.version.release 2>/dev/null | tr -d '\r')"
+          timeout 420 "$ADB" wait-for-device
+          echo "device connected: $("$ADB" devices | tail -2 | head -1)"
+          timeout 420 bash -c "until [ \"\$('$ADB' shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')\" = \"1\" ]; do sleep 5; done"
+          echo "boot_completed=$("$ADB" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')  android=$("$ADB" shell getprop ro.build.version.release 2>/dev/null | tr -d '\r')"
           echo ""
           APK="$(find apk -name '*.apk' | head -1)"
           echo "== install $APK ($(stat -c%s "$APK") bytes) =="
-          adb install -r "$APK"
+          "$ADB" install -r "$APK"
           echo ""
           echo "== launch =="
-          adb shell monkey -p com.fishme.game -c android.intent.category.LAUNCHER 1 2>&1 | tail -3
+          "$ADB" shell monkey -p com.fishme.game -c android.intent.category.LAUNCHER 1 2>&1 | tail -3
           sleep 30
-          PID="$(adb shell pidof com.fishme.game | tr -d '\r')"
+          PID="$("$ADB" shell pidof com.fishme.game | tr -d '\r')"
           if [ -n "$PID" ]; then
             echo "RESULT: app is RUNNING (pid $PID) - install + launch OK"
           else
@@ -420,17 +430,17 @@ jobs:
           fi
           echo ""
           echo "== memory =="
-          adb shell dumpsys meminfo com.fishme.game 2>/dev/null | head -14
+          "$ADB" shell dumpsys meminfo com.fishme.game 2>/dev/null | head -14
           echo ""
           echo "== visible activity =="
-          adb shell dumpsys activity activities 2>/dev/null | grep -m2 -i fishme
+          "$ADB" shell dumpsys activity activities 2>/dev/null | grep -m2 -i fishme
           echo ""
           echo "== logcat (fish me / crashes) =="
-          adb logcat -d -v brief 2>/dev/null | grep -iE 'fishme|AndroidRuntime|FATAL|Exception' | tail -40
+          "$ADB" logcat -d -v brief 2>/dev/null | grep -iE 'fishme|AndroidRuntime|FATAL|Exception' | tail -40
           echo ""
           echo "== emulator output tail =="
           tail -15 emulator-out.log
-          adb emu kill 2>/dev/null || true
+          "$ADB" emu kill 2>/dev/null || true
           kill $EMU_PID 2>/dev/null || true
           echo "== done =="
 
@@ -439,7 +449,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git pull --rebase origin arena/a8b5a558-salah || true
           mkdir -p fishme-port
           if [ ! -s fishme-port/emulator-test.txt ]; then
             echo "Emulator test could not run in CI (no report was produced)." > fishme-port/emulator-test.txt
@@ -449,5 +458,10 @@ jobs:
             echo "no report"
           else
             git commit -m "Fish Me: emulator test report [skip ci]"
-            git push origin HEAD:arena/a8b5a558-salah
+            for i in 1 2 3 4 5; do
+              git pull --rebase origin arena/a8b5a558-salah || true
+              if git push origin HEAD:arena/a8b5a558-salah; then echo "pushed (attempt $i)"; break; fi
+              sleep 15
+            done
           fi
+          git push origin HEAD:arena/a8b5a558-salah
