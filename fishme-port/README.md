@@ -48,6 +48,7 @@ built from the project on the Drive).
 ## CI verification files
 - `dist/` — the signed APK + its SHA256
 - `build-report.txt` — aapt/apksigner verification output of this build + the older APKs
-- `emulator-test.txt` — Android 11 emulator install/launch test
+- `emulator-test.txt` — Android 11 emulator install/launch test (best effort: the cloud
+  emulator boots very slowly in CI, so this file only appears when that check completes)
 - `original-report.txt` — what the original `fich-me.zip` contains
 - Workflow: `.github/workflows/fishme-build.yml`
