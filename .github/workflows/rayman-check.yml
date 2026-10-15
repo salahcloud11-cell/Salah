@@ -47,6 +47,7 @@ jobs:
           AAPT="${BT}aapt"
           APKSIGNER="${BT}apksigner"
           mkdir -p rayman-port
+          set +e
 
           analyse() {
             APK="$1"
