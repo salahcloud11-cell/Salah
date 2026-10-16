@@ -177,8 +177,8 @@ if [ ! -f "$KEYSTORE" ]; then
     -keypass "$KEYSTORE_PASS" -dname "CN=PS3Mod, OU=Personal, O=Personal, C=MA" >/dev/null
 fi
 rm -f "$OUTPUT_APK"
-"$BT/apksigner" sign --ks "$KEYSTORE" --ks-pass:"$KEYSTORE_PASS" \
-  --key-pass:"$KEYSTORE_PASS" --ks-key-alias ps3mod \
+"$BT/apksigner" sign --ks "$KEYSTORE" --ks-pass "pass:$KEYSTORE_PASS" \
+  --key-pass "pass:$KEYSTORE_PASS" --ks-key-alias ps3mod \
   --v1-signing-enabled true --v2-signing-enabled true \
   --out "$OUTPUT_APK" "$ALIGNED"
 "$BT/apksigner" verify --print-certs "$OUTPUT_APK" 2>&1 | head -n 8
