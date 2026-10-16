@@ -47,11 +47,35 @@ gh workflow run granny-ps3.yml --ref arena/f166472e-salah
 
 ## ✅ معلومات النسخة المبنية
 
-<!-- filled after the CI build -->
-- **versionName/versionCode:** _pending_
-- **الحجم:** _pending_
-- **md5:** _pending_
-- **sha256:** _pending_
+- **versionName/versionCode:** unknown / 0 (الـ manifest الأصلي ما فيهش version —
+  طبيعي، ماشي مشكل)
+- **الملف:** `Granny-unknown-PS3-FULL-CONTROLLER.apk`
+- **الحجم:** 186,407,467 bytes
+- **md5:** `f0b3baefe52813be4b755eadd0a30522`
+- **sha256:** `6d9118f144c7d13990d1404481511c28329d44c65569506dffcb162025193d66`
+- **التوقيع:** `CN=PS3Mod` (RSA 2048, v1+v2) — `apksigner verify` ✅
+- **التحقق:** `PS3Mapper` موجودة فـ classes.dex ✅ + الـ hooks محقونة فـ
+  `UnityPlayerActivity` (dispatchKeyEvent/dispatchGenericMotionEvent) ✅
+
+## ⚠️ Native libraries (مهم!)
+
+الـ `Granny.apk` اللي فـ Drive هو **base APK بلا native libraries** (الـ `.so`
+كاينين فـ **config split** بوحدو: `config.arm64_v8a.apk` أو similar).
+النسخة الحالية فـ Releases خدامة من ناحية الـ mod، ولكن **ما غاديش تفتح اللعبة**
+بلا الـ native libs (Unity/IL2CPP).
+
+**باش نكمّل نسخة واحدة جاهزة للتثبيت (single APK):**
+
+1. من التيليفون اللي فيه Granny منصّبة (Play Store version)، ثبّت تطبيق
+   **SAI (Split APKs Installer)**.
+2. SAI > Apps > Granny > **Backup** (غادي يساڤي base + splits).
+3. صيفط ملفات الـ split اللي سميتها فيها `arm64` (مثال:
+   `config.arm64_v8a.apk` — شي ~20-60MB) لـ **Google Drive** (نفس المجلد).
+4. علمني — غادي نحوّلهم public، الـ CI غادي يدمج الـ `.so` فالنسخة المعدّلة،
+   وغادي تولّي APK وحدة جاهزة: ثبّت ولعب 🎮.
+
+> ⚠️ الـ split **خاصو يكون من نفس version ديال Granny** اللي فالـ base
+> (الأحسن: من اللعبة المنصّبة عندك دابا). version مختلفة = crash.
 
 ---
 
