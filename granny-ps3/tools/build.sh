@@ -71,6 +71,27 @@ echo "--- [1/7] apktool decode ---"
 rm -rf "$DECODED"
 java -jar "$APKTOOL_JAR" d -f -o "$DECODED" "$ORIG_APK" 2>&1 | tail -n 5
 echo "decoded OK"
+echo "--- manifest head ---"
+head -c 1500 "$DECODED/AndroidManifest.xml"; echo
+echo "--- orig apk layout ---"
+python3 - "$ORIG_APK" <<'EOF'
+import sys, zipfile, collections
+z = zipfile.ZipFile(sys.argv[1])
+tops = collections.Counter()
+lib = []
+big = []
+for i in z.infolist():
+    tops[i.filename.split("/")[0] if "/" in i.filename else "(root)"] += 1
+    if i.filename.startswith("lib/") and i.filename.endswith(".so"):
+        lib.append((i.filename, i.file_size))
+    big.append((i.file_size, i.filename))
+print("top-level:", dict(tops))
+print("lib/*.so:", lib if lib else "(none)")
+big.sort(reverse=True)
+print("largest files:")
+for s, n in big[:12]:
+    print("  %10d %s" % (s, n))
+EOF
 
 echo "--- [2/7] compile com.ps3mod (javac) ---"
 rm -rf "$CLASSES"
@@ -88,6 +109,11 @@ cp "$DECODED/analysis.txt" "$WORK/analysis.txt"
 cat "$WORK/analysis.txt"
 MINSDK="$(grep -E '^minSdk=' "$WORK/analysis.txt" | cut -d= -f2 | tr -cd '0-9' || true)"
 [ -z "$MINSDK" ] && MINSDK=21
+# apktool/smali rebuilds dex as v037 (needs API 24+); keep d8 consistent.
+if [ "$MINSDK" -lt 24 ]; then
+  echo "note: raising d8 min-api $MINSDK -> 24 (dex v037 requirement)"
+  MINSDK=24
+fi
 echo "d8 min-api: $MINSDK"
 
 echo "--- [4/7] apktool build ---"

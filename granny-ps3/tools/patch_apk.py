@@ -287,6 +287,17 @@ def main():
         print("  added uses-feature %s" % name)
     if not version_name.endswith("-ps3"):
         root.set(android_attr("versionName"), version_name + "-ps3")
+    # Rebuilt dex is v037 (API 24+); keep minSdk honest so old devices get a
+    # clean "not compatible" instead of a runtime crash.
+    uses_sdk = root.find("uses-sdk")
+    if uses_sdk is not None:
+        try:
+            cur_min = int(uses_sdk.get(android_attr("minSdkVersion"), "24"))
+        except ValueError:
+            cur_min = 24
+        if cur_min < 24:
+            uses_sdk.set(android_attr("minSdkVersion"), "24")
+            print("  minSdkVersion %d -> 24" % cur_min)
     tree.write(manifest_path, encoding="utf-8", xml_declaration=True)
     print("  versionName -> %s" % root.get(android_attr("versionName")))
 
