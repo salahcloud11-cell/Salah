@@ -87,6 +87,11 @@ for i in z.infolist():
     big.append((i.file_size, i.filename))
 print("top-level:", dict(tops))
 print("lib/*.so:", lib if lib else "(none)")
+so_any = [n for n in z.namelist() if n.endswith(".so")]
+print(".so anywhere:", so_any if so_any else "(none)")
+for probe in ("assets/bin/Data/app.info", "assets/bin/Data/boot.config"):
+    if probe in z.namelist():
+        print(probe, "->", z.read(probe)[:300])
 big.sort(reverse=True)
 print("largest files:")
 for s, n in big[:12]:
@@ -150,7 +155,7 @@ MERGED_APK="$WORK/merged.apk"
 rm -f "$MERGED_APK"
 python3 - "$UNSIGNED" "$MERGED/out/classes.dex" "$MERGED_APK" <<'EOF'
 import sys, zipfile
-src, newdex, dst = sys.argv[1], sys.argv[2]
+src, newdex, dst = sys.argv[1], sys.argv[2], sys.argv[3]
 zin = zipfile.ZipFile(src, "r")
 dex = open(newdex, "rb").read()
 with zipfile.ZipFile(dst, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as zout:
