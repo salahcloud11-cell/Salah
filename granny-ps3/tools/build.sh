@@ -107,8 +107,11 @@ open(sys.argv[2], "wb").write(data)
 print("built classes.dex bytes:", len(data))
 print("dex entries:", [n for n in z.namelist() if n.endswith(".dex")])
 EOF
+# NOTE: pass .class files explicitly (newer d8 rejects directory inputs).
+# shellcheck disable=SC2046
 "$BT/d8" --min-api "$MINSDK" --lib "$ANDROID_JAR" \
-  --output "$MERGED/out" "$MERGED/classes.dex" "$CLASSES"
+  --output "$MERGED/out" "$MERGED/classes.dex" \
+  $(find "$CLASSES" -name '*.class' | sort)
 ls -la "$MERGED/out"
 if ! strings "$MERGED/out/classes.dex" | grep -q "Lcom/ps3mod/PS3Mapper;"; then
   echo "ERROR: PS3Mapper missing from merged classes.dex"
