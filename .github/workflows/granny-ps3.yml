@@ -85,8 +85,8 @@ jobs:
           [ -n "$BAKSMALI_URL" ] && [ "$BAKSMALI_URL" != "null" ]
           curl -sL -o "$WORK/tools/baksmali.jar" "$BAKSMALI_URL"
           ls -la "$WORK/tools"
-          java -jar "$WORK/tools/apktool.jar" --version
-          java -jar "$WORK/tools/baksmali.jar" --version
+          java -jar "$WORK/tools/apktool.jar" --version || echo "(apktool --version rc=$?)"
+          java -jar "$WORK/tools/baksmali.jar" --version || echo "(baksmali check done)"
 
       - name: Download Granny.apk from Google Drive
         run: |

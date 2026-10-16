@@ -26,6 +26,22 @@ ANDROID_NS = "http://schemas.android.com/apk/res/android"
 ET.register_namespace("android", ANDROID_NS)
 
 
+def register_manifest_namespaces(manifest_path):
+    """Preserve every xmlns prefix (tools, dist, ...) so ET won't emit ns0:."""
+    try:
+        with open(manifest_path, "r", encoding="utf-8") as fh:
+            raw = fh.read(65536)
+    except OSError:
+        return
+    for prefix, uri in re.findall(r'xmlns:([A-Za-z0-9_.-]+)="([^"]+)"', raw):
+        if prefix == "android":
+            continue
+        try:
+            ET.register_namespace(prefix, uri)
+        except ValueError:
+            pass
+
+
 def android_attr(name):
     return "{%s}%s" % (ANDROID_NS, name)
 
@@ -192,6 +208,7 @@ def main():
     ps3mod_smali = sys.argv[2]
 
     manifest_path = os.path.join(decoded_dir, "AndroidManifest.xml")
+    register_manifest_namespaces(manifest_path)
     tree = ET.parse(manifest_path)
     root = tree.getroot()
     package = root.get("package", "")
