@@ -29,8 +29,22 @@ REPO_JAVA="$SCRIPT_DIR/../java"
 APKTOOL_JAR="${APKTOOL_JAR:-$WORK/tools/apktool.jar}"
 BAKSMALI_JAR="${BAKSMALI_JAR:-$WORK/tools/baksmali.jar}"
 ANDROID_HOME="${ANDROID_HOME:-$HOME/Android/Sdk}"
-BT="$ANDROID_HOME/build-tools/34.0.0"
-ANDROID_JAR="$ANDROID_HOME/platforms/android-34/android.jar"
+BT="${BT:-$ANDROID_HOME/build-tools/34.0.0}"
+if [ ! -x "$BT/d8" ]; then
+  # Fall back to the newest build-tools that ships d8.
+  for cand in $(ls -d "$ANDROID_HOME"/build-tools/* 2>/dev/null | sort -Vr); do
+    if [ -x "$cand/d8" ]; then BT="$cand"; break; fi
+  done
+fi
+PLATFORM="${PLATFORM:-android-34}"
+ANDROID_JAR="$ANDROID_HOME/platforms/$PLATFORM/android.jar"
+if [ ! -f "$ANDROID_JAR" ]; then
+  for cand in $(ls -d "$ANDROID_HOME"/platforms/android-* 2>/dev/null | sort -Vr); do
+    if [ -f "$cand/android.jar" ]; then ANDROID_JAR="$cand/android.jar"; break; fi
+  done
+fi
+echo "build-tools: $BT"
+echo "android.jar: $ANDROID_JAR"
 KEYSTORE_PASS="${KEYSTORE_PASS:-ps3modps3mod}"
 
 echo "=== Granny PS3-mod build ==="

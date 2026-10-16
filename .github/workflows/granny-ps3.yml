@@ -5,12 +5,13 @@ name: Granny PS3 controller mod
 # patched with the com.ps3mod touch-mapper, rebuilt, re-signed and published
 # as a GitHub Release (too big to commit to git).
 #
-# Trigger: Actions tab -> "Granny PS3 controller mod" -> Run workflow,
-#   or: gh workflow run granny-ps3.yml --ref <branch>
+# Trigger: any push toArena/main touching granny-ps3/** or this file,
+#   or manual: Actions tab -> "Granny PS3 controller mod" -> Run workflow.
+#
+# NOTE: run logs are mirrored to commit comments + annotations because the
+# agent sandbox cannot download raw logs (see Report steps).
 
 on:
-  # Auto-build on push (sandbox token cannot call workflow_dispatch, so CI
-  # runs from git pushes; manual runs from the Actions tab still work).
   push:
     branches: ["arena/**", "main"]
     paths:
@@ -34,13 +35,17 @@ on:
         required: true
         type: string
 
+concurrency:
+  group: granny-ps3
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
 env:
   DRIVE_FILE_ID: ${{ inputs.drive_file_id || '1aTRukFGeqdnYP1TWGBALoJ7JX8oCLR3P' }}
   EXPECTED_BYTES: ${{ inputs.expected_bytes || '183565031' }}
   RELEASE_TAG: ${{ inputs.release_tag || 'granny-ps3-latest' }}
-
-permissions:
-  contents: write
 
 jobs:
   build:
@@ -53,60 +58,75 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "17"
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install platform + build-tools
+      - name: Prepare Android SDK (preinstalled on runner)
         run: |
-          yes | sdkmanager --licenses >/dev/null 2>&1 || true
-          sdkmanager "platforms;android-34" "build-tools;34.0.0"
-          echo "ANDROID_HOME=$ANDROID_HOME"
-          ls "$ANDROID_HOME/build-tools/34.0.0" | head -n 30
+          set -euo pipefail
+          mkdir -p "$WORK/logs"
+          {
+            echo "ANDROID_HOME=$ANDROID_HOME"
+            echo "--- build-tools ---"
+            ls "$ANDROID_HOME/build-tools"
+            echo "--- platforms ---"
+            ls "$ANDROID_HOME/platforms"
+            SDKMAN="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+            if [ ! -d "$ANDROID_HOME/build-tools/34.0.0" ] || [ ! -f "$ANDROID_HOME/platforms/android-34/android.jar" ]; then
+              echo "installing build-tools;34.0.0 + platforms;android-34 ..."
+              yes | "$SDKMAN" --licenses >/dev/null 2>&1 || true
+              "$SDKMAN" "platforms;android-34" "build-tools;34.0.0"
+            fi
+            echo "--- final ---"
+            ls "$ANDROID_HOME/build-tools/34.0.0" | head -n 40
+            ls -la "$ANDROID_HOME/platforms/android-34/android.jar"
+          } 2>&1 | tee "$WORK/logs/sdk.log"
 
       - name: Download apktool + baksmali
         run: |
           set -euo pipefail
-          mkdir -p "$WORK/tools"
-          echo "--- apktool (latest) ---"
-          APKTOOL_URL="$(curl -sL https://api.github.com/repos/iBotPeaches/Apktool/releases/latest \
-            | jq -r '.assets[] | select(.name | test("^apktool_.*\\.jar$")) | .browser_download_url' | head -n 1)"
-          echo "url=$APKTOOL_URL"
-          [ -n "$APKTOOL_URL" ] && [ "$APKTOOL_URL" != "null" ]
-          curl -sL -o "$WORK/tools/apktool.jar" "$APKTOOL_URL"
-          echo "--- baksmali (latest) ---"
-          BAKSMALI_URL="$(curl -sL https://api.github.com/repos/JesusFreke/smali/releases/latest \
-            | jq -r '[.assets[] | select(.name | test("^baksmali-.*\\.jar$")) | select(.name | test("sources|javadoc") | not) | .browser_download_url] | sort_by(test("fat") | not) | .[0]')"
-          echo "url=$BAKSMALI_URL"
-          [ -n "$BAKSMALI_URL" ] && [ "$BAKSMALI_URL" != "null" ]
-          curl -sL -o "$WORK/tools/baksmali.jar" "$BAKSMALI_URL"
-          ls -la "$WORK/tools"
-          java -jar "$WORK/tools/apktool.jar" --version || echo "(apktool --version rc=$?)"
-          java -jar "$WORK/tools/baksmali.jar" --version || echo "(baksmali check done)"
+          {
+            mkdir -p "$WORK/tools"
+            echo "--- apktool (latest) ---"
+            APKTOOL_URL="$(curl -sL https://api.github.com/repos/iBotPeaches/Apktool/releases/latest \
+              | jq -r '.assets[] | select(.name | test("^apktool_.*\\.jar$")) | .browser_download_url' | head -n 1)"
+            echo "url=$APKTOOL_URL"
+            [ -n "$APKTOOL_URL" ] && [ "$APKTOOL_URL" != "null" ]
+            curl -sL -o "$WORK/tools/apktool.jar" "$APKTOOL_URL"
+            echo "--- baksmali (latest) ---"
+            BAKSMALI_URL="$(curl -sL https://api.github.com/repos/JesusFreke/smali/releases/latest \
+              | jq -r '[.assets[] | select(.name | test("^baksmali-.*\\.jar$")) | select(.name | test("sources|javadoc") | not) | .browser_download_url] | sort_by(test("fat") | not) | .[0]')"
+            echo "url=$BAKSMALI_URL"
+            [ -n "$BAKSMALI_URL" ] && [ "$BAKSMALI_URL" != "null" ]
+            curl -sL -o "$WORK/tools/baksmali.jar" "$BAKSMALI_URL"
+            ls -la "$WORK/tools"
+            java -jar "$WORK/tools/apktool.jar" --version || echo "(apktool version check rc=$?)"
+            java -jar "$WORK/tools/baksmali.jar" --version || echo "(baksmali version check done)"
+          } 2>&1 | tee "$WORK/logs/tools.log"
 
       - name: Download Granny.apk from Google Drive
         run: |
           set -euo pipefail
-          pip install -q gdown
-          gdown --fuzzy "https://drive.google.com/uc?id=$DRIVE_FILE_ID&export=download" \
-            -O "$WORK/Granny-orig.apk"
-          ls -la "$WORK/Granny-orig.apk"
-          SIZE="$(stat -c%s "$WORK/Granny-orig.apk")"
-          echo "downloaded bytes: $SIZE (expected $EXPECTED_BYTES)"
-          MAGIC="$(head -c 2 "$WORK/Granny-orig.apk")"
-          if [ "$MAGIC" != "PK" ]; then
-            echo "ERROR: download is not a zip/APK (magic=$MAGIC). First bytes:"
-            head -c 300 "$WORK/Granny-orig.apk" | cat -v
-            exit 1
-          fi
-          if [ "$SIZE" != "$EXPECTED_BYTES" ]; then
-            echo "ERROR: size mismatch, aborting (Drive file changed?)"
-            exit 1
-          fi
+          {
+            pip install -q gdown
+            gdown --fuzzy "https://drive.google.com/uc?id=$DRIVE_FILE_ID&export=download" \
+              -O "$WORK/Granny-orig.apk"
+            ls -la "$WORK/Granny-orig.apk"
+            SIZE="$(stat -c%s "$WORK/Granny-orig.apk")"
+            echo "downloaded bytes: $SIZE (expected $EXPECTED_BYTES)"
+            MAGIC="$(head -c 2 "$WORK/Granny-orig.apk")"
+            if [ "$MAGIC" != "PK" ]; then
+              echo "ERROR: download is not a zip/APK (magic=$MAGIC). First bytes:"
+              head -c 300 "$WORK/Granny-orig.apk" | cat -v
+              exit 1
+            fi
+            if [ "$SIZE" != "$EXPECTED_BYTES" ]; then
+              echo "ERROR: size mismatch, aborting (Drive file changed?)"
+              exit 1
+            fi
+          } 2>&1 | tee "$WORK/logs/download.log"
 
       - name: Build modded APK
         env:
@@ -115,7 +135,7 @@ jobs:
         run: |
           set -euo pipefail
           chmod +x granny-ps3/tools/build.sh
-          granny-ps3/tools/build.sh "$WORK/Granny-orig.apk" "$WORK/Granny-PS3-mod.apk" "$WORK/build"
+          granny-ps3/tools/build.sh "$WORK/Granny-orig.apk" "$WORK/Granny-PS3-mod.apk" "$WORK/build" 2>&1 | tee "$WORK/logs/build.log"
 
       - name: Name outputs + checksums
         id: outputs
@@ -156,29 +176,87 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          cd "$WORK"
-          APK_NAME="$(grep '^file=' CHECKSUMS.txt | cut -d= -f2)"
           {
-            echo "## Granny + full PS3 (DualShock 3) controller support 🎮"
+            cd "$WORK"
+            APK_NAME="$(grep '^file=' CHECKSUMS.txt | cut -d= -f2)"
+            {
+              echo "## Granny + full PS3 (DualShock 3) controller support 🎮"
+              echo ""
+              echo "Modded APK: the original game from Google Drive + injected"
+              echo "\`com.ps3mod\` touch-mapper (left stick = move, right stick = look,"
+              echo "all buttons mapped). **Uninstall the original game first**"
+              echo "(different signature), then install this APK."
+              echo ""
+              echo "Full button map + pairing instructions: see"
+              echo "\`granny-ps3/PS3-CONTROLLER-GUIDE.md\` in the repo."
+              echo ""
+              echo "### Build info"
+              echo '```'
+              cat CHECKSUMS.txt
+              echo '```'
+            } > release-notes.md
+            TAG="$RELEASE_TAG"
+            if gh release view "$TAG" >/dev/null 2>&1; then
+              echo "deleting existing release $TAG"
+              gh release delete "$TAG" -y
+              git push origin ":refs/tags/$TAG" || true
+            fi
+            gh release create "$TAG" --title "Granny PS3 Full Controller (${{ steps.outputs.outputs.version }})" \
+              --notes-file release-notes.md "$APK_NAME" CHECKSUMS.txt analysis.txt
+            echo "RELEASE_URL=https://github.com/${{ github.repository }}/releases/tag/$TAG" | tee release-url.txt
+          } 2>&1 | tee "$WORK/logs/release.log"
+
+      - name: Report success (commit comment + annotation)
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          {
+            echo "## ✅ Granny PS3 build OK"
             echo ""
-            echo "Modded APK: the original game from Google Drive + injected"
-            echo "\`com.ps3mod\` touch-mapper (left stick = move, right stick = look,"
-            echo "all buttons mapped). **Uninstall the original game first**"
-            echo "(different signature), then install this APK."
+            echo "run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            if [ -f "$WORK/release-url.txt" ]; then echo "$(cat "$WORK/release-url.txt")"; fi
             echo ""
-            echo "Full button map + pairing instructions: see"
-            echo "\`granny-ps3/PS3-CONTROLLER-GUIDE.md\` in the repo."
-            echo ""
-            echo "### Build info"
+            echo "### CHECKSUMS.txt"
             echo '```'
-            cat CHECKSUMS.txt
+            cat "$WORK/CHECKSUMS.txt"
             echo '```'
-          } > release-notes.md
-          TAG="$RELEASE_TAG"
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            echo "deleting existing release $TAG"
-            gh release delete "$TAG" -y
-            git push origin ":refs/tags/$TAG" || true
+            echo "### analysis.txt"
+            echo '```'
+            cat "$WORK/analysis.txt"
+            echo '```'
+          } > "$WORK/report.md"
+          gh api "repos/${{ github.repository }}/commits/${{ github.sha }}/comments" \
+            -f body="$(cat "$WORK/report.md")" >/dev/null || echo "(commit comment failed)"
+          HASHES="$(tr '\n' ' ' < "$WORK/CHECKSUMS.txt" | head -c 800)"
+          echo "::notice::GRANNY-PS3-OK $HASHES"
+
+      - name: Report failure (commit comment + annotation)
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          {
+            echo "## ❌ Granny PS3 build FAILED"
+            echo ""
+            echo "run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            echo "commit: ${{ github.sha }}"
+            for f in sdk tools download build release; do
+              echo ""
+              echo "### $f.log (tail)"
+              echo '```'
+              tail -c 9000 "$WORK/logs/$f.log" 2>/dev/null || echo "(no $f.log)"
+              echo '```'
+            done
+          } > "$WORK/report.md"
+          gh api "repos/${{ github.repository }}/commits/${{ github.sha }}/comments" \
+            -f body="$(cat "$WORK/report.md")" >/dev/null || echo "(commit comment failed)"
+          TAIL40="$(tail -n 40 "$WORK/logs/build.log" 2>/dev/null | head -c 3500)"
+          if [ -z "$TAIL40" ]; then
+            for f in release download tools sdk; do
+              TAIL40="$(tail -n 40 "$WORK/logs/$f.log" 2>/dev/null | head -c 3500)"
+              [ -n "$TAIL40" ] && break
+            done
           fi
-          gh release create "$TAG" --title "Granny PS3 Full Controller (${{ steps.outputs.outputs.version }})" \
-            --notes-file release-notes.md "$APK_NAME" CHECKSUMS.txt analysis.txt
+          ESC="$(printf '%s' "$TAIL40" | python3 -c 'import sys; print(sys.stdin.read().replace("%","%25").replace("\r","%0D").replace("\n","%0A"))')"
+          echo "::error::GRANNY-PS3-FAIL%0A$ESC"
