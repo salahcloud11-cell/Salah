@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
-"""Inject the PS3Mapper (com.ps3mod) into a decoded APK directory.
+"""Inject the PS3Mapper (com.ps3mod) hooks into a decoded APK directory.
 
 Usage:
-    patch_apk.py <decoded_dir> <ps3mod_smali_dir>
+    patch_apk.py <decoded_dir> [ps3mod_smali_dir]
 
 Steps:
   1. Parse AndroidManifest.xml -> package, version, launcher activity.
-  2. Copy com/ps3mod/*.smali into the best smali_classes* dir (64K heuristic).
+  2. If a ps3mod smali dir is given, copy com/ps3mod/*.smali into the best
+     smali_classes* dir (64K heuristic). Otherwise the mapper classes are
+     merged at dex level later (see build.sh d8 step) and this is skipped.
   3. Inject dispatchKeyEvent / dispatchGenericMotionEvent overrides into the
      launcher activity smali (hooks the originals if they already exist).
   4. Add gamepad/usb-host <uses-feature> entries + "-ps3" versionName suffix.
-  5. Write analysis.txt with everything the build needs (output file name...).
+  5. Write analysis.txt with everything the build needs.
 
 Only stdlib is used.
 """
@@ -200,12 +202,26 @@ def guess_unity_version(decoded_dir):
     return "unknown"
 
 
+def find_ps3mapper_smali(ps3mod_smali):
+    """Return dir containing PS3Mapper.smali, or None."""
+    if not ps3mod_smali or not os.path.isdir(ps3mod_smali):
+        return None
+    direct = os.path.join(ps3mod_smali, "com", "ps3mod", "PS3Mapper.smali")
+    if os.path.isfile(direct):
+        return os.path.join(ps3mod_smali, "com", "ps3mod")
+    hits = glob.glob(os.path.join(ps3mod_smali, "**", "PS3Mapper.smali"),
+                     recursive=True)
+    if hits:
+        return os.path.dirname(hits[0])
+    return None
+
+
 def main():
-    if len(sys.argv) != 3:
-        print("Usage: patch_apk.py <decoded_dir> <ps3mod_smali_dir>")
+    if len(sys.argv) not in (2, 3):
+        print("Usage: patch_apk.py <decoded_dir> [ps3mod_smali_dir]")
         return 2
     decoded_dir = sys.argv[1]
-    ps3mod_smali = sys.argv[2]
+    ps3mod_smali = sys.argv[2] if len(sys.argv) == 3 else None
 
     manifest_path = os.path.join(decoded_dir, "AndroidManifest.xml")
     register_manifest_namespaces(manifest_path)
@@ -222,24 +238,19 @@ def main():
         raise SystemExit("Launcher activity not found in manifest")
     print("launcher activity: %s" % activity)
 
-    print("Picking smali dir for injection:")
-    smali_dir = pick_smali_dir(decoded_dir)
-
-    # 1. Copy mapper smali files.
-    src = os.path.join(ps3mod_smali, "com", "ps3mod")
-    if not os.path.isdir(src):
-        # baksmali output root may directly be the package dir
-        srcs = glob.glob(os.path.join(ps3mod_smali, "**", "PS3Mapper.smali"),
-                         recursive=True)
-        if not srcs:
-            raise SystemExit("PS3Mapper.smali not found under %s" % ps3mod_smali)
-        src = os.path.dirname(srcs[0])
-    dst = os.path.join(smali_dir, "com", "ps3mod")
-    os.makedirs(dst, exist_ok=True)
-    for f in os.listdir(src):
-        if f.endswith(".smali"):
-            shutil.copy2(os.path.join(src, f), os.path.join(dst, f))
-            print("  copied com/ps3mod/%s" % f)
+    # 1. Copy mapper smali files (optional: dex-merge path skips this).
+    src = find_ps3mapper_smali(ps3mod_smali)
+    if src:
+        print("Picking smali dir for injection:")
+        smali_dir = pick_smali_dir(decoded_dir)
+        dst = os.path.join(smali_dir, "com", "ps3mod")
+        os.makedirs(dst, exist_ok=True)
+        for f in os.listdir(src):
+            if f.endswith(".smali"):
+                shutil.copy2(os.path.join(src, f), os.path.join(dst, f))
+                print("  copied com/ps3mod/%s" % f)
+    else:
+        print("No PS3Mapper smali provided: mapper will be merged at dex level (d8).")
 
     # 2. Inject activity overrides.
     rel = activity.replace(".", "/") + ".smali"
@@ -285,6 +296,11 @@ def main():
                   if os.path.isdir(os.path.join(decoded_dir, "lib", d))) \
         if os.path.isdir(os.path.join(decoded_dir, "lib")) else []
     unity = guess_unity_version(decoded_dir)
+    uses_sdk = root.find("uses-sdk")
+    min_sdk = uses_sdk.get(android_attr("minSdkVersion"), "21") \
+        if uses_sdk is not None else "21"
+    target_sdk = uses_sdk.get(android_attr("targetSdkVersion"), "?") \
+        if uses_sdk is not None else "?"
     with open(os.path.join(decoded_dir, "analysis.txt"), "w",
               encoding="utf-8") as fh:
         fh.write("package=%s\n" % package)
@@ -295,7 +311,10 @@ def main():
             [d for d in dexes if os.path.isdir(d)]))
         fh.write("abis=%s\n" % ",".join(abis))
         fh.write("unity=%s\n" % unity)
-    print("wrote analysis.txt (abis=%s unity=%s)" % (abis, unity))
+        fh.write("minSdk=%s\n" % min_sdk)
+        fh.write("targetSdk=%s\n" % target_sdk)
+    print("wrote analysis.txt (abis=%s unity=%s minSdk=%s targetSdk=%s)"
+          % (abis, unity, min_sdk, target_sdk))
     return 0
 
 

@@ -84,49 +84,30 @@ jobs:
             ls -la "$ANDROID_HOME/platforms/android-34/android.jar"
           } 2>&1 | tee "$WORK/logs/sdk.log"
 
-      - name: Download apktool + baksmali
+      - name: Download apktool
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           {
             mkdir -p "$WORK/tools"
-            AUTH=(-H "Authorization: Bearer $GH_TOKEN")
-            latest_jar() { # $1=repo $2=name-regex -> url (empty on failure)
-              local repo="$1" rx="$2" json url
-              json="$(curl -sL "${AUTH[@]}" "https://api.github.com/repos/$repo/releases/latest" || true)"
-              if echo "$json" | jq -e '.assets' >/dev/null 2>&1; then
-                url="$(echo "$json" | jq -r --arg rx "$rx" \
-                  '[.assets[] | select(.name | test($rx)) | select(.name | test("sources|javadoc") | not) | .browser_download_url] | sort_by(test("fat") | not) | .[0] // empty')"
-                echo "$url"
-              else
-                echo "API note for $repo: $(echo "$json" | jq -r '.message // "no .assets in response"' | head -c 200)"
-                echo ""
-              fi
-            }
-            echo "--- apktool (latest, fallback: pinned) ---"
-            APKTOOL_URL="$(latest_jar iBotPeaches/Apktool '^apktool_.*\.jar$')"
-            [ -z "$APKTOOL_URL" ] && APKTOOL_URL="https://github.com/iBotPeaches/Apktool/releases/download/v2.9.3/apktool_2.9.3.jar" && echo "using pinned fallback"
+            # NOTE: standalone baksmali jars are no longer published upstream
+            # (smali repo archived, releases removed), so the mapper is merged
+            # at dex level with d8 instead (see build.sh step 5/7).
+            JSON="$(curl -sL -H "Authorization: Bearer $GH_TOKEN" \
+              https://api.github.com/repos/iBotPeaches/Apktool/releases/latest || true)"
+            APKTOOL_URL="$(echo "$JSON" | jq -r \
+              '[.assets[]? | select(.name | test("^apktool_.*\\.jar$")) | .browser_download_url] | .[0] // empty')"
+            if [ -z "$APKTOOL_URL" ]; then
+              echo "API note: $(echo "$JSON" | jq -r '.message // "no assets"' | head -c 200)"
+              APKTOOL_URL="https://github.com/iBotPeaches/Apktool/releases/download/v2.9.3/apktool_2.9.3.jar"
+              echo "using pinned fallback"
+            fi
             echo "url=$APKTOOL_URL"
             curl -sL -o "$WORK/tools/apktool.jar" "$APKTOOL_URL"
-            echo "--- baksmali (latest, fallback: pinned) ---"
-            BAKSMALI_URL="$(latest_jar JesusFreke/smali '^baksmali-.*\.jar$')"
-            if [ -z "$BAKSMALI_URL" ]; then
-              for v in 3.0.7 3.0.3 2.5.2; do
-                cand="https://github.com/JesusFreke/smali/releases/download/v$v/baksmali-$v.jar"
-                if curl -sL -o "$WORK/tools/baksmali.jar" "$cand" && [ "$(stat -c%s "$WORK/tools/baksmali.jar")" -gt 1000000 ]; then
-                  echo "pinned fallback OK: $cand"; BAKSMALI_URL="$cand"; break
-                fi
-              done
-            else
-              echo "url=$BAKSMALI_URL"
-              curl -sL -o "$WORK/tools/baksmali.jar" "$BAKSMALI_URL"
-            fi
-            [ -n "${BAKSMALI_URL:-}" ] || { echo "ERROR: could not obtain baksmali jar"; exit 1; }
             ls -la "$WORK/tools"
-            file "$WORK/tools"/*.jar 2>/dev/null || head -c 4 "$WORK/tools/apktool.jar" | od -c | head -1
+            [ "$(stat -c%s "$WORK/tools/apktool.jar")" -gt 1000000 ] || { echo "ERROR: apktool jar too small"; exit 1; }
             java -jar "$WORK/tools/apktool.jar" --version || echo "(apktool version check rc=$?)"
-            java -jar "$WORK/tools/baksmali.jar" --version || echo "(baksmali version check done)"
           } 2>&1 | tee "$WORK/logs/tools.log"
 
       - name: Download Granny.apk from Google Drive
@@ -154,7 +135,6 @@ jobs:
       - name: Build modded APK
         env:
           APKTOOL_JAR: ${{ github.workspace }}/ps3work/tools/apktool.jar
-          BAKSMALI_JAR: ${{ github.workspace }}/ps3work/tools/baksmali.jar
         run: |
           set -euo pipefail
           chmod +x granny-ps3/tools/build.sh
