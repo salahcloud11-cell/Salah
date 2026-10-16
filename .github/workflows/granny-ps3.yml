@@ -34,6 +34,11 @@ on:
         default: "granny-ps3-latest"
         required: true
         type: string
+      split_ids:
+        description: "Optional comma/space-separated Drive IDs of config split APKs (native libs get merged into one APK)"
+        default: ""
+        required: false
+        type: string
 
 concurrency:
   group: granny-ps3
@@ -46,6 +51,7 @@ env:
   DRIVE_FILE_ID: ${{ inputs.drive_file_id || '1aTRukFGeqdnYP1TWGBALoJ7JX8oCLR3P' }}
   EXPECTED_BYTES: ${{ inputs.expected_bytes || '183565031' }}
   RELEASE_TAG: ${{ inputs.release_tag || 'granny-ps3-latest' }}
+  SPLIT_IDS: ${{ inputs.split_ids || '' }}
 
 jobs:
   build:
@@ -129,11 +135,26 @@ jobs:
               echo "ERROR: size mismatch, aborting (Drive file changed?)"
               exit 1
             fi
+            if [ -n "$SPLIT_IDS" ]; then
+              mkdir -p "$WORK/splits"
+              n=0
+              for sid in $(echo "$SPLIT_IDS" | tr ',' ' '); do
+                n=$((n + 1))
+                echo "--- split $n: $sid ---"
+                gdown "$sid" -O "$WORK/splits/split-$n.apk"
+                ls -la "$WORK/splits/split-$n.apk"
+                MAGIC="$(head -c 2 "$WORK/splits/split-$n.apk")"
+                [ "$MAGIC" = "PK" ] || { echo "ERROR: split $n is not an APK"; exit 1; }
+              done
+            else
+              echo "(no config splits given: base APK only)"
+            fi
           } 2>&1 | tee "$WORK/logs/download.log"
 
       - name: Build modded APK
         env:
           APKTOOL_JAR: ${{ github.workspace }}/ps3work/tools/apktool.jar
+          SPLITS_DIR: ${{ github.workspace }}/ps3work/splits
         run: |
           set -euo pipefail
           chmod +x granny-ps3/tools/build.sh
@@ -146,7 +167,7 @@ jobs:
           cat "$WORK/build/analysis.txt"
           # shellcheck disable=SC1091
           source <(grep -E '^(package|versionName|versionCode|launcherActivity|unity)=' "$WORK/build/analysis.txt" | sed 's/[^a-zA-Z0-9_=.,+-]/_/g')
-          SAFE_VER="$(echo "${versionName:-unknown}" | tr -c 'a-zA-Z0-9._+-' '_' | head -c 32)"
+          SAFE_VER="$(printf '%s' "${versionName:-unknown}" | tr -c 'a-zA-Z0-9._+-' '_' | head -c 32)"
           APK_NAME="Granny-${SAFE_VER}-PS3-FULL-CONTROLLER.apk"
           cp "$WORK/Granny-PS3-mod.apk" "$WORK/$APK_NAME"
           {
@@ -181,6 +202,7 @@ jobs:
           {
             cd "$WORK"
             APK_NAME="$(grep '^file=' CHECKSUMS.txt | cut -d= -f2)"
+            ABIS="$(grep '^abis=' analysis.txt | cut -d= -f2)"
             {
               echo "## Granny + full PS3 (DualShock 3) controller support 🎮"
               echo ""
@@ -189,6 +211,15 @@ jobs:
               echo "all buttons mapped). **Uninstall the original game first**"
               echo "(different signature), then install this APK."
               echo ""
+              if [ -z "$ABIS" ]; then
+                echo "> ⚠️ **Base APK only — native libraries are NOT inside yet.**"
+                echo "> The game will NOT launch until the ABI split is merged."
+                echo "> See \`granny-ps3/README.md\` (§ Native libraries) for how to provide it."
+                echo ""
+              else
+                echo "> ✅ Single APK with merged native libraries (ABIs: $ABIS) — ready to install."
+                echo ""
+              fi
               echo "Full button map + pairing instructions: see"
               echo "\`granny-ps3/PS3-CONTROLLER-GUIDE.md\` in the repo."
               echo ""

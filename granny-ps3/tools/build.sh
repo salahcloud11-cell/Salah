@@ -12,9 +12,10 @@
 #   BT            build-tools dir (default: 34.0.0 or newest with d8)
 #   PLATFORM      android platform (default: android-34 or newest)
 #   KEYSTORE_PASS password for the throwaway signing key (default: ps3modps3mod)
+#   SPLITS_DIR    dir with config split APKs (native libs merged into one APK)
 #
 # Pipeline:
-#   1. apktool decode
+#   1. apktool decode (+ optional native-lib merge from SPLITS_DIR)
 #   2. javac com.ps3mod -> classes dir
 #   3. patch_apk.py: activity hooks + manifest tweaks (+ analysis.txt)
 #   4. apktool build -> unsigned.apk
@@ -97,6 +98,33 @@ print("largest files:")
 for s, n in big[:12]:
     print("  %10d %s" % (s, n))
 EOF
+
+if [ -n "${SPLITS_DIR:-}" ] && ls "${SPLITS_DIR}"/*.apk >/dev/null 2>&1; then
+  echo "--- [1b/7] merge native libs from config splits ---"
+  python3 - "$DECODED" "${SPLITS_DIR}" <<'EOF'
+import sys, os, glob, zipfile
+decoded, splits = sys.argv[1], sys.argv[2]
+total = 0
+for apk in sorted(glob.glob(os.path.join(splits, "*.apk"))):
+    z = zipfile.ZipFile(apk)
+    libs = [n for n in z.namelist() if n.startswith("lib/") and n.endswith(".so")]
+    other = sorted({n.split("/")[0] for n in z.namelist() if "/" in n} - {"lib"})
+    print("%s: lib/*.so=%d (other top-level dirs skipped: %s)"
+          % (os.path.basename(apk), len(libs), other))
+    for name in libs:
+        dest = os.path.join(decoded, name)
+        os.makedirs(os.path.dirname(dest), exist_ok=True)
+        with open(dest, "wb") as fh:
+            fh.write(z.read(name))
+        total += 1
+        print("  + %s" % name)
+print("merged %d native libs" % total)
+if total == 0:
+    print("WARNING: splits provided but no lib/*.so found inside")
+EOF
+else
+  echo "--- [1b/7] no config splits (base APK only) ---"
+fi
 
 echo "--- [2/7] compile com.ps3mod (javac) ---"
 rm -rf "$CLASSES"
