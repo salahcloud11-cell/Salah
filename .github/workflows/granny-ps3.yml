@@ -115,8 +115,7 @@ jobs:
           set -euo pipefail
           {
             pip install -q gdown
-            gdown --fuzzy "https://drive.google.com/uc?id=$DRIVE_FILE_ID&export=download" \
-              -O "$WORK/Granny-orig.apk"
+            gdown "$DRIVE_FILE_ID" -O "$WORK/Granny-orig.apk"
             ls -la "$WORK/Granny-orig.apk"
             SIZE="$(stat -c%s "$WORK/Granny-orig.apk")"
             echo "downloaded bytes: $SIZE (expected $EXPECTED_BYTES)"
