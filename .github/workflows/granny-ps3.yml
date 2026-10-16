@@ -1,0 +1,172 @@
+name: Granny PS3 controller mod
+
+# Builds the modded Granny APK with full PS3 (DualShock 3) controller support.
+# The original APK (183 MB, on Google Drive) is downloaded inside the runner,
+# patched with the com.ps3mod touch-mapper, rebuilt, re-signed and published
+# as a GitHub Release (too big to commit to git).
+#
+# Trigger: Actions tab -> "Granny PS3 controller mod" -> Run workflow,
+#   or: gh workflow run granny-ps3.yml --ref <branch>
+
+on:
+  workflow_dispatch:
+    inputs:
+      drive_file_id:
+        description: "Google Drive file ID of Granny.apk (must be anyone-with-link)"
+        default: "1aTRukFGeqdnYP1TWGBALoJ7JX8oCLR3P"
+        required: true
+        type: string
+      expected_bytes:
+        description: "Expected size of the original APK in bytes (sanity check)"
+        default: "183565031"
+        required: true
+        type: string
+      release_tag:
+        description: "Release tag to create/update with the modded APK"
+        default: "granny-ps3-latest"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      WORK: ${{ github.workspace }}/ps3work
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install platform + build-tools
+        run: |
+          yes | sdkmanager --licenses >/dev/null 2>&1 || true
+          sdkmanager "platforms;android-34" "build-tools;34.0.0"
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          ls "$ANDROID_HOME/build-tools/34.0.0" | head -n 30
+
+      - name: Download apktool + baksmali
+        run: |
+          set -euo pipefail
+          mkdir -p "$WORK/tools"
+          echo "--- apktool (latest) ---"
+          APKTOOL_URL="$(curl -sL https://api.github.com/repos/iBotPeaches/Apktool/releases/latest \
+            | jq -r '.assets[] | select(.name | test("^apktool_.*\\.jar$")) | .browser_download_url' | head -n 1)"
+          echo "url=$APKTOOL_URL"
+          [ -n "$APKTOOL_URL" ] && [ "$APKTOOL_URL" != "null" ]
+          curl -sL -o "$WORK/tools/apktool.jar" "$APKTOOL_URL"
+          echo "--- baksmali (latest) ---"
+          BAKSMALI_URL="$(curl -sL https://api.github.com/repos/JesusFreke/smali/releases/latest \
+            | jq -r '[.assets[] | select(.name | test("^baksmali-.*\\.jar$")) | select(.name | test("sources|javadoc") | not) | .browser_download_url] | sort_by(test("fat") | not) | .[0]')"
+          echo "url=$BAKSMALI_URL"
+          [ -n "$BAKSMALI_URL" ] && [ "$BAKSMALI_URL" != "null" ]
+          curl -sL -o "$WORK/tools/baksmali.jar" "$BAKSMALI_URL"
+          ls -la "$WORK/tools"
+          java -jar "$WORK/tools/apktool.jar" --version
+          java -jar "$WORK/tools/baksmali.jar" --version
+
+      - name: Download Granny.apk from Google Drive
+        run: |
+          set -euo pipefail
+          pip install -q gdown
+          gdown --fuzzy "https://drive.google.com/uc?id=${{ inputs.drive_file_id }}&export=download" \
+            -O "$WORK/Granny-orig.apk"
+          ls -la "$WORK/Granny-orig.apk"
+          SIZE="$(stat -c%s "$WORK/Granny-orig.apk")"
+          echo "downloaded bytes: $SIZE (expected ${{ inputs.expected_bytes }})"
+          MAGIC="$(head -c 2 "$WORK/Granny-orig.apk")"
+          if [ "$MAGIC" != "PK" ]; then
+            echo "ERROR: download is not a zip/APK (magic=$MAGIC). First bytes:"
+            head -c 300 "$WORK/Granny-orig.apk" | cat -v
+            exit 1
+          fi
+          if [ "$SIZE" != "${{ inputs.expected_bytes }}" ]; then
+            echo "ERROR: size mismatch, aborting (Drive file changed?)"
+            exit 1
+          fi
+
+      - name: Build modded APK
+        env:
+          APKTOOL_JAR: ${{ github.workspace }}/ps3work/tools/apktool.jar
+          BAKSMALI_JAR: ${{ github.workspace }}/ps3work/tools/baksmali.jar
+        run: |
+          set -euo pipefail
+          chmod +x granny-ps3/tools/build.sh
+          granny-ps3/tools/build.sh "$WORK/Granny-orig.apk" "$WORK/Granny-PS3-mod.apk" "$WORK/build"
+
+      - name: Name outputs + checksums
+        id: outputs
+        run: |
+          set -euo pipefail
+          cat "$WORK/build/analysis.txt"
+          # shellcheck disable=SC1091
+          source <(grep -E '^(package|versionName|versionCode|launcherActivity|unity)=' "$WORK/build/analysis.txt" | sed 's/[^a-zA-Z0-9_=.,+-]/_/g')
+          SAFE_VER="$(echo "${versionName:-unknown}" | tr -c 'a-zA-Z0-9._+-' '_' | head -c 32)"
+          APK_NAME="Granny-${SAFE_VER}-PS3-FULL-CONTROLLER.apk"
+          cp "$WORK/Granny-PS3-mod.apk" "$WORK/$APK_NAME"
+          {
+            echo "file=$APK_NAME"
+            echo "size=$(stat -c%s "$WORK/$APK_NAME")"
+            echo "md5=$(md5sum "$WORK/$APK_NAME" | cut -d' ' -f1)"
+            echo "sha256=$(sha256sum "$WORK/$APK_NAME" | cut -d' ' -f1)"
+            echo "versionName=${versionName:-unknown}"
+            echo "versionCode=${versionCode:-0}"
+          } | tee "$WORK/CHECKSUMS.txt"
+          cp "$WORK/build/analysis.txt" "$WORK/analysis.txt"
+          {
+            echo "apk_name=$APK_NAME"
+            echo "version=${versionName:-unknown} (${versionCode:-0})"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: granny-ps3-apk
+          path: |
+            ${{ github.workspace }}/ps3work/*.apk
+            ${{ github.workspace }}/ps3work/CHECKSUMS.txt
+            ${{ github.workspace }}/ps3work/analysis.txt
+          if-no-files-found: error
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          cd "$WORK"
+          APK_NAME="$(grep '^file=' CHECKSUMS.txt | cut -d= -f2)"
+          {
+            echo "## Granny + full PS3 (DualShock 3) controller support 🎮"
+            echo ""
+            echo "Modded APK: the original game from Google Drive + injected"
+            echo "\`com.ps3mod\` touch-mapper (left stick = move, right stick = look,"
+            echo "all buttons mapped). **Uninstall the original game first**"
+            echo "(different signature), then install this APK."
+            echo ""
+            echo "Full button map + pairing instructions: see"
+            echo "\`granny-ps3/PS3-CONTROLLER-GUIDE.md\` in the repo."
+            echo ""
+            echo "### Build info"
+            echo '```'
+            cat CHECKSUMS.txt
+            echo '```'
+          } > release-notes.md
+          TAG="${{ inputs.release_tag }}"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "deleting existing release $TAG"
+            gh release delete "$TAG" -y
+            git push origin ":refs/tags/$TAG" || true
+          fi
+          gh release create "$TAG" --title "Granny PS3 Full Controller (${{ steps.outputs.outputs.version }})" \
+            --notes-file release-notes.md "$APK_NAME" CHECKSUMS.txt analysis.txt

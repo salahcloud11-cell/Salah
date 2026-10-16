@@ -1,0 +1,58 @@
+# Granny — PS3 Controller (Full Support) 🎮
+
+لعبة **Granny** (DVloper) بدعم كامل ليد **PlayStation 3 (DualShock 3)**:
+العصاوت الاتنين (analog sticks) + كامل الأزرار خدامين داخل اللعبة عبر
+**touch-mapper مدمج** (`com.ps3mod`): اليد كتحوّل للمسات فالبلايص الصحيحة.
+
+> **الملف الأصلي**: `Granny.apk` من Google Drive (183,565,031 bytes).
+> **النسخة المعدّلة** ما محطوطاش فالـ git (كبيرة بزاف: ~183MB > حد 100MB ديال GitHub) —
+> حمّلها من صفحة **Releases** (تاغ `granny-ps3-latest`).
+
+## 📦 الملفات
+
+| الملف | الوصف |
+|---|---|
+| `java/com/ps3mod/PS3Mapper.java` | سورس الـ mapper (Java — يتكومپايلا فالـ CI) |
+| `tools/patch_apk.py` | سكريبت الحقن (smali + manifest) |
+| `tools/build.sh` | pipeline كامل: decode → inject → build → sign |
+| `PS3-CONTROLLER-GUIDE.md` | الدليل الكامل (الفرملة + الأزرار + المشاكل) |
+
+## ⚠️ التثبيت (خطوة ضرورية)
+
+1. **احذف (uninstall) لعبة Granny الأصلية أولاً** — التوقيع مختلف.
+2. حمّل الـ APK من **Releases** وثبّته (سمح بمصادر مجهولة).
+3. **فرمّل اليد قبل ما تفتح اللعبة.**
+
+## 🎮 مختصر التحكم
+
+- **العصا اليسرى / D-Pad** — الحركة (joystick البيضاء)
+- **العصا اليمنى** — التدوير/التخمام (look) المستمر
+- **✕ / R1** — اليد: هز / استعمل / حل 🤚
+- **○ / R2** — Drop / Use / Place / Shoot / Spray
+- **□ / L2** — التخبية والخروج + أزرار الوسط
+- **△ / L1 / SELECT** — القرفصاء / الوقوف
+- **START** — القائمة (pause)
+- **L3+R3** — طفيان/تشغيل الـ mapping
+
+الدليل الكامل: [`PS3-CONTROLLER-GUIDE.md`](./PS3-CONTROLLER-GUIDE.md)
+
+## 🔨 البناء (build)
+
+تلقائي عبر GitHub Actions (workflow `granny-ps3.yml`):
+كيحمّل الأصلي من Drive، كيحقن `com.ps3mod`، كيعاود البناء والتوقيع، وكينشر release.
+
+```sh
+gh workflow run granny-ps3.yml --ref arena/f166472e-salah
+```
+
+## ✅ معلومات النسخة المبنية
+
+<!-- filled after the CI build -->
+- **versionName/versionCode:** _pending_
+- **الحجم:** _pending_
+- **md5:** _pending_
+- **sha256:** _pending_
+
+---
+
+> نسخة معدّلة (mod) — اللعبة ملك لـ DVloper؛ هاد المجلد مخصص للاستعمال الشخصي ديال صاحب الحساب.
