@@ -9,6 +9,13 @@ name: Granny PS3 controller mod
 #   or: gh workflow run granny-ps3.yml --ref <branch>
 
 on:
+  # Auto-build on push (sandbox token cannot call workflow_dispatch, so CI
+  # runs from git pushes; manual runs from the Actions tab still work).
+  push:
+    branches: ["arena/**", "main"]
+    paths:
+      - "granny-ps3/**"
+      - ".github/workflows/granny-ps3.yml"
   workflow_dispatch:
     inputs:
       drive_file_id:
@@ -26,6 +33,11 @@ on:
         default: "granny-ps3-latest"
         required: true
         type: string
+
+env:
+  DRIVE_FILE_ID: ${{ inputs.drive_file_id || '1aTRukFGeqdnYP1TWGBALoJ7JX8oCLR3P' }}
+  EXPECTED_BYTES: ${{ inputs.expected_bytes || '183565031' }}
+  RELEASE_TAG: ${{ inputs.release_tag || 'granny-ps3-latest' }}
 
 permissions:
   contents: write
@@ -80,18 +92,18 @@ jobs:
         run: |
           set -euo pipefail
           pip install -q gdown
-          gdown --fuzzy "https://drive.google.com/uc?id=${{ inputs.drive_file_id }}&export=download" \
+          gdown --fuzzy "https://drive.google.com/uc?id=$DRIVE_FILE_ID&export=download" \
             -O "$WORK/Granny-orig.apk"
           ls -la "$WORK/Granny-orig.apk"
           SIZE="$(stat -c%s "$WORK/Granny-orig.apk")"
-          echo "downloaded bytes: $SIZE (expected ${{ inputs.expected_bytes }})"
+          echo "downloaded bytes: $SIZE (expected $EXPECTED_BYTES)"
           MAGIC="$(head -c 2 "$WORK/Granny-orig.apk")"
           if [ "$MAGIC" != "PK" ]; then
             echo "ERROR: download is not a zip/APK (magic=$MAGIC). First bytes:"
             head -c 300 "$WORK/Granny-orig.apk" | cat -v
             exit 1
           fi
-          if [ "$SIZE" != "${{ inputs.expected_bytes }}" ]; then
+          if [ "$SIZE" != "$EXPECTED_BYTES" ]; then
             echo "ERROR: size mismatch, aborting (Drive file changed?)"
             exit 1
           fi
@@ -162,7 +174,7 @@ jobs:
             cat CHECKSUMS.txt
             echo '```'
           } > release-notes.md
-          TAG="${{ inputs.release_tag }}"
+          TAG="$RELEASE_TAG"
           if gh release view "$TAG" >/dev/null 2>&1; then
             echo "deleting existing release $TAG"
             gh release delete "$TAG" -y
